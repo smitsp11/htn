@@ -44,7 +44,15 @@ export function QueueTable({ submissions, expandedId, onToggle }: QueueTableProp
                 <td>{submission.primaryRiskState ?? "—"}</td>
                 <td>{formatMoney(submission.tiv)}</td>
                 <td>{formatMoney(submission.totalPremium)}</td>
-                <td className="reason-cell">{primaryReason(submission)}</td>
+                <td className="reason-cell">
+                  {primaryReason(submission)}
+                  {submission.enrichment && submission.enrichment.compositeRating !== "unknown" ? (
+                    <span className={`xr-badge xr-rating-${submission.enrichment.compositeRating.replace(/\s+/g, "-")}`}>
+                      {submission.enrichment.topHazards[0]?.type ?? "Hazard"} ·{" "}
+                      {submission.enrichment.compositeRating.charAt(0).toUpperCase() + submission.enrichment.compositeRating.slice(1)}
+                    </span>
+                  ) : null}
+                </td>
                 <td className="recommendation-cell">{submission.recommendation}</td>
                 <td>
                   <button type="button" className="detail-button" aria-expanded={expanded} onClick={() => onToggle(submission.id)}>

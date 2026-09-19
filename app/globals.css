@@ -1,4 +1,5 @@
 @import "../components/factor-breakdown/factor-breakdown.css";
+@import "../components/external-risk/external-risk.css";
 
 :root {
   color-scheme: light;

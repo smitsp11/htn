@@ -1,3 +1,4 @@
+import { ExternalRisk } from "@/components/external-risk/external-risk";
 import { FactorBreakdown } from "@/components/factor-breakdown/factor-breakdown";
 import type { RankedSubmission } from "@/lib/domain/types";
 
@@ -19,6 +20,7 @@ export function SubmissionDetail({ submission }: { submission: RankedSubmission 
         </dl>
       </div>
       <FactorBreakdown submission={submission} />
+      <ExternalRisk profile={submission.enrichment} />
     </div>
   );
 }

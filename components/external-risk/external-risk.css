@@ -1,0 +1,122 @@
+/* External risk panel (FEMA NRI enrichment). Prefixed `xr-` to avoid colliding
+   with the dashboard shell and the `fb-` appetite factor breakdown. Kept
+   visually distinct from .fb so enrichment always reads as outside context,
+   never part of the carrier appetite score. */
+
+.xr {
+  background: var(--paper, #f4f7f5);
+  border: 1px dashed var(--line, #dce5e0);
+  border-radius: 0.6rem;
+  display: grid;
+  gap: 0.6rem;
+  padding: 0.9rem 1rem;
+}
+
+.xr-label {
+  color: var(--muted, #66736e);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.xr-empty {
+  color: var(--muted, #66736e);
+  font-size: 0.82rem;
+  margin: 0;
+}
+
+.xr-composite {
+  border-radius: 999px;
+  display: inline-block;
+  font-size: 0.78rem;
+  font-weight: 800;
+  padding: 0.32rem 0.6rem;
+  width: fit-content;
+}
+
+.xr-hazards {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.xr-hazard {
+  background: var(--surface, #ffffff);
+  border: 1px solid var(--line, #dce5e0);
+  border-radius: 0.4rem;
+  font-size: 0.76rem;
+  padding: 0.3rem 0.55rem;
+}
+
+.xr-note {
+  color: var(--muted, #66736e);
+  font-size: 0.7rem;
+  font-style: italic;
+}
+
+.xr-badge {
+  border-radius: 999px;
+  display: block;
+  font-size: 0.68rem;
+  font-weight: 700;
+  margin-top: 0.4rem;
+  padding: 0.2rem 0.5rem;
+  width: fit-content;
+}
+
+.xr-rating-very-high {
+  background: var(--red-soft, #fdebe8);
+  color: var(--red, #a63a32);
+}
+
+.xr-rating-relatively-high {
+  background: var(--amber-soft, #fff2d8);
+  color: var(--amber, #9a5c08);
+}
+
+.xr-rating-relatively-moderate {
+  background: var(--amber-soft, #fff2d8);
+  color: var(--amber, #9a5c08);
+}
+
+.xr-rating-relatively-low,
+.xr-rating-very-low {
+  background: var(--green-soft, #e4f4ed);
+  color: var(--green, #126447);
+}
+
+.xr-rating-unknown {
+  background: var(--line, #dce5e0);
+  color: var(--muted, #66736e);
+}
+
+li.xr-hazard.xr-rating-very-high,
+li.xr-hazard.xr-rating-relatively-high,
+li.xr-hazard.xr-rating-relatively-moderate,
+li.xr-hazard.xr-rating-relatively-low,
+li.xr-hazard.xr-rating-very-low,
+li.xr-hazard.xr-rating-unknown {
+  background: var(--surface, #ffffff);
+}
+
+li.xr-hazard.xr-rating-very-high {
+  border-left: 3px solid var(--red, #a63a32);
+}
+
+li.xr-hazard.xr-rating-relatively-high,
+li.xr-hazard.xr-rating-relatively-moderate {
+  border-left: 3px solid var(--amber, #9a5c08);
+}
+
+li.xr-hazard.xr-rating-relatively-low,
+li.xr-hazard.xr-rating-very-low {
+  border-left: 3px solid var(--green, #126447);
+}
+
+li.xr-hazard.xr-rating-unknown {
+  border-left: 3px solid var(--muted, #66736e);
+}
