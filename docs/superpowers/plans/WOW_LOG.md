@@ -64,9 +64,11 @@ Status legend: `queued` · `planning` · `building` · `blocked` · `done`
 - **Risk:** low (reads existing fields; adds a derived view, not a new verdict).
 
 ### W3 — Missing-data enrichment waterfall + provenance chips (the ENGINE)
-- **Status:** planned → `docs/superpowers/plans/2026-09-19-w3-enrichment-waterfall.md` (needs scope decision before Task 4)
-- **Role:** the source-agnostic waterfall + provenance + resolution map. Ships with empty chains
-  (never fabricates). **W8 and W9 are the sources that plug into it.** Build W3 first.
+- **Status:** DONE (2026-09-19) → plan `2026-09-19-w3-enrichment-waterfall.md`. Built on branch
+  `w3-enrichment-waterfall` (stacked PR on `federato-prompt-improvement`). Engineer confirmed the
+  context-not-silent-rescore stance. 190/190 tests green. Ships honest empty chains (every gap →
+  "Request from broker"); provenance chips ready. **W8 plugs its sources into `resolve-submission.ts`.**
+- **Role:** the source-agnostic waterfall + provenance + resolution map.
 - **Goal:** Per missing required field, run a cheapest-first source chain (Federato field →
   free inference → external dataset), stop at first confident source, record which source won,
   and show a provenance chip (`value · source · confidence · as-of`) with click-through.
