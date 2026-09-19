@@ -1,0 +1,17 @@
+{
+  "AZ|Maricopa": { "compositeRating": "unknown", "topHazards": [], "source": "FEMA NRI", "asOf": "2026-09-19" },
+  "CA|Alameda": { "compositeRating": "unknown", "topHazards": [], "source": "FEMA NRI", "asOf": "2026-09-19" },
+  "CA|Sacramento": { "compositeRating": "unknown", "topHazards": [], "source": "FEMA NRI", "asOf": "2026-09-19" },
+  "CO|Denver": { "compositeRating": "unknown", "topHazards": [], "source": "FEMA NRI", "asOf": "2026-09-19" },
+  "FL|Hillsborough": { "compositeRating": "unknown", "topHazards": [], "source": "FEMA NRI", "asOf": "2026-09-19" },
+  "FL|Miami-Dade": { "compositeRating": "unknown", "topHazards": [], "source": "FEMA NRI", "asOf": "2026-09-19" },
+  "GA|Fulton": { "compositeRating": "unknown", "topHazards": [], "source": "FEMA NRI", "asOf": "2026-09-19" },
+  "IL|Cook": { "compositeRating": "unknown", "topHazards": [], "source": "FEMA NRI", "asOf": "2026-09-19" },
+  "MA|Suffolk": { "compositeRating": "unknown", "topHazards": [], "source": "FEMA NRI", "asOf": "2026-09-19" },
+  "MO|Jackson": { "compositeRating": "unknown", "topHazards": [], "source": "FEMA NRI", "asOf": "2026-09-19" },
+  "NJ|Essex": { "compositeRating": "unknown", "topHazards": [], "source": "FEMA NRI", "asOf": "2026-09-19" },
+  "TN|Davidson": { "compositeRating": "unknown", "topHazards": [], "source": "FEMA NRI", "asOf": "2026-09-19" },
+  "TX|Harris": { "compositeRating": "unknown", "topHazards": [], "source": "FEMA NRI", "asOf": "2026-09-19" },
+  "TX|Travis": { "compositeRating": "unknown", "topHazards": [], "source": "FEMA NRI", "asOf": "2026-09-19" },
+  "WA|King": { "compositeRating": "unknown", "topHazards": [], "source": "FEMA NRI", "asOf": "2026-09-19" }
+}
