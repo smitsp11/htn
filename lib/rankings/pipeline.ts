@@ -1,9 +1,9 @@
 import { demoSubmissions } from "@/lib/demo/submissions";
 import { rankSubmissions } from "@/lib/domain/appetite";
-import type { CanonicalSubmission, RankedSubmission, RankingsResponse } from "@/lib/domain/types";
+import type { CanonicalSubmission, HazardProfile, RankedSubmission, RankingsResponse } from "@/lib/domain/types";
 import { buildQueryPayload, normalizeQueryResponse } from "@/lib/federato/adapter";
 import { FederatoClient } from "@/lib/federato/client";
-import { loadOfflineSubmissions } from "@/lib/federato/offline-data";
+import { loadOfflineEnrichment, loadOfflineSubmissions } from "@/lib/federato/offline-data";
 import { summarize } from "./presentation";
 
 /** Every upstream capability is injected so the pipeline is testable offline. */
@@ -16,6 +16,12 @@ export interface RankingsPipelineDeps {
    * wires this whenever the engineer has not explicitly forced demo or live mode.
    */
   loadOfflineData?: () => Promise<CanonicalSubmission[]>;
+  /**
+   * When present, the offline branch attaches each submission's primary-location
+   * hazard profile (`RankedSubmission.enrichment`) after ranking. Optional so
+   * tests that inject their own deps (without enrichment) keep passing.
+   */
+  loadEnrichment?: () => Promise<Map<string, HazardProfile>>;
   getSchema: () => Promise<unknown>;
   buildQueryPayload: (schema: unknown) => unknown;
   query: (payload: unknown) => Promise<unknown>;
@@ -39,6 +45,7 @@ export function defaultPipelineDeps(): RankingsPipelineDeps {
     useDemoData,
     demoSubmissions,
     loadOfflineData: useDemoData || explicitLive ? undefined : loadOfflineSubmissions,
+    loadEnrichment: useDemoData || explicitLive ? undefined : loadOfflineEnrichment,
     getSchema: () => client.getSchema(),
     buildQueryPayload,
     query: (payload) => client.query(payload),
@@ -95,6 +102,13 @@ export async function buildRankings(deps: RankingsPipelineDeps): Promise<Ranking
     // records are normalized through the same adapter and scored through the same
     // appetite engine as a live query, so the source is reported as "federato".
     const ranked = deps.rank(await deps.loadOfflineData());
+    if (deps.loadEnrichment) {
+      const hazards = await deps.loadEnrichment();
+      for (const s of ranked) {
+        const h = hazards.get(s.id);
+        if (h) s.enrichment = h;
+      }
+    }
     return {
       source: "federato",
       generatedAt,

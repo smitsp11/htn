@@ -1,7 +1,8 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
-import type { CanonicalSubmission } from "@/lib/domain/types";
+import type { CanonicalSubmission, HazardProfile } from "@/lib/domain/types";
 import { normalizeQueryResponse } from "@/lib/federato/adapter";
+import { hazardForLocation, loadHazardIndex } from "@/lib/enrichment/hazard";
 
 /**
  * Offline Federato data source (server-only).
@@ -78,12 +79,83 @@ function refIds(value: unknown): number[] {
   return [];
 }
 
+/** Canonical submission id: `submission_number || id` (matches the adapter's rule). */
+function canonicalSubmissionId(submission: UnknownRecord, index: number): string {
+  const number = submission.submission_number;
+  if (typeof number === "string" && number.trim() !== "") return number;
+  if (typeof number === "number") return String(number);
+  const id = submission.id;
+  if (typeof id === "string" && id.trim() !== "") return id;
+  if (typeof id === "number") return String(id);
+  return `submission-${index + 1}`;
+}
+
+/** Expand a Location into { state, buildings: Building[] } for the adapter. */
+function expandLocation(location: UnknownRecord, buildingById: Map<number, UnknownRecord>): UnknownRecord {
+  return {
+    state: location.state,
+    buildings: refIds(location.buildings)
+      .map((id) => buildingById.get(id))
+      .filter((building): building is UnknownRecord => building !== undefined),
+  };
+}
+
+/** Building TIV, falling back to building_value when tiv is absent/non-numeric. */
+function buildingTivValue(building: UnknownRecord): number {
+  const tiv = building.tiv;
+  if (typeof tiv === "number" && Number.isFinite(tiv)) return tiv;
+  const buildingValue = building.building_value;
+  if (typeof buildingValue === "number" && Number.isFinite(buildingValue)) return buildingValue;
+  return 0;
+}
+
+/** Summed Building.tiv (fallback building_value) across a Location's buildings. */
+function locationTiv(location: UnknownRecord, buildingById: Map<number, UnknownRecord>): number {
+  return refIds(location.buildings)
+    .map((id) => buildingById.get(id))
+    .filter((building): building is UnknownRecord => building !== undefined)
+    .reduce((sum, building) => sum + buildingTivValue(building), 0);
+}
+
 /**
- * Build every EXPANDED submission record from the indexed raw resources, then
- * hand them to the shared adapter so all 158 submissions normalize through the
- * exact same code path a live query would use.
+ * The submission's PRIMARY risk location: the risk location with the largest
+ * summed building TIV; fall back to the insured's HQ location; then to any
+ * location at all (when neither of the above is available).
  */
-export async function loadOfflineSubmissions(): Promise<CanonicalSubmission[]> {
+function pickPrimaryLocation(
+  riskLocations: UnknownRecord[],
+  hqLocation: UnknownRecord | undefined,
+  buildingById: Map<number, UnknownRecord>,
+  anyLocation: UnknownRecord | undefined,
+): UnknownRecord | undefined {
+  let best: UnknownRecord | undefined;
+  let bestTiv = -Infinity;
+  for (const location of riskLocations) {
+    const tiv = locationTiv(location, buildingById);
+    if (tiv > bestTiv) {
+      bestTiv = tiv;
+      best = location;
+    }
+  }
+  return best ?? hqLocation ?? anyLocation;
+}
+
+interface JoinedSubmission {
+  /** Canonical id: `submission_number || id`. */
+  id: string;
+  /** The EXPANDED record `normalizeQueryResponse` consumes. */
+  expanded: UnknownRecord;
+  /** The submission's primary risk location (raw Location record), if any. */
+  primaryLocation?: UnknownRecord;
+}
+
+/**
+ * Read the raw resources, perform the documented per-Submission joins once,
+ * and return one `JoinedSubmission` per submission. Both `loadOfflineSubmissions`
+ * (canonical normalization) and `loadOfflineEnrichment` (hazard lookup) build on
+ * this shared join so the record-linking logic lives in exactly one place.
+ */
+async function joinSubmissions(): Promise<JoinedSubmission[]> {
   const [submissions, policies, insureds, locations, buildings, claims, exposureUnits] = await Promise.all(
     RESOURCES.map(loadResource),
   );
@@ -100,15 +172,7 @@ export async function loadOfflineSubmissions(): Promise<CanonicalSubmission[]> {
     if (typeof policy.submission === "number") policyBySubmission.set(policy.submission, policy);
   }
 
-  // Expand a Location into { state, buildings: Building[] } for the adapter.
-  const expandLocation = (location: UnknownRecord): UnknownRecord => ({
-    state: location.state,
-    buildings: refIds(location.buildings)
-      .map((id) => buildingById.get(id))
-      .filter((building): building is UnknownRecord => building !== undefined),
-  });
-
-  const expanded = submissions.map((submission) => {
+  return submissions.map((submission, index) => {
     const insured = typeof submission.insured === "number" ? insuredById.get(submission.insured) : undefined;
     const hqLocation =
       insured && typeof insured.hq === "number" ? locationById.get(insured.hq) : undefined;
@@ -136,7 +200,7 @@ export async function loadOfflineSubmissions(): Promise<CanonicalSubmission[]> {
           .filter((claim): claim is UnknownRecord => claim !== undefined)
       : undefined;
 
-    return {
+    const expanded: UnknownRecord = {
       id: submission.id,
       submission_number: submission.submission_number,
       line_of_business: submission.line_of_business,
@@ -151,10 +215,41 @@ export async function loadOfflineSubmissions(): Promise<CanonicalSubmission[]> {
             dates: policy.dates,
           }
         : undefined,
-      locations: riskLocations.map(expandLocation),
+      locations: riskLocations.map((location) => expandLocation(location, buildingById)),
       claims: policyClaims,
-    } satisfies UnknownRecord;
-  });
+    };
 
-  return normalizeQueryResponse({ data: expanded });
+    const primaryLocation = pickPrimaryLocation(riskLocations, hqLocation, buildingById, locations[0]);
+
+    return {
+      id: canonicalSubmissionId(submission, index),
+      expanded,
+      primaryLocation,
+    } satisfies JoinedSubmission;
+  });
+}
+
+export async function loadOfflineSubmissions(): Promise<CanonicalSubmission[]> {
+  const joined = await joinSubmissions();
+  return normalizeQueryResponse({ data: joined.map((submission) => submission.expanded) });
+}
+
+/**
+ * Build a `Map<canonicalSubmissionId, HazardProfile>` covering every offline
+ * submission, resolved from each submission's PRIMARY risk location's
+ * state/county against the FEMA NRI hazard index (`raw/enrichment.json`).
+ * Locations without a usable state/county resolve to the "unknown" hazard
+ * profile via `hazardForLocation`'s own fallback.
+ */
+export async function loadOfflineEnrichment(): Promise<Map<string, HazardProfile>> {
+  const joined = await joinSubmissions();
+  const hazardIndex = loadHazardIndex();
+
+  const map = new Map<string, HazardProfile>();
+  for (const submission of joined) {
+    const state = typeof submission.primaryLocation?.state === "string" ? submission.primaryLocation.state : undefined;
+    const county = typeof submission.primaryLocation?.county === "string" ? submission.primaryLocation.county : undefined;
+    map.set(submission.id, hazardForLocation(hazardIndex, state, county));
+  }
+  return map;
 }
