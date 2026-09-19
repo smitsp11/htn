@@ -477,7 +477,8 @@ td small {
 }
 
 .queue-toolbar-actions { display: flex; gap: 8px; align-items: center; }
-.view-toggle { display: inline-flex; border: 1px solid #e0e0e0; border-radius: 6px; overflow: hidden; }
-.view-toggle button { border: none; background: #fff; padding: 6px 12px; cursor: pointer; font-size: 13px; }
-.view-toggle button[aria-pressed="true"] { background: #1f3b2c; color: #fff; }
-.quadrant-detail { border: 1px solid #e0e0e0; border-radius: 8px; margin-top: 12px; padding: 8px; }
+.view-toggle { display: inline-flex; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
+.view-toggle button { border: none; border-radius: 0; background: var(--surface); color: var(--ink); padding: 6px 12px; cursor: pointer; font-size: 13px; }
+.view-toggle button[aria-pressed="true"] { background: var(--navy); color: #fff; }
+.quadrant-detail { border: 1px solid var(--line); border-radius: 8px; margin-top: 12px; padding: 8px; }
+.quadrant-detail-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 4px; }

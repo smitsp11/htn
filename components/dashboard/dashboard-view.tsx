@@ -78,9 +78,13 @@ export function DashboardView({ data, error, loading, expandedId, onToggle, onRe
 
         {view === "quadrant" ? (
           <>
-            <QuadrantBoard submissions={rankedSubmissions} onSelect={onToggle} />
+            <QuadrantBoard submissions={rankedSubmissions} onSelect={onToggle} selectedId={expandedId} />
             {selected ? (
               <div className="quadrant-detail">
+                <div className="quadrant-detail-head">
+                  <strong>{selected.accountName}</strong>
+                  <button type="button" className="detail-button" onClick={() => onToggle(selected.id)}>Close</button>
+                </div>
                 <SubmissionDetail submission={selected} />
               </div>
             ) : null}
