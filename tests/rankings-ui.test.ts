@@ -86,12 +86,14 @@ test("renders 55 submissions with sequential ranks", () => {
   assert.match(html, /<td class="rank-cell">55<\/td>/);
 });
 
-test("expanded detail composes explanation, dates, unresolved callout, and factor breakdown", () => {
+test("expanded detail composes explanation, dates, In Good Order checklist, and factor breakdown", () => {
   const html = render({ data: response(), expandedId: rankedEmpty.id });
   assert.match(html, /aria-label="Appetite factor breakdown"/);
   assert.match(html, /Empty Account scores 0\/100/);
   assert.match(text(html), /Effective Unknown/);
-  assert.match(text(html), /Unresolved fields: submission type, line of business/);
+  assert.match(text(html), /0 of 8 required fields resolved/);
+  assert.match(text(html), /Confirm submission type/);
+  assert.match(text(html), /Confirm line of business/);
 });
 
 test("expanded detail for a clean submission has no unresolved callout", () => {
