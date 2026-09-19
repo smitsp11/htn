@@ -20,8 +20,6 @@ The engineer should identify you as Person 1, 2, 3, or 4. If no assignment is st
 
 ## Non-negotiable scope
 
-- Use only Federato's supplied API and Auth0 flow.
-- Do not add enrichment APIs or external LLM calls.
 - Keep the product read-only; a human underwriter makes the final decision.
 - Call schema discovery before the production query.
 - Evaluate all 50+ submissions, including out-of-appetite submissions.
