@@ -4,19 +4,19 @@
     "compositeScore": 98.82315521628499,
     "topHazards": [
       {
-        "type": "CWAV",
+        "type": "Cold Wave",
         "rating": "very high"
       },
       {
-        "type": "HRCN",
+        "type": "Hurricane",
         "rating": "very high"
       },
       {
-        "type": "LTNG",
+        "type": "Lightning",
         "rating": "very high"
       },
       {
-        "type": "TRND",
+        "type": "Tornado",
         "rating": "very high"
       }
     ],
@@ -28,11 +28,11 @@
     "compositeScore": 99.87277353689568,
     "topHazards": [
       {
-        "type": "HAIL",
+        "type": "Hail",
         "rating": "very high"
       },
       {
-        "type": "HWAV",
+        "type": "Heat Wave",
         "rating": "very high"
       },
       {
@@ -40,7 +40,7 @@
         "rating": "very high"
       },
       {
-        "type": "SWND",
+        "type": "Strong Wind",
         "rating": "very high"
       }
     ],
@@ -52,11 +52,11 @@
     "compositeScore": 99.68193384223919,
     "topHazards": [
       {
-        "type": "AVLN",
+        "type": "Avalanche",
         "rating": "very high"
       },
       {
-        "type": "ERQK",
+        "type": "Earthquake",
         "rating": "very high"
       },
       {
@@ -64,7 +64,7 @@
         "rating": "very high"
       },
       {
-        "type": "HWAV",
+        "type": "Heat Wave",
         "rating": "relatively high"
       }
     ],
@@ -76,7 +76,7 @@
     "compositeScore": 99.77735368956743,
     "topHazards": [
       {
-        "type": "ERQK",
+        "type": "Earthquake",
         "rating": "very high"
       },
       {
@@ -84,11 +84,11 @@
         "rating": "very high"
       },
       {
-        "type": "CFLD",
+        "type": "Coastal Flooding",
         "rating": "relatively high"
       },
       {
-        "type": "HWAV",
+        "type": "Heat Wave",
         "rating": "relatively high"
       }
     ],
@@ -100,11 +100,11 @@
     "compositeScore": 98.1234096692112,
     "topHazards": [
       {
-        "type": "DRGT",
+        "type": "Drought",
         "rating": "relatively high"
       },
       {
-        "type": "ERQK",
+        "type": "Earthquake",
         "rating": "relatively high"
       },
       {
@@ -120,19 +120,19 @@
     "compositeScore": 96.50127226463104,
     "topHazards": [
       {
-        "type": "HAIL",
+        "type": "Hail",
         "rating": "very high"
       },
       {
-        "type": "TRND",
+        "type": "Tornado",
         "rating": "very high"
       },
       {
-        "type": "CWAV",
+        "type": "Cold Wave",
         "rating": "relatively high"
       },
       {
-        "type": "HWAV",
+        "type": "Heat Wave",
         "rating": "relatively high"
       }
     ],
@@ -144,19 +144,19 @@
     "compositeScore": 93.51145038167938,
     "topHazards": [
       {
-        "type": "LTNG",
+        "type": "Lightning",
         "rating": "very high"
       },
       {
-        "type": "CFLD",
+        "type": "Coastal Flooding",
         "rating": "relatively high"
       },
       {
-        "type": "CWAV",
+        "type": "Cold Wave",
         "rating": "relatively high"
       },
       {
-        "type": "HWAV",
+        "type": "Heat Wave",
         "rating": "relatively high"
       }
     ],
@@ -168,19 +168,19 @@
     "compositeScore": 99.96819338422391,
     "topHazards": [
       {
-        "type": "CWAV",
+        "type": "Cold Wave",
         "rating": "very high"
       },
       {
-        "type": "HWAV",
+        "type": "Heat Wave",
         "rating": "very high"
       },
       {
-        "type": "ISTM",
+        "type": "Ice Storm",
         "rating": "very high"
       },
       {
-        "type": "LTNG",
+        "type": "Lightning",
         "rating": "very high"
       }
     ],
@@ -192,19 +192,19 @@
     "compositeScore": 99.61832061068702,
     "topHazards": [
       {
-        "type": "CFLD",
+        "type": "Coastal Flooding",
         "rating": "very high"
       },
       {
-        "type": "CWAV",
+        "type": "Cold Wave",
         "rating": "very high"
       },
       {
-        "type": "HRCN",
+        "type": "Hurricane",
         "rating": "very high"
       },
       {
-        "type": "LTNG",
+        "type": "Lightning",
         "rating": "very high"
       }
     ],
@@ -216,15 +216,15 @@
     "compositeScore": 95.22900763358778,
     "topHazards": [
       {
-        "type": "HAIL",
+        "type": "Hail",
         "rating": "very high"
       },
       {
-        "type": "LTNG",
+        "type": "Lightning",
         "rating": "very high"
       },
       {
-        "type": "CWAV",
+        "type": "Cold Wave",
         "rating": "relatively high"
       },
       {
@@ -240,19 +240,19 @@
     "compositeScore": 99.93638676844783,
     "topHazards": [
       {
-        "type": "CWAV",
+        "type": "Cold Wave",
         "rating": "very high"
       },
       {
-        "type": "HWAV",
+        "type": "Heat Wave",
         "rating": "very high"
       },
       {
-        "type": "HRCN",
+        "type": "Hurricane",
         "rating": "very high"
       },
       {
-        "type": "ISTM",
+        "type": "Ice Storm",
         "rating": "very high"
       }
     ],
@@ -264,19 +264,19 @@
     "compositeScore": 97.74173027989822,
     "topHazards": [
       {
-        "type": "HAIL",
+        "type": "Hail",
         "rating": "very high"
       },
       {
-        "type": "TRND",
+        "type": "Tornado",
         "rating": "very high"
       },
       {
-        "type": "HWAV",
+        "type": "Heat Wave",
         "rating": "relatively high"
       },
       {
-        "type": "ISTM",
+        "type": "Ice Storm",
         "rating": "relatively high"
       }
     ],
@@ -288,11 +288,11 @@
     "compositeScore": 97.16921119592875,
     "topHazards": [
       {
-        "type": "CWAV",
+        "type": "Cold Wave",
         "rating": "relatively high"
       },
       {
-        "type": "ERQK",
+        "type": "Earthquake",
         "rating": "relatively high"
       },
       {
@@ -300,7 +300,7 @@
         "rating": "relatively high"
       },
       {
-        "type": "SWND",
+        "type": "Strong Wind",
         "rating": "relatively high"
       }
     ],
@@ -312,19 +312,19 @@
     "compositeScore": 97.70992366412213,
     "topHazards": [
       {
-        "type": "SWND",
+        "type": "Strong Wind",
         "rating": "very high"
       },
       {
-        "type": "WNTW",
+        "type": "Winter Weather",
         "rating": "very high"
       },
       {
-        "type": "CWAV",
+        "type": "Cold Wave",
         "rating": "relatively high"
       },
       {
-        "type": "HWAV",
+        "type": "Heat Wave",
         "rating": "relatively high"
       }
     ],
@@ -336,19 +336,19 @@
     "compositeScore": 95.80152671755725,
     "topHazards": [
       {
-        "type": "LTNG",
+        "type": "Lightning",
         "rating": "very high"
       },
       {
-        "type": "CWAV",
+        "type": "Cold Wave",
         "rating": "relatively high"
       },
       {
-        "type": "HAIL",
+        "type": "Hail",
         "rating": "relatively high"
       },
       {
-        "type": "ISTM",
+        "type": "Ice Storm",
         "rating": "relatively high"
       }
     ],

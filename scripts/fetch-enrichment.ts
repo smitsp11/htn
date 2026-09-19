@@ -11,6 +11,28 @@ const RATING_BY_LABEL: Record<string, HazardRating> = {
   "Very High": "very high",
 };
 
+// FEMA NRI hazard field prefixes -> human-readable names (the `*_RISKR` columns).
+const HAZARD_LABELS: Record<string, string> = {
+  AVLN: "Avalanche",
+  CFLD: "Coastal Flooding",
+  CWAV: "Cold Wave",
+  DRGT: "Drought",
+  ERQK: "Earthquake",
+  HAIL: "Hail",
+  HWAV: "Heat Wave",
+  HRCN: "Hurricane",
+  ISTM: "Ice Storm",
+  LNDS: "Landslide",
+  LTNG: "Lightning",
+  RFLD: "Riverine Flooding",
+  SWND: "Strong Wind",
+  TRND: "Tornado",
+  TSUN: "Tsunami",
+  VLCN: "Volcanic Activity",
+  WFIR: "Wildfire",
+  WNTW: "Winter Weather",
+};
+
 function locations(): { state: string; county: string }[] {
   const raw = JSON.parse(readFileSync(join(process.cwd(), "raw", "full_Location.json"), "utf8"));
   const rows = raw.output[0].data.results as { state?: string; county?: string }[];
@@ -46,7 +68,8 @@ async function fetchCounty(state: string, county: string): Promise<HazardProfile
   const hazards: { type: string; rating: HazardRating }[] = [];
   for (const [k, v] of Object.entries(props)) {
     if (k.endsWith("_RISKR") && typeof v === "string" && RATING_BY_LABEL[v]) {
-      hazards.push({ type: k.replace("_RISKR", ""), rating: RATING_BY_LABEL[v] });
+      const code = k.replace("_RISKR", "");
+      hazards.push({ type: HAZARD_LABELS[code] ?? code, rating: RATING_BY_LABEL[v] });
     }
   }
   const order: HazardRating[] = ["very high", "relatively high", "relatively moderate", "relatively low", "very low"];
