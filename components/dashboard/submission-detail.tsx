@@ -1,10 +1,14 @@
 import { ExternalRisk } from "@/components/external-risk/external-risk";
 import { FactorBreakdown } from "@/components/factor-breakdown/factor-breakdown";
+import { ResolutionChips } from "@/components/enrichment-resolution/resolution-chips";
 import type { RankedSubmission } from "@/lib/domain/types";
+import { resolveSubmissionFields } from "@/lib/enrichment/resolve-submission";
 import { completenessOf } from "@/lib/rankings/completeness";
 
 export function SubmissionDetail({ submission }: { submission: RankedSubmission }) {
   const completeness = completenessOf(submission);
+  const resolutions = resolveSubmissionFields(submission);
+  const factorLabels = Object.fromEntries(submission.factors.map((f) => [f.key, f.label]));
   return (
     <div className="detail-content">
       <div>
@@ -27,6 +31,7 @@ export function SubmissionDetail({ submission }: { submission: RankedSubmission 
           {completeness.missing.length > 0 ? (
             <p className="igo-note">Unresolved fields never count as acceptable.</p>
           ) : null}
+          <ResolutionChips resolutions={resolutions} labels={factorLabels} />
         </div>
         <dl className="dates">
           <div><dt>Effective</dt><dd>{submission.effectiveDate ?? "Unknown"}</dd></div>
