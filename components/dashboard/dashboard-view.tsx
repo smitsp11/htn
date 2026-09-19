@@ -1,0 +1,68 @@
+import type { RankingsResponse } from "@/lib/domain/types";
+import type { RankingsErrorBody } from "@/lib/rankings/errors";
+import { summarize } from "@/lib/rankings/presentation";
+import { QueueTable } from "./queue-table";
+import { SourceStatus } from "./source-status";
+import { EmptyPanel, ErrorPanel, LoadingPanel, StaleBanner } from "./state-panels";
+
+export interface DashboardViewProps {
+  data: RankingsResponse | null;
+  error: RankingsErrorBody | null;
+  loading: boolean;
+  expandedId: string | null;
+  onToggle: (id: string) => void;
+  onRefresh: () => void;
+}
+
+/** Pure presentational shell; all data fetching lives in RankingsDashboard. */
+export function DashboardView({ data, error, loading, expandedId, onToggle, onRefresh }: DashboardViewProps) {
+  if (!data) {
+    if (error) return <ErrorPanel error={error} onRetry={onRefresh} />;
+    return <LoadingPanel />;
+  }
+
+  if (data.submissions.length === 0) return <EmptyPanel onRefresh={onRefresh} />;
+
+  const summary = summarize(data.submissions);
+
+  return (
+    <>
+      <section className="summary-grid" aria-label="Queue summary">
+        <SummaryCard label="In appetite" value={summary.in_appetite} tone="good" />
+        <SummaryCard label="Investigate" value={summary.needs_investigation} tone="warn" />
+        <SummaryCard label="Out of appetite" value={summary.out_of_appetite} tone="bad" />
+        <SourceStatus data={data} summary={summary} />
+      </section>
+
+      <section className="queue-panel">
+        <div className="queue-toolbar">
+          <div>
+            <h2>Prioritized submissions</h2>
+            <p>Appetite status is considered before the transparent match score. A human underwriter makes every decision.</p>
+          </div>
+          <button type="button" onClick={onRefresh} disabled={loading}>
+            {loading ? "Refreshing…" : "Refresh queue"}
+          </button>
+        </div>
+
+        {error ? <StaleBanner generatedAt={data.generatedAt} error={error} /> : null}
+
+        <QueueTable submissions={data.submissions} expandedId={expandedId} onToggle={onToggle} />
+      </section>
+
+      <details className="trace-panel">
+        <summary>Decision trace</summary>
+        <ul>{data.trace.map((item, index) => <li key={`${index}-${item}`}>{item}</li>)}</ul>
+      </details>
+    </>
+  );
+}
+
+function SummaryCard({ label, value, tone }: { label: string; value: number; tone: string }) {
+  return (
+    <div className={`summary-card ${tone}`}>
+      <span>{label}</span>
+      <strong>{value}</strong>
+    </div>
+  );
+}
