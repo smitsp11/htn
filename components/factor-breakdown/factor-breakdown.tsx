@@ -4,6 +4,7 @@ const statusLabels: Record<AppetiteStatus, string> = {
   in_appetite: "In appetite",
   needs_investigation: "Needs investigation",
   out_of_appetite: "Out of appetite",
+  out_of_scope: "Out of scope",
 };
 
 const verdictLabels: Record<AppetiteVerdict, string> = {

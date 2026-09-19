@@ -121,3 +121,33 @@ test("no write-back or binding action exists anywhere in the UI", () => {
   for (const button of buttons) assert.doesNotMatch(button, /accept|bind|reject|decline|approve/i);
   assert.doesNotMatch(html, /<form|method="post"/i);
 });
+
+test("out-of-scope submissions render in a collapsed section, not the main table", () => {
+  const mixed = rankSubmissions([
+    {
+      id: "P1",
+      accountName: "Prop Co",
+      lineOfBusiness: "Property",
+      submissionType: "New business",
+      primaryRiskState: "FL",
+      tiv: 60_000_000,
+      totalPremium: 80_000,
+      buildingYear: 2015,
+      approvedConstructionPercentage: 0.9,
+      fiveYearLossValue: 0,
+    },
+    { id: "C1", accountName: "Cyber Co", lineOfBusiness: "Cyber", primaryRiskState: "TX" },
+  ]);
+  const html = render({ data: response({ submissions: mixed }) });
+  const bodyRows = (html.match(/<tr class="queue-row"/g) ?? []).length;
+  assert.equal(bodyRows, 1); // only the property submission is in the ranked table
+  const plain = text(html);
+  assert.match(plain, /Out of scope \(1\)/);
+  assert.match(plain, /Cyber Co/);
+  assert.match(html, /out-of-scope-panel/);
+});
+
+test("no out-of-scope section renders when every submission is in scope", () => {
+  const html = render({ data: response() });
+  assert.doesNotMatch(html, /out-of-scope-panel/);
+});
