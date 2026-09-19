@@ -1,6 +1,7 @@
 import type { QueueFilter } from "@/lib/agent/query-tools";
 import { explainSubmission, filterQueue, resolveSubmission } from "@/lib/agent/query-tools";
 import { chatWithTools, type ChatMessage, type ChatTool } from "@/lib/agent/openai";
+import { whatWouldFlip } from "@/lib/domain/counterfactual";
 import type { RankedSubmission } from "@/lib/domain/types";
 
 export interface AskResult {
@@ -39,11 +40,21 @@ const TOOLS: ChatTool[] = [
       parameters: { type: "object", properties: { nameOrId: { type: "string" } }, required: ["nameOrId"] },
     },
   },
+  {
+    type: "function",
+    function: {
+      name: "whatWouldFlip",
+      description: "For one submission (by account name or id), return the minimal factor changes that would raise its appetite status (e.g. resolve unknowns, or fix not-acceptable factors).",
+      parameters: { type: "object", properties: { nameOrId: { type: "string" } }, required: ["nameOrId"] },
+    },
+  },
 ];
 
 const SYSTEM =
   "You are an assistant for a commercial-property underwriting queue. Answer ONLY using the tool results. " +
-  "Never invent numbers, names, or verdicts. If nothing matches, say so plainly. Keep answers to one or two sentences.";
+  "Never invent numbers, names, or verdicts. When a submission has problems, LEAD with them: state contradictions first " +
+  "(a factor that fails while others match), and clearly distinguish a factor that is MISSING (unresolved data) from one that FAILS " +
+  "(out of appetite) — never blur the two. If nothing matches, say so plainly. Keep answers to one or two sentences.";
 
 type ChatFn = (req: { messages: ChatMessage[]; tools: ChatTool[]; toolChoice?: "auto" | "none" }) => Promise<ChatMessage>;
 
@@ -77,6 +88,11 @@ export async function askQueue(
     kind = "explain";
     const found = resolveSubmission(subs, String((args as { nameOrId?: string }).nameOrId ?? ""));
     result = found ? explainSubmission(found) : { error: "not found" };
+    if (found) matchedIds = [found.id];
+  } else if (call.function.name === "whatWouldFlip") {
+    kind = "explain";
+    const found = resolveSubmission(subs, String((args as { nameOrId?: string }).nameOrId ?? ""));
+    result = found ? (whatWouldFlip(found) ?? { alreadyInAppetite: true }) : { error: "not found" };
     if (found) matchedIds = [found.id];
   }
 
