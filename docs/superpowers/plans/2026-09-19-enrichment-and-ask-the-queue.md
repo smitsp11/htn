@@ -68,9 +68,9 @@ Include every pair emitted by:
 - [ ] **Step 3: Create `tests/fixtures/enrichment/index.ts`** with a small hand-built index for tests (do not depend on `raw/enrichment.json`):
 
 ```ts
-import type { HazardIndex } from "@/lib/enrichment/hazard";
+import type { HazardProfile } from "@/lib/domain/types";
 
-export const hazardFixture: HazardIndex = {
+export const hazardFixture: Record<string, HazardProfile> = {
   "CA|Los Angeles": {
     compositeRating: "very high",
     compositeScore: 92.1,
