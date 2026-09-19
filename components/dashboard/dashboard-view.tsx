@@ -12,10 +12,11 @@ export interface DashboardViewProps {
   expandedId: string | null;
   onToggle: (id: string) => void;
   onRefresh: () => void;
+  matchedIds?: string[] | null;
 }
 
 /** Pure presentational shell; all data fetching lives in RankingsDashboard. */
-export function DashboardView({ data, error, loading, expandedId, onToggle, onRefresh }: DashboardViewProps) {
+export function DashboardView({ data, error, loading, expandedId, onToggle, onRefresh, matchedIds }: DashboardViewProps) {
   if (!data) {
     if (error) return <ErrorPanel error={error} onRetry={onRefresh} />;
     return <LoadingPanel />;
@@ -24,6 +25,10 @@ export function DashboardView({ data, error, loading, expandedId, onToggle, onRe
   if (data.submissions.length === 0) return <EmptyPanel onRefresh={onRefresh} />;
 
   const summary = summarize(data.submissions);
+  const filtering = Array.isArray(matchedIds);
+  const visibleSubmissions = Array.isArray(matchedIds)
+    ? data.submissions.filter((submission) => matchedIds.includes(submission.id))
+    : data.submissions;
 
   return (
     <>
@@ -47,7 +52,13 @@ export function DashboardView({ data, error, loading, expandedId, onToggle, onRe
 
         {error ? <StaleBanner generatedAt={data.generatedAt} error={error} /> : null}
 
-        <QueueTable submissions={data.submissions} expandedId={expandedId} onToggle={onToggle} />
+        {filtering ? (
+          <p className="queue-filter-note">
+            Showing {visibleSubmissions.length} of {data.submissions.length} — Clear the ask bar to see the full queue.
+          </p>
+        ) : null}
+
+        <QueueTable submissions={visibleSubmissions} expandedId={expandedId} onToggle={onToggle} />
       </section>
 
       <details className="trace-panel">

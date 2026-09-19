@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import type { RankingsResponse } from "@/lib/domain/types";
 import type { RankingsErrorBody } from "@/lib/rankings/errors";
+import { AskBar } from "./ask-queue/ask-bar";
 import { DashboardView } from "./dashboard/dashboard-view";
 
 function toErrorBody(body: unknown, fallback: string): RankingsErrorBody {
@@ -21,6 +22,7 @@ export function RankingsDashboard() {
   const [error, setError] = useState<RankingsErrorBody | null>(null);
   const [loading, setLoading] = useState(true);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [matchedIds, setMatchedIds] = useState<string[] | null>(null);
 
   const loadRankings = useCallback(async () => {
     setLoading(true);
@@ -45,13 +47,17 @@ export function RankingsDashboard() {
   }, [loadRankings]);
 
   return (
-    <DashboardView
-      data={data}
-      error={error}
-      loading={loading}
-      expandedId={expandedId}
-      onToggle={(id) => setExpandedId((current) => (current === id ? null : id))}
-      onRefresh={() => void loadRankings()}
-    />
+    <>
+      <AskBar onResult={setMatchedIds} />
+      <DashboardView
+        data={data}
+        error={error}
+        loading={loading}
+        expandedId={expandedId}
+        onToggle={(id) => setExpandedId((current) => (current === id ? null : id))}
+        onRefresh={() => void loadRankings()}
+        matchedIds={matchedIds}
+      />
+    </>
   );
 }

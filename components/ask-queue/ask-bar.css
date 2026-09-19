@@ -1,0 +1,45 @@
+.askbar {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 0.85rem;
+  box-shadow: 0 10px 30px rgba(25, 63, 69, 0.04);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 1.2rem;
+  padding: 1rem 1.2rem;
+}
+
+.askbar-input {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 0.55rem;
+  color: var(--ink);
+  flex: 1 1 320px;
+  font: inherit;
+  padding: 0.7rem 0.85rem;
+}
+
+.askbar-input:focus {
+  border-color: var(--green);
+  outline: none;
+}
+
+.askbar button {
+  flex: 0 0 auto;
+}
+
+.askbar-clear {
+  background: transparent;
+  border: 1px solid var(--line);
+  color: var(--muted);
+}
+
+.askbar-answer {
+  color: var(--navy);
+  flex: 1 0 100%;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  margin: 0;
+}
