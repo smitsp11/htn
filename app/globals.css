@@ -1,3 +1,5 @@
+@import "../components/factor-breakdown/factor-breakdown.css";
+
 :root {
   color-scheme: light;
   --ink: #17231f;
@@ -200,8 +202,14 @@ h1 {
 
 table {
   border-collapse: collapse;
-  min-width: 1080px;
+  min-width: 1240px;
   width: 100%;
+}
+
+thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
 }
 
 th,
@@ -266,6 +274,35 @@ td small {
   max-width: 180px;
 }
 
+.reason-cell {
+  color: #3d4a46;
+  font-size: 0.8rem;
+  line-height: 1.4;
+  max-width: 260px;
+}
+
+.missing-callout {
+  background: var(--amber-soft);
+  border-left: 3px solid var(--amber);
+  border-radius: 0.4rem;
+  color: var(--amber);
+  font-size: 0.82rem;
+  padding: 0.6rem 0.8rem;
+}
+
+.empty-panel {
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.empty-panel span,
+.error-panel small {
+  color: var(--muted);
+  font-size: 0.85rem;
+  max-width: 520px;
+  text-align: center;
+}
+
 .detail-button {
   background: transparent;
   color: var(--green);
@@ -314,52 +351,6 @@ td small {
   margin: 0.25rem 0 0;
 }
 
-.factor-grid {
-  display: grid;
-  gap: 0.6rem;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-}
-
-.factor-card {
-  background: white;
-  border: 1px solid var(--line);
-  border-radius: 0.6rem;
-  display: flex;
-  flex-direction: column;
-  min-height: 115px;
-  padding: 0.75rem;
-}
-
-.factor-card > span {
-  color: var(--muted);
-  font-size: 0.7rem;
-  font-weight: 700;
-}
-
-.factor-card strong {
-  font-size: 0.78rem;
-  margin: 0.45rem 0;
-  text-transform: capitalize;
-}
-
-.factor-card strong.target,
-.factor-card strong.acceptable {
-  color: var(--green);
-}
-
-.factor-card strong.not_acceptable {
-  color: var(--red);
-}
-
-.factor-card strong.unknown {
-  color: var(--amber);
-}
-
-.factor-card small {
-  color: var(--muted);
-  font-size: 0.68rem;
-  line-height: 1.35;
-}
 
 .trace-panel {
   color: var(--muted);
@@ -422,10 +413,6 @@ td small {
   .detail-content {
     grid-template-columns: 1fr;
   }
-
-  .factor-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
 }
 
 @media (max-width: 620px) {
@@ -440,10 +427,6 @@ td small {
   }
 
   .summary-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .factor-grid {
     grid-template-columns: 1fr;
   }
 }
