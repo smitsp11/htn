@@ -31,6 +31,9 @@ function InGoodOrder({ submission }: { submission: RankedSubmission }) {
   const completeness = completenessOf(submission);
   const pending = completeness.effortToDecision;
   const resolutions = resolveSubmissionFields(submission);
+  // Provenance chips only earn their space once a source has filled a gap;
+  // until then the checklist above already names every broker chase.
+  const anyResolved = Object.values(resolutions).some(Boolean);
   const factorLabels = Object.fromEntries(submission.factors.map((f) => [f.key, f.label]));
   const reasonFor = (key: string) => submission.factors.find((factor) => factor.key === key)?.reason;
   return (
@@ -55,7 +58,7 @@ function InGoodOrder({ submission }: { submission: RankedSubmission }) {
         </ul>
       ) : null}
       {pending > 0 ? <p className="igo-note">Unresolved fields never count as acceptable.</p> : null}
-      <ResolutionChips resolutions={resolutions} labels={factorLabels} />
+      {anyResolved ? <ResolutionChips resolutions={resolutions} labels={factorLabels} /> : null}
     </div>
   );
 }
