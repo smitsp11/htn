@@ -63,8 +63,10 @@ Status legend: `queued` · `planning` · `building` · `blocked` · `done`
 - **Owner:** Person 4 (UI) + possibly Person 3 (derivation helper).
 - **Risk:** low (reads existing fields; adds a derived view, not a new verdict).
 
-### W3 — Missing-data enrichment waterfall + provenance chips
+### W3 — Missing-data enrichment waterfall + provenance chips (the ENGINE)
 - **Status:** planned → `docs/superpowers/plans/2026-09-19-w3-enrichment-waterfall.md` (needs scope decision before Task 4)
+- **Role:** the source-agnostic waterfall + provenance + resolution map. Ships with empty chains
+  (never fabricates). **W8 and W9 are the sources that plug into it.** Build W3 first.
 - **Goal:** Per missing required field, run a cheapest-first source chain (Federato field →
   free inference → external dataset), stop at first confident source, record which source won,
   and show a provenance chip (`value · source · confidence · as-of`) with click-through.
@@ -111,6 +113,31 @@ Status legend: `queued` · `planning` · `building` · `blocked` · `done`
 
 ### W7 — Portfolio-impact strip ("Control Tower" lite)
 - **Status:** planned → `docs/superpowers/plans/2026-09-19-w7-portfolio-strip.md` (stretch; build after W1/W2)
+
+### W8 — Multi-channel consolidation (Browserbase) — THE SHOWPIECE
+- **Status:** planned → `docs/superpowers/plans/2026-09-19-w8-multichannel-consolidation.md` (depends on W3)
+- **Goal:** consolidate data the broker *already sent but scattered* across email / SOV / portal
+  into the canonical record — resolving "missing" fields from where the broker actually put them,
+  cutting the ~1.4 broker follow-ups without contacting the broker. A browser agent
+  (Browserbase/Stagehand, or local Playwright) drives the channels; every value carries channel
+  provenance ("consolidated from broker email").
+- **Why:** most "missing" data isn't missing — it's buried. This is the strongest pitch/demo moment.
+- **Scope / files:** staged synthetic scattered scenario (Federato green-lit synthetic data) →
+  `lib/consolidation/*` → build-time `scripts/consolidate.ts` → feeds W3's `resolve-submission.ts`
+  as top-priority source. Optional live Browserbase adapter (key-gated) for the on-stage wow.
+- **Owner:** Person 4 + whoever owns W3. **Depends on W3.**
+- **Risk:** medium (browser automation demo risk kept OUT of the runtime; default path deterministic).
+
+### W9 — Government / public-data enrichment (context-only)
+- **Status:** planned → `docs/superpowers/plans/2026-09-19-w9-public-data-enrichment.md`
+- **Goal:** attach public/government context signals (flood zone, Census, OSHA, business registry…)
+  to each submission — decision-support that **never changes appetite** (the FEMA pattern extended).
+- **Why:** the "enrich decision-making with public data" idea, kept honestly separate from the
+  broker-gap-filling flow. Lower wow, but real and easy (public sources cache cleanly like FEMA).
+- **Scope / files:** additive `context?: ContextSignal[]` on `RankedSubmission` (same nod as the
+  FEMA `enrichment` field) + `lib/enrichment/context.ts` + `scripts/fetch-context.ts` + read-only panel.
+- **Owner:** Person 3/4 + contract sign-off (additive field). **Independent.**
+- **Risk:** low (context-only; mirrors existing FEMA plumbing). Decision needed: which public source first.
 - **Goal:** Header strip showing queue-level aggregates (total TIV, state concentration, hazard
   exposure) and how the selected submission shifts them.
 - **Why:** Highest-end differentiator; signals portfolio-level thinking.
@@ -141,15 +168,33 @@ Status legend: `queued` · `planning` · `building` · `blocked` · `done`
 
 ## Recommended build order (dependencies)
 
-1. **W1** flag taxonomy — independent, zero risk.
-2. **W2** In Good Order + `effortToDecision` — independent; unblocks W6.
+1. **W1** flag taxonomy — DONE.
+2. **W2** In Good Order + `effortToDecision` — DONE; unblocks W6.
 3. **W5** agentic narration — independent (reasoning differentiator).
-4. **W6** quadrant — needs W2.
-5. **W3** enrichment waterfall — needs scope sign-off (context-not-silent-rescore stance).
-6. **W4** RFI draft — needs W2 + draft-only sign-off.
-7. **W7** portfolio strip — stretch; after W1/W2.
+4. **W6** quadrant — needs W2 (ready).
+5. **W3** enrichment waterfall (the engine) — needs scope sign-off; unblocks W8.
+6. **W8** multi-channel consolidation — needs W3; THE showpiece (staged synthetic scenario + Browserbase).
+7. **W4** RFI draft — needs W2 + draft-only sign-off (the "what W8 couldn't find" chase).
+8. **W9** public-data enrichment — independent; context-only; needs which-source decision.
+9. **W7** portfolio strip — stretch; after W1/W2.
+
+**The gap-closing trio, in order:** W3 (engine) → W8 (find what the broker already sent, scattered)
+→ W4 (draft a chase only for what's *genuinely* still missing). Together they attack the ~1.4
+broker round-trips end to end.
 
 - **Built W1** (flag taxonomy) end-to-end on this branch: `lib/rankings/flags.ts` + queue-table
   Flags column + chip styles, TDD (helper test + render test). `typecheck` clean, `npm test`
   179/179 green, `npm run build` succeeds. Four commits. PR opened to `main`.
 - **Next:** engineer picks the next feature (recommend W2 → then W5/W6); I execute its plan task-by-task.
+
+### 2026-09-19 (later)
+- Disentangled the "reduce broker back-and-forth" idea into three distinct capabilities:
+  W3 (engine to resolve gaps), **W8** (consolidate what the broker already sent, scattered across
+  channels — the Browserbase vision), **W4** (chase only what's truly missing). Public/government
+  data split out as **W9** (context-only, never changes appetite).
+- Wrote full TDD plans for **W8** (multi-channel consolidation via Browserbase; staged synthetic
+  scattered scenario feeding W3) and **W9** (public-data enrichment mirroring the FEMA pattern).
+- Reframed **W3** as the source-agnostic engine; W8/W9 plug into it. Federato green-lit synthetic
+  supporting data + synthesized guidelines, so W8's staged scenario and a live demo are legitimate.
+- **Decisions still open:** (1) W3 "context-not-silent-rescore" stance; (2) W9's first public source;
+  (3) whether W8's live Browserbase adapter is worth wiring vs. the deterministic fixture default.

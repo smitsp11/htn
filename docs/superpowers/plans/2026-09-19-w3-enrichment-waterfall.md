@@ -8,6 +8,11 @@
 
 **Architecture:** Three pure layers plus UI. `provenance.ts` defines the value+provenance shape. `waterfall.ts` runs an ordered list of pluggable sources and returns the first confident hit. `resolve-submission.ts` builds a source chain per missing appetite field (canonical value → deterministic inference → "needs broker") and returns a resolution map. The appetite engine is never called differently; resolutions are attached as separate context (like FEMA enrichment already is). Re-scoring on an accepted value is an explicit opt-in, out of scope for the default flow.
 
+> **W3 is the ENGINE; its sources are separate features.** W3 ships with empty source chains (never fabricates). The real sources plug in later:
+> - **W8** (multi-channel consolidation) provides the highest-priority, most-honest source — fields the broker *already sent, scattered* across email/SOV/portal — resolving them before anything routes to broker-chase (W4).
+> - **W9** (public/government data) is a *context-only* enrichment layer that never touches appetite (separate from this resolve-a-required-field flow).
+> Build order: **W3 first** (this plan), then W8 attaches to `resolve-submission.ts`.
+
 **Tech Stack:** Next.js 16, TypeScript strict, React 19, `node:test` + `tsx`, CSS in `app/globals.css`. No network dependency for the MVP source chain (deterministic inference only); real external sources plug into the same `Source<T>` interface later.
 
 **Invariants (must hold after every task):** appetite score/status never changes as a side effect of resolution; `lib/domain/types.ts` frozen contract untouched (resolutions live in a `lib/enrichment` type, not on `RankedSubmission`); product read-only; `npm run typecheck`, `npm test`, `npm run build` all green.
