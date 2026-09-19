@@ -432,3 +432,13 @@ td small {
     grid-template-columns: 1fr;
   }
 }
+
+.flag-chips { display: inline-flex; gap: 4px; }
+.flag-chip {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 20px; height: 20px; padding: 0 6px;
+  border-radius: 10px; font-size: 12px; font-weight: 600; cursor: default;
+}
+.flag-chip.flag-red { background: #fdecea; color: #b3261e; }
+.flag-chip.flag-yellow { background: #fef7e0; color: #8a6d00; }
+.flag-chip.flag-preferred { background: #e6f4ea; color: #1e7d34; }
