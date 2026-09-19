@@ -1,16 +1,134 @@
 /**
- * ASSUMED raw Federato record fixtures for the adapter tests. These are the
- * kind of nested/array/reference shapes the normalizer must fold into a single
- * CanonicalSubmission. They are guesses at the live shape, used only to prove
- * the documented aggregation and missing-data rules.
+ * EXPANDED Federato submission fixtures using the REAL field names. These mirror
+ * what `lib/federato/offline-data` builds per submission (nested insured, policy,
+ * risk locations with buildings, and policy claims) and exercise every documented
+ * join/aggregation/missing-data rule the normalizer applies.
  */
 
-/** Flat record: every canonical field present as a top-level scalar. */
+/**
+ * Full record: policy present, two risk locations with buildings, dated claims
+ * (one inside the 5-year window, one in the future, one too old). Exercises TIV
+ * sum, primary-state selection, oldest building year, TIV-weighted approved
+ * construction, and the trailing-5-year loss window.
+ */
+export const expandedRecord = {
+  id: 1,
+  submission_number: "SUB-2025-00001",
+  line_of_business: "property",
+  target_effective_date: "2025-09-15",
+  status: "bound",
+  insured: { name: "Harbor Point Retail LLC" },
+  policy: {
+    premium: 619_900,
+    business_type: "new",
+    line_of_business: "property",
+    dates: { effective: "2025-10-01", expiration: "2026-10-01" },
+  },
+  locations: [
+    {
+      state: "FL",
+      buildings: [
+        { tiv: 30_000_000, year_built: 2011, construction_type: "Frame", building_value: 18_000_000 },
+        { tiv: 6_000_000, year_built: 1974, construction_type: "Joisted Masonry", building_value: 3_000_000 },
+      ],
+    },
+    {
+      state: "AZ",
+      buildings: [{ tiv: 4_000_000, year_built: 1984, construction_type: "Non-Combustible", building_value: 2_000_000 }],
+    },
+  ],
+  claims: [
+    { date_of_loss: "2025-11-21", paid_indemnity: 187_500, paid_expense: 41_200 }, // inside window
+    { date_of_loss: "2026-01-26", paid_indemnity: 105_700, paid_expense: 23_200 }, // future -> excluded
+    { date_of_loss: "2019-05-01", paid_indemnity: 500_000, paid_expense: 0 }, // older than 5y -> excluded
+  ],
+};
+
+/** No policy: submission-only fields survive; policy-derived fields stay unknown. */
+export const noPolicyRecord = {
+  id: 2,
+  submission_number: "SUB-2025-00002",
+  line_of_business: "property",
+  target_effective_date: "2025-08-01",
+  insured: { name: "No Policy Co" },
+  locations: [
+    { state: "TX", buildings: [{ tiv: 5_000_000, year_built: 2000, construction_type: "Fire Resistive" }] },
+  ],
+};
+
+/** Policy present but zero claims: five-year losses must be 0, not undefined. */
+export const policyNoClaimsRecord = {
+  id: 3,
+  submission_number: "SUB-2025-00003",
+  insured: { name: "Empty Claims Inc" },
+  policy: {
+    premium: 90_000,
+    business_type: "renewal",
+    dates: { effective: "2025-01-01", expiration: "2026-01-01" },
+  },
+  locations: [{ state: "CA", buildings: [{ tiv: 8_000_000, year_built: 1988, construction_type: "Wood Frame" }] }],
+  claims: [],
+};
+
+/** Missing insured and no buildings: unknown account, undefined aggregates. */
+export const missingInsuredRecord = {
+  id: 4,
+  submission_number: "SUB-2025-00004",
+  locations: [],
+};
+
+/** Buildings without TIV: approved-construction share falls back to equal weight. */
+export const equalWeightConstructionRecord = {
+  id: 5,
+  submission_number: "SUB-2025-00005",
+  insured: { name: "Equal Weight Co" },
+  policy: { premium: 70_000, business_type: "new", dates: { effective: "2024-01-01" } },
+  locations: [
+    {
+      state: "NY",
+      buildings: [
+        { construction_type: "Masonry Non-Combustible" }, // approved
+        { construction_type: "Frame" }, // combustible
+        { construction_type: "Steel Frame" }, // approved
+        { construction_type: "Frame" }, // combustible
+      ],
+    },
+  ],
+  claims: [],
+};
+
+/** Malformed record: wrong types everywhere. Must not throw; yields unknowns. */
+export const malformedRecord = {
+  id: { nope: true },
+  insured: "not-an-object",
+  policy: "not-an-object",
+  locations: "should-be-an-array",
+  claims: { amount: 5 },
+};
+
+/** Out-of-appetite record with real values. Must be RETAINED, never dropped. */
+export const outOfAppetiteRecord = {
+  id: 9,
+  submission_number: "SUB-2025-00009",
+  insured: { name: "Risky Renewals LLC" },
+  policy: {
+    premium: 5_000,
+    business_type: "renewal",
+    dates: { effective: "2025-06-01", expiration: "2026-06-01" },
+  },
+  locations: [{ state: "XX", buildings: [{ tiv: 500_000_000, year_built: 1965, construction_type: "Frame" }] }],
+  claims: [{ date_of_loss: "2024-01-01", paid_indemnity: 900_000, paid_expense: 0 }],
+};
+
+/**
+ * Flat record: canonical field names as top-level scalars. Proves the
+ * `FEDERATO_FIELD_MAP_JSON` seam / flat-response fallback still works.
+ */
 export const flatRecord = {
-  id: "sub-1",
+  id: "flat-1",
   accountName: "Flat Co",
-  submissionType: "New business",
-  lineOfBusiness: "Property",
+  submissionType: "new",
+  lineOfBusiness: "property",
   primaryRiskState: "CA",
   effectiveDate: "2026-01-01",
   expirationDate: "2027-01-01",
@@ -22,102 +140,7 @@ export const flatRecord = {
   fiveYearLossValue: 20_000,
 };
 
-/**
- * Nested record: multiple locations (each with buildings), an expanded account
- * reference, layered premium, and a dated loss history. Exercises every
- * aggregation rule.
- */
-export const nestedRecord = {
-  id: "sub-2",
-  account: { id: 7, name: "Nested Holdings" },
-  submissionType: "New business",
-  lineOfBusiness: "Property",
-  effectiveDate: "2026-06-01",
-  layers: [{ premium: 60_000 }, { premium: 30_000 }],
-  locations: [
-    {
-      state: "OH",
-      isPrimary: false,
-      buildings: [
-        { yearBuilt: 2001, constructionType: "Frame", value: 10_000_000, approvedConstruction: true },
-        { yearBuilt: 1998, constructionType: "Masonry", value: 5_000_000, approvedConstruction: true },
-      ],
-    },
-    {
-      state: "PA",
-      isPrimary: true,
-      buildings: [{ yearBuilt: 1995, constructionType: "Joisted Masonry", value: 8_000_000, approvedConstruction: false }],
-    },
-  ],
-  lossHistory: [
-    { year: 2024, amount: 15_000 },
-    { year: 2023, amount: 10_000 },
-    { year: 2015, amount: 500_000 }, // Older than the 5-year window; must be excluded.
-  ],
-};
-
-/**
- * Record with an UNEXPANDED reference (account is a bare id) and missing appetite
- * inputs. Proves references that were not expanded stay unknown and missing data
- * is preserved as undefined rather than invented.
- */
-export const missingAndUnexpandedRecord = {
-  id: "sub-3",
-  account: 42, // Not expanded: no name available -> "Unknown account".
-  submissionType: "New business",
-  // lineOfBusiness, locations, premium, losses all absent.
-};
-
-/** Malformed record: wrong types everywhere. Must not throw; must yield unknowns. */
-export const malformedRecord = {
-  id: { nope: true },
-  accountName: ["still", "wrong"],
-  tiv: "not-a-number",
-  totalPremium: {},
-  buildingYear: "MCMXC",
-  locations: "should-be-an-array",
-  lossHistory: { amount: 5 },
-};
-
-/** Out-of-appetite record: real values that fail appetite. Must be RETAINED. */
-export const outOfAppetiteRecord = {
-  id: "sub-4",
-  accountName: "Risky Renewals LLC",
-  submissionType: "Renewal business",
-  lineOfBusiness: "Property",
-  primaryRiskState: "TX",
-  tiv: 500_000_000,
-  totalPremium: 5_000,
-  buildingYear: 1965,
-  approvedConstructionPercentage: 0.1,
-  fiveYearLossValue: 900_000,
-};
-
-/** Record whose losses are undated: rule says sum them all. */
-export const undatedLossesRecord = {
-  id: "sub-5",
-  accountName: "Undated Losses Inc",
-  losses: [{ amount: 12_000 }, { amount: 8_000 }],
-};
-
-/** Buildings carry approval flags but no values: count-weighted construction share. */
-export const countWeightedConstructionRecord = {
-  id: "sub-6",
-  accountName: "Count Weighted Co",
-  locations: [
-    {
-      state: "FL",
-      buildings: [
-        { constructionType: "Masonry", approvedConstruction: true },
-        { constructionType: "Frame", approvedConstruction: true },
-        { constructionType: "Frame", approvedConstruction: false },
-        { constructionType: "Steel", approvedConstruction: true },
-      ],
-    },
-  ],
-};
-
-/** A full response envelope wrapping several records under `data`. */
+/** A response envelope wrapping several expanded records under `data`. */
 export const responseEnvelope = {
-  data: [flatRecord, nestedRecord, missingAndUnexpandedRecord, outOfAppetiteRecord],
+  data: [expandedRecord, noPolicyRecord, policyNoClaimsRecord, outOfAppetiteRecord],
 };

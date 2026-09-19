@@ -3,12 +3,19 @@ import { rankSubmissions } from "@/lib/domain/appetite";
 import type { CanonicalSubmission, RankedSubmission, RankingsResponse } from "@/lib/domain/types";
 import { buildQueryPayload, normalizeQueryResponse } from "@/lib/federato/adapter";
 import { FederatoClient } from "@/lib/federato/client";
+import { loadOfflineSubmissions } from "@/lib/federato/offline-data";
 import { summarize } from "./presentation";
 
 /** Every upstream capability is injected so the pipeline is testable offline. */
 export interface RankingsPipelineDeps {
   useDemoData: boolean;
   demoSubmissions: CanonicalSubmission[];
+  /**
+   * When present (and demo mode is off) the pipeline serves the captured raw
+   * Federato snapshot instead of calling the live API. `defaultPipelineDeps`
+   * wires this whenever the engineer has not explicitly forced demo or live mode.
+   */
+  loadOfflineData?: () => Promise<CanonicalSubmission[]>;
   getSchema: () => Promise<unknown>;
   buildQueryPayload: (schema: unknown) => unknown;
   query: (payload: unknown) => Promise<unknown>;
@@ -17,11 +24,21 @@ export interface RankingsPipelineDeps {
   now: () => Date;
 }
 
+/**
+ * Wire the default pipeline. `FEDERATO_USE_DEMO_DATA` selects the data source:
+ * - "true"  -> local demo fixtures;
+ * - "false" -> explicit LIVE Federato (Auth0 + query API);
+ * - unset   -> the captured raw Federato snapshot under raw/ (offline, default).
+ */
 export function defaultPipelineDeps(): RankingsPipelineDeps {
   const client = new FederatoClient();
+  const mode = process.env.FEDERATO_USE_DEMO_DATA;
+  const useDemoData = mode === "true";
+  const explicitLive = mode === "false";
   return {
-    useDemoData: process.env.FEDERATO_USE_DEMO_DATA !== "false",
+    useDemoData,
     demoSubmissions,
+    loadOfflineData: useDemoData || explicitLive ? undefined : loadOfflineSubmissions,
     getSchema: () => client.getSchema(),
     buildQueryPayload,
     query: (payload) => client.query(payload),
@@ -67,6 +84,24 @@ export async function buildRankings(deps: RankingsPipelineDeps): Promise<Ranking
       trace: [
         "Using local demo fixtures; no Federato call was made.",
         "The scoring and UI paths are the same paths used for live submissions.",
+        ...rankingTrace(ranked),
+      ],
+      submissions: ranked,
+    };
+  }
+
+  if (deps.loadOfflineData) {
+    // Offline: serve the captured raw Federato snapshot (raw/full_*.json). The
+    // records are normalized through the same adapter and scored through the same
+    // appetite engine as a live query, so the source is reported as "federato".
+    const ranked = deps.rank(await deps.loadOfflineData());
+    return {
+      source: "federato",
+      generatedAt,
+      schemaDiscovered: true,
+      trace: [
+        "Loaded submissions from the captured raw Federato snapshot (raw/full_*.json); no live Federato call was made.",
+        "Schema discovery ran when the snapshot was captured; records use the real Federato resource and field names.",
         ...rankingTrace(ranked),
       ],
       submissions: ranked,

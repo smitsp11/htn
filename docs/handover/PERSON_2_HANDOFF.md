@@ -1,6 +1,21 @@
 # Person 2 handoff — schema-driven query agent
 
-Status: complete against the brief in `PERSON_2_QUERY_AGENT.md`. Typecheck, the full suite (154 tests total; 21 owned), and the production build pass.
+Status: complete against the brief in `PERSON_2_QUERY_AGENT.md`, then **refactored to the real captured Federato schema** (`raw/schema.json` + `raw/full_*.json`). Typecheck, the full suite (158 tests), and the production build pass.
+
+## Real-schema addendum (supersedes the guessed assumptions below)
+
+The real Federato schema and a full data snapshot were captured into `raw/`, so the planner and adapter now target the actual resources instead of guesses:
+
+- **Queue root:** `Submission` (158 records). References are numeric ids; the join walks `Submission.insured → Insured.hq → Location.buildings → Building`, the reverse `Policy.submission` relation for premium/business type/dates/claims, and `Policy.exposure_units → ExposureUnit.location` for risk locations.
+- **Field mapping:** accountName←`Insured.name`; submissionType←`Policy.business_type`; lineOfBusiness←`Submission.line_of_business`; primaryRiskState←`Location.state` (largest-TIV risk location, else insured HQ); effective/expiration←`Policy.dates`; tiv←Σ`Building.tiv`; totalPremium←`Policy.premium`; buildingYear←min`Building.year_built`; approvedConstructionPercentage←TIV-weighted share of `Building.construction_type` in the approved set (non-combustible and better; `Frame`/`Wood Frame` excluded — cites MASTER_RESEARCH line 70); fiveYearLossValue←Σ(`paid_indemnity`+`paid_expense`) within the trailing 5 years of the effective year.
+- **Offline source:** `lib/federato/offline-data.ts` reads the `raw/` snapshot, performs the id-joins, and feeds the expanded records through `normalizeQueryResponse`. `lib/rankings/pipeline.ts` serves it as `source: "federato"`, `schemaDiscovered: true` when `FEDERATO_USE_DEMO_DATA` is unset (the default). This is how the app shows the real 158 submissions with no live audience.
+- **Sanity:** ranking the 158 yields 2 needs-investigation and 156 out-of-appetite (0 in-appetite) — real, not a bug: real premiums sit far above the guideline's $50K–$175K band and many buildings predate 1990. Appetite thresholds are Person 3's to revisit if the book should score differently.
+
+Original pre-refactor notes follow for history.
+
+---
+
+Status (original): complete against the brief in `PERSON_2_QUERY_AGENT.md`. Typecheck, the full suite (154 tests total; 21 owned), and the production build pass.
 
 ## Changed files
 

@@ -1,19 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import {
-  FIELD_REQUIREMENTS,
-  parseSchema,
-  planQuery,
-} from "../lib/federato/schema-planner";
+import { FIELD_REQUIREMENTS, parseSchema, planQuery } from "../lib/federato/schema-planner";
 import { buildQueryTrace, traceToLines } from "../lib/federato/query-trace";
-import {
-  alienSchema,
-  emptySchema,
-  nullSchema,
-  renamedSchema,
-  schemaAsMap,
-  schemaWithSubmissions,
-} from "./fixtures/federato/schema";
+import { alienSchema, emptySchema, nullSchema, realSchema, schemaAsMap } from "./fixtures/federato/schema";
 
 type Json = Record<string, unknown>;
 
@@ -22,76 +11,77 @@ function asRecord(value: unknown): Json {
   return value as Json;
 }
 
-test("parseSchema normalizes an array-of-resources shape", () => {
-  const parsed = parseSchema(schemaWithSubmissions);
-  const submissions = parsed.resources.find((resource) => resource.name === "submissions");
-  assert.ok(submissions, "submissions resource should be discovered");
-  const account = submissions.fields.find((field) => field.name === "account");
-  assert.equal(account?.isReference, true, "account should be classified as a reference");
-  const locations = submissions.fields.find((field) => field.name === "locations");
-  assert.equal(locations?.isArray, true, "locations should be classified as an array");
+test("parseSchema unwraps the real output[0].data envelope and classifies fields", () => {
+  const parsed = parseSchema(realSchema);
+  const submission = parsed.resources.find((resource) => resource.name === "Submission");
+  assert.ok(submission, "Submission resource should be discovered");
+  const insured = submission.fields.find((field) => field.name === "insured");
+  assert.equal(insured?.isReference, true, "insured should be a reference");
+  assert.equal(insured?.resource, "Insured", "insured should target the Insured resource");
+  const policy = parsed.resources.find((resource) => resource.name === "Policy");
+  const exposureUnits = policy?.fields.find((field) => field.name === "exposure_units");
+  assert.equal(exposureUnits?.isArray, true, "exposure_units (cardinality many) should be an array");
+  assert.equal(exposureUnits?.isReference, true, "exposure_units should also be a reference");
 });
 
 test("parseSchema also handles a map-of-resources shape", () => {
   const parsed = parseSchema(schemaAsMap);
-  const submissions = parsed.resources.find((resource) => resource.name === "submissions");
-  assert.ok(submissions, "submissions resource should be discovered from the map form");
-  assert.ok(submissions.fields.some((field) => field.name === "tiv"));
+  const submission = parsed.resources.find((resource) => resource.name === "Submission");
+  assert.ok(submission, "Submission resource should be discovered from the map form");
+  assert.ok(submission.fields.some((field) => field.name === "submission_number"));
 });
 
-test("planQuery maps every appetite concept to a schema path and builds a projection", () => {
-  const plan = planQuery(schemaWithSubmissions);
-  assert.equal(plan.resource, "submissions");
+test("planQuery resolves every appetite factor across the real reference graph", () => {
+  const plan = planQuery(realSchema);
+  assert.equal(plan.resource, "Submission");
   assert.equal(plan.resourceResolved, true);
 
-  // Every one of the eight appetite factors resolves to a concrete path.
   const factorFields = plan.fields.filter((field) => field.factor);
   assert.equal(factorFields.length, 8, "all eight appetite factors should be planned");
   for (const field of factorFields) {
     assert.ok(field.resolved, `factor ${field.factor} should resolve`);
     assert.ok(field.matchedPath, `factor ${field.factor} should have a matched path`);
   }
+});
 
+test("planQuery builds a nested $expand projection with empty where/filter", () => {
+  const plan = planQuery(realSchema);
   const projection = asRecord(plan.projection);
-  assert.equal(projection.resource, "submissions");
-  // where/filter are intentionally empty so no submission is dropped.
+  assert.equal(projection.resource, "Submission");
   assert.deepEqual(projection.where, {});
   assert.deepEqual(projection.filter, {});
 
   const select = asRecord(projection.select);
-  // Reference uses $expand.
-  const account = asRecord(select.account);
-  assert.ok("$expand" in account, "account reference should be expanded");
-  // Array selects its leaves and aggregates client-side.
-  const locations = asRecord(select.locations);
-  assert.ok(Array.isArray(locations.select));
-  assert.ok((locations.select as string[]).includes("state"));
-  assert.ok((locations.select as string[]).includes("tiv"));
-  // Scalar is selected directly.
-  assert.equal(select.submissionType, true);
+  // Scalars selected directly.
+  assert.equal(select.submission_number, true);
+  assert.equal(select.line_of_business, true);
+  // insured reference is expanded to its name.
+  const insured = asRecord(select.insured);
+  const insuredExpand = asRecord(insured.$expand);
+  assert.equal(asRecord(insuredExpand.select).name, true);
+  // policy (reverse relation) expands, and the deep chain reaches building.tiv.
+  const policy = asRecord(select.policy);
+  const policySelect = asRecord(asRecord(policy.$expand).select);
+  const exposure = asRecord(policySelect.exposure_units);
+  const exposureSelect = asRecord(asRecord(exposure.$expand).select);
+  const location = asRecord(exposureSelect.location);
+  const locationSelect = asRecord(asRecord(location.$expand).select);
+  const buildings = asRecord(locationSelect.buildings);
+  const buildingsSelect = asRecord(asRecord(buildings.$expand).select);
+  assert.equal(buildingsSelect.tiv, true);
+  assert.equal(buildingsSelect.year_built, true);
+  assert.equal(buildingsSelect.construction_type, true);
+  // policy.claims is expanded for the loss run.
+  assert.ok("claims" in policySelect, "policy.claims should be part of the projection");
 });
 
 test("planned array factors carry a documented $elemMatch template for developers", () => {
-  const plan = planQuery(schemaWithSubmissions);
-  const primaryState = plan.fields.find((field) => field.canonicalField === "primaryRiskState");
-  assert.ok(primaryState?.elemMatchExample, "array field should expose an $elemMatch template");
-  const template = asRecord(primaryState.elemMatchExample);
-  const locations = asRecord(template.locations);
-  assert.ok("$elemMatch" in locations, "$elemMatch should target the array root");
-});
-
-test("planQuery handles a renamed schema gracefully (resolves what it can, surfaces the rest)", () => {
-  const plan = planQuery(renamedSchema);
-  assert.equal(plan.resource, "accounts");
-  const resolved = plan.fields.filter((field) => field.resolved).map((field) => field.canonicalField);
-  const unresolved = plan.fields.filter((field) => !field.resolved).map((field) => field.canonicalField);
-  // Recognisable renames still resolve.
-  assert.ok(resolved.includes("submissionType"), "type -> submissionType should resolve");
-  assert.ok(resolved.includes("lineOfBusiness"), "lob -> lineOfBusiness should resolve");
-  assert.ok(resolved.includes("primaryRiskState"), "riskState -> primaryRiskState should resolve");
-  // Unmappable fields surface as unresolved rather than being invented.
-  assert.ok(unresolved.includes("tiv"));
-  assert.ok(unresolved.length > 0);
+  const plan = planQuery(realSchema);
+  const tiv = plan.fields.find((field) => field.canonicalField === "tiv");
+  assert.ok(tiv?.elemMatchExample, "array field should expose an $elemMatch template");
+  const template = asRecord(tiv.elemMatchExample);
+  const arrayRoot = asRecord(template.exposure_units);
+  assert.ok("$elemMatch" in arrayRoot, "$elemMatch should target the array root (exposure_units)");
 });
 
 test("planQuery flags a fallback resource and unresolved fields for an alien schema", () => {
@@ -104,17 +94,17 @@ test("planQuery flags a fallback resource and unresolved fields for an alien sch
 test("planQuery does not throw on empty or null schema input", () => {
   for (const schema of [emptySchema, nullSchema]) {
     const plan = planQuery(schema);
-    assert.equal(plan.resource, "submissions", "falls back to the assumed queue resource");
+    assert.equal(plan.resource, "Submission", "falls back to the assumed queue resource");
     assert.equal(plan.resourceResolved, false);
     assert.ok(plan.fields.every((field) => !field.resolved));
   }
 });
 
 test("buildQueryTrace produces a credential-free, serializable trace", () => {
-  const plan = planQuery(schemaWithSubmissions);
+  const plan = planQuery(realSchema);
   const trace = buildQueryTrace(plan, { generatedFromSchema: true });
 
-  assert.equal(trace.resource, "submissions");
+  assert.equal(trace.resource, "Submission");
   assert.equal(trace.fields.length, FIELD_REQUIREMENTS.length);
   assert.equal(trace.unresolvedFields.length, 0);
   for (const field of trace.fields) {
@@ -122,7 +112,6 @@ test("buildQueryTrace produces a credential-free, serializable trace", () => {
     assert.ok(field.schemaMatch.length > 0);
   }
 
-  // Serializable and free of anything sensitive.
   const serialized = JSON.stringify(trace);
   assert.doesNotMatch(serialized, /token|secret|authorization|bearer|client_secret/i);
   const roundTripped = JSON.parse(serialized) as typeof trace;
@@ -131,8 +120,7 @@ test("buildQueryTrace produces a credential-free, serializable trace", () => {
 });
 
 test("traceToLines summarizes resolution for the existing string[] trace", () => {
-  const plan = planQuery(renamedSchema);
+  const plan = planQuery(alienSchema);
   const lines = traceToLines(buildQueryTrace(plan));
-  assert.ok(lines.some((line) => line.includes("accounts")));
   assert.ok(lines.some((line) => line.includes("Unresolved fields")));
 });
