@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
+  classifyScope,
   computeScore,
   deriveStatus,
   evaluateAppetite,
@@ -248,4 +249,35 @@ test("ranking: does not mutate or drop input", () => {
   const ranked = rankSubmissions(input);
   assert.equal(ranked.length, 2);
   assert.equal(input[0].id, "fx-contradictory");
+});
+
+test("classifyScope: property, non-property, and missing lines", () => {
+  assert.equal(classifyScope("Commercial Property"), "property");
+  assert.equal(classifyScope("property"), "property");
+  assert.equal(classifyScope("Cyber"), "out_of_scope");
+  assert.equal(classifyScope("General Liability"), "out_of_scope");
+  assert.equal(classifyScope(undefined), "unknown_line");
+  assert.equal(classifyScope("   "), "unknown_line");
+});
+
+test("out of scope: a non-property line short-circuits before the property factors", () => {
+  const ranked = evaluateAppetite({ ...fullTarget, lineOfBusiness: "Cyber" });
+  assert.equal(ranked.status, "out_of_scope");
+  assert.equal(ranked.factors.length, 0);
+  assert.equal(ranked.score, 0);
+  assert.match(ranked.recommendation, /out of scope/i);
+  assert.match(ranked.explanation, /commercial property only/i);
+  assert.match(ranked.explanation, /Cyber/);
+});
+
+test("out of scope: a property line is evaluated on all eight factors", () => {
+  const ranked = evaluateAppetite({ ...fullTarget, lineOfBusiness: "Property" });
+  assert.notEqual(ranked.status, "out_of_scope");
+  assert.equal(ranked.factors.length, 8);
+});
+
+test("out of scope: a missing line stays in the property pipeline as needs_investigation", () => {
+  const ranked = evaluateAppetite({ ...fullTarget, lineOfBusiness: undefined });
+  assert.equal(ranked.status, "needs_investigation");
+  assert.equal(ranked.factors.length, 8);
 });

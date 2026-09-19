@@ -9,7 +9,7 @@ export type FactorKey =
   | "fiveYearLossValue";
 
 export type AppetiteVerdict = "target" | "acceptable" | "not_acceptable" | "unknown";
-export type AppetiteStatus = "in_appetite" | "needs_investigation" | "out_of_appetite";
+export type AppetiteStatus = "in_appetite" | "needs_investigation" | "out_of_appetite" | "out_of_scope";
 
 export interface CanonicalSubmission {
   id: string;
