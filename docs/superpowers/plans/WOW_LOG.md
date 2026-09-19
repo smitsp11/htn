@@ -49,7 +49,9 @@ Status legend: `queued` · `planning` · `building` · `blocked` · `done`
 - **Risk:** none (pure presentation over data that already exists).
 
 ### W2 — "In Good Order" completeness view + Effort-to-Decision axis
-- **Status:** planned → `docs/superpowers/plans/2026-09-19-w2-in-good-order.md` (awaiting go-ahead to build)
+- **Status:** DONE (2026-09-19) → plan `2026-09-19-w2-in-good-order.md`. Built on branch
+  `federato-prompt-improvement`, stacked onto PR #3. `lib/rankings/completeness.ts` +
+  In Good Order detail panel. 184/184 tests green. Exports `effortToDecision` for W6.
 - **Goal:** For each submission, show a completeness checklist derived from `unknown` factors
   ("3 fields between this and a quote"), and add an **Effort-to-Decision** measure so the queue
   can be read as *appetite × completeness* (Convr's shipped "fast-flow / referral / decline" lanes;
