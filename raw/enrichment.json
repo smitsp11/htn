@@ -1,17 +1,358 @@
 {
-  "AZ|Maricopa": { "compositeRating": "unknown", "topHazards": [], "source": "FEMA NRI", "asOf": "2026-09-19" },
-  "CA|Alameda": { "compositeRating": "unknown", "topHazards": [], "source": "FEMA NRI", "asOf": "2026-09-19" },
-  "CA|Sacramento": { "compositeRating": "unknown", "topHazards": [], "source": "FEMA NRI", "asOf": "2026-09-19" },
-  "CO|Denver": { "compositeRating": "unknown", "topHazards": [], "source": "FEMA NRI", "asOf": "2026-09-19" },
-  "FL|Hillsborough": { "compositeRating": "unknown", "topHazards": [], "source": "FEMA NRI", "asOf": "2026-09-19" },
-  "FL|Miami-Dade": { "compositeRating": "unknown", "topHazards": [], "source": "FEMA NRI", "asOf": "2026-09-19" },
-  "GA|Fulton": { "compositeRating": "unknown", "topHazards": [], "source": "FEMA NRI", "asOf": "2026-09-19" },
-  "IL|Cook": { "compositeRating": "unknown", "topHazards": [], "source": "FEMA NRI", "asOf": "2026-09-19" },
-  "MA|Suffolk": { "compositeRating": "unknown", "topHazards": [], "source": "FEMA NRI", "asOf": "2026-09-19" },
-  "MO|Jackson": { "compositeRating": "unknown", "topHazards": [], "source": "FEMA NRI", "asOf": "2026-09-19" },
-  "NJ|Essex": { "compositeRating": "unknown", "topHazards": [], "source": "FEMA NRI", "asOf": "2026-09-19" },
-  "TN|Davidson": { "compositeRating": "unknown", "topHazards": [], "source": "FEMA NRI", "asOf": "2026-09-19" },
-  "TX|Harris": { "compositeRating": "unknown", "topHazards": [], "source": "FEMA NRI", "asOf": "2026-09-19" },
-  "TX|Travis": { "compositeRating": "unknown", "topHazards": [], "source": "FEMA NRI", "asOf": "2026-09-19" },
-  "WA|King": { "compositeRating": "unknown", "topHazards": [], "source": "FEMA NRI", "asOf": "2026-09-19" }
+  "FL|Hillsborough": {
+    "compositeRating": "relatively high",
+    "compositeScore": 98.82315521628499,
+    "topHazards": [
+      {
+        "type": "CWAV",
+        "rating": "very high"
+      },
+      {
+        "type": "HRCN",
+        "rating": "very high"
+      },
+      {
+        "type": "LTNG",
+        "rating": "very high"
+      },
+      {
+        "type": "TRND",
+        "rating": "very high"
+      }
+    ],
+    "source": "FEMA NRI",
+    "asOf": "2026-09-19"
+  },
+  "AZ|Maricopa": {
+    "compositeRating": "very high",
+    "compositeScore": 99.87277353689568,
+    "topHazards": [
+      {
+        "type": "HAIL",
+        "rating": "very high"
+      },
+      {
+        "type": "HWAV",
+        "rating": "very high"
+      },
+      {
+        "type": "IFLD",
+        "rating": "very high"
+      },
+      {
+        "type": "SWND",
+        "rating": "very high"
+      }
+    ],
+    "source": "FEMA NRI",
+    "asOf": "2026-09-19"
+  },
+  "WA|King": {
+    "compositeRating": "very high",
+    "compositeScore": 99.68193384223919,
+    "topHazards": [
+      {
+        "type": "AVLN",
+        "rating": "very high"
+      },
+      {
+        "type": "ERQK",
+        "rating": "very high"
+      },
+      {
+        "type": "IFLD",
+        "rating": "very high"
+      },
+      {
+        "type": "HWAV",
+        "rating": "relatively high"
+      }
+    ],
+    "source": "FEMA NRI",
+    "asOf": "2026-09-19"
+  },
+  "CA|Alameda": {
+    "compositeRating": "very high",
+    "compositeScore": 99.77735368956743,
+    "topHazards": [
+      {
+        "type": "ERQK",
+        "rating": "very high"
+      },
+      {
+        "type": "IFLD",
+        "rating": "very high"
+      },
+      {
+        "type": "CFLD",
+        "rating": "relatively high"
+      },
+      {
+        "type": "HWAV",
+        "rating": "relatively high"
+      }
+    ],
+    "source": "FEMA NRI",
+    "asOf": "2026-09-19"
+  },
+  "CA|Sacramento": {
+    "compositeRating": "relatively high",
+    "compositeScore": 98.1234096692112,
+    "topHazards": [
+      {
+        "type": "DRGT",
+        "rating": "relatively high"
+      },
+      {
+        "type": "ERQK",
+        "rating": "relatively high"
+      },
+      {
+        "type": "IFLD",
+        "rating": "relatively high"
+      }
+    ],
+    "source": "FEMA NRI",
+    "asOf": "2026-09-19"
+  },
+  "MO|Jackson": {
+    "compositeRating": "relatively high",
+    "compositeScore": 96.50127226463104,
+    "topHazards": [
+      {
+        "type": "HAIL",
+        "rating": "very high"
+      },
+      {
+        "type": "TRND",
+        "rating": "very high"
+      },
+      {
+        "type": "CWAV",
+        "rating": "relatively high"
+      },
+      {
+        "type": "HWAV",
+        "rating": "relatively high"
+      }
+    ],
+    "source": "FEMA NRI",
+    "asOf": "2026-09-19"
+  },
+  "MA|Suffolk": {
+    "compositeRating": "relatively moderate",
+    "compositeScore": 93.51145038167938,
+    "topHazards": [
+      {
+        "type": "LTNG",
+        "rating": "very high"
+      },
+      {
+        "type": "CFLD",
+        "rating": "relatively high"
+      },
+      {
+        "type": "CWAV",
+        "rating": "relatively high"
+      },
+      {
+        "type": "HWAV",
+        "rating": "relatively high"
+      }
+    ],
+    "source": "FEMA NRI",
+    "asOf": "2026-09-19"
+  },
+  "IL|Cook": {
+    "compositeRating": "very high",
+    "compositeScore": 99.96819338422391,
+    "topHazards": [
+      {
+        "type": "CWAV",
+        "rating": "very high"
+      },
+      {
+        "type": "HWAV",
+        "rating": "very high"
+      },
+      {
+        "type": "ISTM",
+        "rating": "very high"
+      },
+      {
+        "type": "LTNG",
+        "rating": "very high"
+      }
+    ],
+    "source": "FEMA NRI",
+    "asOf": "2026-09-19"
+  },
+  "FL|Miami-Dade": {
+    "compositeRating": "very high",
+    "compositeScore": 99.61832061068702,
+    "topHazards": [
+      {
+        "type": "CFLD",
+        "rating": "very high"
+      },
+      {
+        "type": "CWAV",
+        "rating": "very high"
+      },
+      {
+        "type": "HRCN",
+        "rating": "very high"
+      },
+      {
+        "type": "LTNG",
+        "rating": "very high"
+      }
+    ],
+    "source": "FEMA NRI",
+    "asOf": "2026-09-19"
+  },
+  "CO|Denver": {
+    "compositeRating": "relatively high",
+    "compositeScore": 95.22900763358778,
+    "topHazards": [
+      {
+        "type": "HAIL",
+        "rating": "very high"
+      },
+      {
+        "type": "LTNG",
+        "rating": "very high"
+      },
+      {
+        "type": "CWAV",
+        "rating": "relatively high"
+      },
+      {
+        "type": "IFLD",
+        "rating": "relatively high"
+      }
+    ],
+    "source": "FEMA NRI",
+    "asOf": "2026-09-19"
+  },
+  "TX|Harris": {
+    "compositeRating": "very high",
+    "compositeScore": 99.93638676844783,
+    "topHazards": [
+      {
+        "type": "CWAV",
+        "rating": "very high"
+      },
+      {
+        "type": "HWAV",
+        "rating": "very high"
+      },
+      {
+        "type": "HRCN",
+        "rating": "very high"
+      },
+      {
+        "type": "ISTM",
+        "rating": "very high"
+      }
+    ],
+    "source": "FEMA NRI",
+    "asOf": "2026-09-19"
+  },
+  "TX|Travis": {
+    "compositeRating": "relatively high",
+    "compositeScore": 97.74173027989822,
+    "topHazards": [
+      {
+        "type": "HAIL",
+        "rating": "very high"
+      },
+      {
+        "type": "TRND",
+        "rating": "very high"
+      },
+      {
+        "type": "HWAV",
+        "rating": "relatively high"
+      },
+      {
+        "type": "ISTM",
+        "rating": "relatively high"
+      }
+    ],
+    "source": "FEMA NRI",
+    "asOf": "2026-09-19"
+  },
+  "TN|Davidson": {
+    "compositeRating": "relatively high",
+    "compositeScore": 97.16921119592875,
+    "topHazards": [
+      {
+        "type": "CWAV",
+        "rating": "relatively high"
+      },
+      {
+        "type": "ERQK",
+        "rating": "relatively high"
+      },
+      {
+        "type": "IFLD",
+        "rating": "relatively high"
+      },
+      {
+        "type": "SWND",
+        "rating": "relatively high"
+      }
+    ],
+    "source": "FEMA NRI",
+    "asOf": "2026-09-19"
+  },
+  "NJ|Essex": {
+    "compositeRating": "relatively high",
+    "compositeScore": 97.70992366412213,
+    "topHazards": [
+      {
+        "type": "SWND",
+        "rating": "very high"
+      },
+      {
+        "type": "WNTW",
+        "rating": "very high"
+      },
+      {
+        "type": "CWAV",
+        "rating": "relatively high"
+      },
+      {
+        "type": "HWAV",
+        "rating": "relatively high"
+      }
+    ],
+    "source": "FEMA NRI",
+    "asOf": "2026-09-19"
+  },
+  "GA|Fulton": {
+    "compositeRating": "relatively high",
+    "compositeScore": 95.80152671755725,
+    "topHazards": [
+      {
+        "type": "LTNG",
+        "rating": "very high"
+      },
+      {
+        "type": "CWAV",
+        "rating": "relatively high"
+      },
+      {
+        "type": "HAIL",
+        "rating": "relatively high"
+      },
+      {
+        "type": "ISTM",
+        "rating": "relatively high"
+      }
+    ],
+    "source": "FEMA NRI",
+    "asOf": "2026-09-19"
+  }
 }
