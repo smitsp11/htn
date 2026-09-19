@@ -18,7 +18,7 @@ export interface ChatOptions {
 }
 
 export async function chatWithTools(
-  req: { messages: ChatMessage[]; tools: ChatTool[] },
+  req: { messages: ChatMessage[]; tools: ChatTool[]; toolChoice?: "auto" | "none" },
   opts: ChatOptions = {},
 ): Promise<ChatMessage> {
   const apiKey = opts.apiKey ?? process.env.OPENAI_API_KEY;
@@ -28,7 +28,7 @@ export async function chatWithTools(
   const res = await doFetch("https://api.openai.com/v1/chat/completions", {
     method: "POST",
     headers: { authorization: `Bearer ${apiKey}`, "content-type": "application/json" },
-    body: JSON.stringify({ model, messages: req.messages, tools: req.tools, tool_choice: "auto", temperature: 0 }),
+    body: JSON.stringify({ model, messages: req.messages, tools: req.tools, tool_choice: req.toolChoice ?? "auto", temperature: 0 }),
     signal: AbortSignal.timeout(opts.timeoutMs ?? 20_000),
   });
   if (!res.ok) {

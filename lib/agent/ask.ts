@@ -45,7 +45,7 @@ const SYSTEM =
   "You are an assistant for a commercial-property underwriting queue. Answer ONLY using the tool results. " +
   "Never invent numbers, names, or verdicts. If nothing matches, say so plainly. Keep answers to one or two sentences.";
 
-type ChatFn = (req: { messages: ChatMessage[]; tools: ChatTool[] }) => Promise<ChatMessage>;
+type ChatFn = (req: { messages: ChatMessage[]; tools: ChatTool[]; toolChoice?: "auto" | "none" }) => Promise<ChatMessage>;
 
 export async function askQueue(
   question: string,
@@ -85,7 +85,9 @@ export async function askQueue(
     tool_call_id: call.id,
     content: JSON.stringify(result),
   });
-  const final = await chat({ messages, tools: TOOLS });
+  // Phrasing turn: forbid further tool calls so the model must return prose
+  // (the facts are already grounded in `matchedIds`/`result`).
+  const final = await chat({ messages, tools: TOOLS, toolChoice: "none" });
   return { kind, answer: final.content ?? "", filter, matchedIds };
 }
 

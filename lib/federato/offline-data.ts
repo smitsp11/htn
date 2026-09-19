@@ -219,7 +219,9 @@ async function joinSubmissions(): Promise<JoinedSubmission[]> {
       claims: policyClaims,
     };
 
-    const primaryLocation = pickPrimaryLocation(riskLocations, hqLocation, buildingById, locations[0]);
+    // No global fallback: a submission with no risk locations and no insured HQ
+    // must resolve to "unknown" hazard, never an unrelated county's real rating.
+    const primaryLocation = pickPrimaryLocation(riskLocations, hqLocation, buildingById, undefined);
 
     return {
       id: canonicalSubmissionId(submission, index),
