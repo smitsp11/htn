@@ -1,6 +1,7 @@
 import type { RankingsResponse } from "@/lib/domain/types";
 import type { RankingsErrorBody } from "@/lib/rankings/errors";
 import { summarize } from "@/lib/rankings/presentation";
+import { OutOfScopeSection } from "./out-of-scope-section";
 import { QueueTable } from "./queue-table";
 import { QuadrantBoard } from "./quadrant-board";
 import { SubmissionDetail } from "./submission-detail";
@@ -35,7 +36,9 @@ export function DashboardView({ data, error, loading, expandedId, onToggle, onRe
   const visibleSubmissions = Array.isArray(matchedIds)
     ? data.submissions.filter((submission) => matchedIds.includes(submission.id))
     : data.submissions;
-  const selected = expandedId ? visibleSubmissions.find((s) => s.id === expandedId) : undefined;
+  const rankedSubmissions = visibleSubmissions.filter((submission) => submission.status !== "out_of_scope");
+  const outOfScopeSubmissions = visibleSubmissions.filter((submission) => submission.status === "out_of_scope");
+  const selected = expandedId ? rankedSubmissions.find((s) => s.id === expandedId) : undefined;
 
   return (
     <>
@@ -75,7 +78,7 @@ export function DashboardView({ data, error, loading, expandedId, onToggle, onRe
 
         {view === "quadrant" ? (
           <>
-            <QuadrantBoard submissions={visibleSubmissions} onSelect={onToggle} />
+            <QuadrantBoard submissions={rankedSubmissions} onSelect={onToggle} />
             {selected ? (
               <div className="quadrant-detail">
                 <SubmissionDetail submission={selected} />
@@ -83,8 +86,10 @@ export function DashboardView({ data, error, loading, expandedId, onToggle, onRe
             ) : null}
           </>
         ) : (
-          <QueueTable submissions={visibleSubmissions} expandedId={expandedId} onToggle={onToggle} />
+          <QueueTable submissions={rankedSubmissions} expandedId={expandedId} onToggle={onToggle} />
         )}
+
+        <OutOfScopeSection submissions={outOfScopeSubmissions} />
       </section>
 
       <details className="trace-panel">
