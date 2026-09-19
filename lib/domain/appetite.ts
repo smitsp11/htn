@@ -9,6 +9,21 @@ import type {
   RankedSubmission,
 } from "./types";
 
+export type LineScope = "property" | "out_of_scope" | "unknown_line";
+
+/**
+ * Route a submission by its line of business. Property lines get the full
+ * eight-factor appetite evaluation; known non-property lines are out of scope
+ * (no property appetite is defined for them); a missing line stays in the
+ * property pipeline so its unknown line factor drives needs_investigation.
+ */
+export function classifyScope(lineOfBusiness?: string): LineScope {
+  const normalized = lineOfBusiness?.trim().toLowerCase();
+  if (!normalized) return "unknown_line";
+  if (normalized.includes("property")) return "property";
+  return "out_of_scope";
+}
+
 // 2025 commercial-property appetite table (documents/APPETITE_GUIDELINES.pdf).
 const TARGET_STATES = new Set(["OH", "PA", "MD", "CO", "CA", "FL"]);
 const ACCEPTABLE_STATES = new Set([...TARGET_STATES, "NC", "SC", "GA", "VA", "UT"]);
@@ -165,6 +180,25 @@ export function deriveStatus(factors: FactorEvaluation[]): AppetiteStatus {
 }
 
 export function evaluateAppetite(submission: CanonicalSubmission): RankedSubmission {
+  if (classifyScope(submission.lineOfBusiness) === "out_of_scope") {
+    const recommendation = recommendationFor("out_of_scope");
+    return {
+      ...submission,
+      status: "out_of_scope",
+      score: 0,
+      factors: [],
+      recommendation,
+      explanation: buildExplanation({
+        accountName: submission.accountName,
+        status: "out_of_scope",
+        score: 0,
+        factors: [],
+        recommendation,
+        lineOfBusiness: submission.lineOfBusiness,
+      }),
+    };
+  }
+
   const factors = evaluateFactors(submission);
   const status = deriveStatus(factors);
   const score = computeScore(factors);
@@ -183,6 +217,7 @@ const statusOrder: Record<AppetiteStatus, number> = {
   in_appetite: 0,
   needs_investigation: 1,
   out_of_appetite: 2,
+  out_of_scope: 3,
 };
 
 /** Stable ordering: status, then score descending, then account name, then id. */

@@ -8,22 +8,23 @@ export interface RfiDraftProps {
 }
 
 export function RfiDraft({ draft }: RfiDraftProps) {
-  const [copied, setCopied] = useState(false);
+  const [copyState, setCopyState] = useState<"idle" | "copied" | "failed">("idle");
   const copy = async () => {
     try {
       await navigator.clipboard.writeText(`Subject: ${draft.subject}\n\n${draft.body}`);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1500);
+      setCopyState("copied");
     } catch {
-      setCopied(false);
+      setCopyState("failed");
     }
+    setTimeout(() => setCopyState("idle"), 1500);
   };
+  const copyLabel = copyState === "copied" ? "Copied" : copyState === "failed" ? "Copy failed — select the text" : "Copy draft";
   return (
     <div className="rfi">
       <div className="rfi-head">
         <strong className="rfi-subject">{draft.subject}</strong>
         <button type="button" className="rfi-copy" onClick={() => void copy()}>
-          {copied ? "Copied" : "Copy draft"}
+          {copyLabel}
         </button>
       </div>
       <pre className="rfi-body">{draft.body}</pre>

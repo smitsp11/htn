@@ -96,10 +96,12 @@ test("expanded detail composes explanation, dates, In Good Order checklist, and 
   assert.match(text(html), /Confirm line of business/);
 });
 
-test("expanded detail for a clean submission has no unresolved callout", () => {
+test("expanded detail for a clean submission reads In good order with no checklist", () => {
   const html = render({ data: response(), expandedId: rankedContradictory.id });
   assert.match(html, /aria-label="Appetite factor breakdown"/);
-  assert.doesNotMatch(html, /Unresolved fields:/);
+  assert.match(text(html), /In good order/);
+  assert.match(text(html), /8 of 8 required fields resolved/);
+  assert.doesNotMatch(html, /igo-checklist/);
   assert.match(text(html), /Effective 2026-10-01/);
 });
 
@@ -122,4 +124,48 @@ test("no write-back or binding action exists anywhere in the UI", () => {
   assert.ok(buttons.length > 0);
   for (const button of buttons) assert.doesNotMatch(button, /accept|bind|reject|decline|approve/i);
   assert.doesNotMatch(html, /<form|method="post"/i);
+});
+
+test("out-of-scope submissions render in a collapsed section, not the main table", () => {
+  const mixed = rankSubmissions([
+    {
+      id: "P1",
+      accountName: "Prop Co",
+      lineOfBusiness: "Property",
+      submissionType: "New business",
+      primaryRiskState: "FL",
+      tiv: 60_000_000,
+      totalPremium: 80_000,
+      buildingYear: 2015,
+      approvedConstructionPercentage: 0.9,
+      fiveYearLossValue: 0,
+    },
+    { id: "C1", accountName: "Cyber Co", lineOfBusiness: "Cyber", primaryRiskState: "TX" },
+  ]);
+  const html = render({ data: response({ submissions: mixed }) });
+  const bodyRows = (html.match(/<tr class="queue-row"/g) ?? []).length;
+  assert.equal(bodyRows, 1); // only the property submission is in the ranked table
+  const plain = text(html);
+  assert.match(plain, /Out of scope \(1\)/);
+  assert.match(plain, /Cyber Co/);
+  assert.match(html, /out-of-scope-panel/);
+});
+
+test("no out-of-scope section renders when every submission is in scope", () => {
+  const html = render({ data: response() });
+  assert.doesNotMatch(html, /out-of-scope-panel/);
+});
+
+test("quadrant view replaces the table, keeps out-of-scope lines in their own section, and offers Close", () => {
+  const mixed = rankSubmissions([
+    { id: "P1", accountName: "Prop Co", lineOfBusiness: "Property", submissionType: "New business", primaryRiskState: "FL", tiv: 60_000_000, totalPremium: 80_000, buildingYear: 2015, approvedConstructionPercentage: 0.9, fiveYearLossValue: 0 },
+    { id: "C1", accountName: "Cyber Co", lineOfBusiness: "Cyber", primaryRiskState: "TX" },
+  ]);
+  const html = render({ data: response({ submissions: mixed }), view: "quadrant", onViewChange: () => undefined, expandedId: "P1" });
+  assert.doesNotMatch(html, /<tr class="queue-row"/);
+  assert.match(html, /aria-label="Appetite by completeness"/);
+  assert.match(html, /aria-pressed="true"[^>]*>Quadrant/);
+  assert.match(text(html), /Out of scope \(1\)/);
+  assert.match(html, /quadrant-detail-head/);
+  assert.match(html, /Prop Co/);
 });

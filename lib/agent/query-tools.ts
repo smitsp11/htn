@@ -21,6 +21,7 @@ export interface StatusCounts {
   in_appetite: number;
   needs_investigation: number;
   out_of_appetite: number;
+  out_of_scope: number;
 }
 
 const HAZARD_ORDER: HazardRating[] = ["unknown", "very low", "relatively low", "relatively moderate", "relatively high", "very high"];
@@ -51,7 +52,7 @@ function matches(s: RankedSubmission, f: QueueFilter): boolean {
 
 export function filterQueue(subs: RankedSubmission[], criteria: QueueFilter): { matchedIds: string[]; counts: StatusCounts } {
   const hits = subs.filter((s) => matches(s, criteria));
-  const counts: StatusCounts = { total: hits.length, in_appetite: 0, needs_investigation: 0, out_of_appetite: 0 };
+  const counts: StatusCounts = { total: hits.length, in_appetite: 0, needs_investigation: 0, out_of_appetite: 0, out_of_scope: 0 };
   for (const s of hits) counts[s.status] += 1;
   return { matchedIds: hits.map((s) => s.id), counts };
 }

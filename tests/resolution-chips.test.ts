@@ -26,3 +26,14 @@ test("renders a broker-chase pill for an unresolved (null) field", () => {
   assert.match(html, /Total premium/);
   assert.match(html, /request from broker|chase/i);
 });
+
+test("money values are formatted like the rest of the UI", () => {
+  const html = renderToStaticMarkup(
+    createElement(ResolutionChips, {
+      resolutions: { tiv: { value: 75_000_000, provenance: { source: "SOV", confidence: 1, asOf: "2026-09-19" } } },
+      labels: { tiv: "Total insured value" },
+    }),
+  );
+  assert.match(html, /\$75M/);
+  assert.doesNotMatch(html, /75000000/);
+});

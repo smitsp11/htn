@@ -128,6 +128,12 @@ Status legend: `queued` · `planning` · `building` · `blocked` · `done`
   `w7-portfolio-strip` (individual PR #8, stacked on PR #7). `lib/rankings/portfolio.ts` +
   header strip (Submissions / In-appetite TIV / Top states). 205/205 tests green.
   Real data: In-appetite TIV $0 (0 in appetite); top states CA/FL/TN.
+- **Goal:** Header strip showing queue-level aggregates (total TIV, state concentration, hazard
+  exposure) and how the selected submission shifts them.
+- **Why:** Highest-end differentiator; signals portfolio-level thinking.
+- **Scope / files:** UI + a small aggregation helper over already-ranked submissions.
+- **Owner:** Person 4.
+- **Risk:** low (read-only aggregation).
 
 ### W8 — Multi-channel consolidation (Browserbase) — THE SHOWPIECE
 - **Status:** planned → `docs/superpowers/plans/2026-09-19-w8-multichannel-consolidation.md` (depends on W3)
@@ -153,12 +159,6 @@ Status legend: `queued` · `planning` · `building` · `blocked` · `done`
   FEMA `enrichment` field) + `lib/enrichment/context.ts` + `scripts/fetch-context.ts` + read-only panel.
 - **Owner:** Person 3/4 + contract sign-off (additive field). **Independent.**
 - **Risk:** low (context-only; mirrors existing FEMA plumbing). Decision needed: which public source first.
-- **Goal:** Header strip showing queue-level aggregates (total TIV, state concentration, hazard
-  exposure) and how the selected submission shifts them.
-- **Why:** Highest-end differentiator; signals portfolio-level thinking.
-- **Scope / files:** UI + a small aggregation helper over already-ranked submissions.
-- **Owner:** Person 4.
-- **Risk:** low (read-only aggregation).
 
 ---
 

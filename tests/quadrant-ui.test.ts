@@ -16,3 +16,12 @@ test("renders four labelled cells and places accounts", () => {
   }
   assert.ok(html.includes(fullTarget.accountName), "places the in-appetite account");
 });
+
+test("out-of-scope lines are left off the board and the open item is marked pressed", () => {
+  const submissions = rankSubmissions([fullTarget, { id: "C1", accountName: "Cyber Co", lineOfBusiness: "Cyber" }]);
+  const html = renderToStaticMarkup(
+    createElement(QuadrantBoard, { submissions, onSelect: () => {}, selectedId: fullTarget.id }),
+  );
+  assert.doesNotMatch(html, /Cyber Co/);
+  assert.match(html, /aria-pressed="true"[^>]*>Target Account/);
+});
