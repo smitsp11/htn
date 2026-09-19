@@ -88,6 +88,7 @@ function FlagChips({ submission }: { submission: RankedSubmission }) {
         summary[tone] > 0 ? (
           <span
             key={tone}
+            role="img"
             className={`flag-chip flag-${tone}`}
             title={reasons[tone].join("\n")}
             aria-label={`${summary[tone]} ${TONE_LABEL[tone]}`}

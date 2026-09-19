@@ -96,10 +96,12 @@ test("expanded detail composes explanation, dates, In Good Order checklist, and 
   assert.match(text(html), /Confirm line of business/);
 });
 
-test("expanded detail for a clean submission has no unresolved callout", () => {
+test("expanded detail for a clean submission reads In good order with no checklist", () => {
   const html = render({ data: response(), expandedId: rankedContradictory.id });
   assert.match(html, /aria-label="Appetite factor breakdown"/);
-  assert.doesNotMatch(html, /Unresolved fields:/);
+  assert.match(text(html), /In good order/);
+  assert.match(text(html), /8 of 8 required fields resolved/);
+  assert.doesNotMatch(html, /igo-checklist/);
   assert.match(text(html), /Effective 2026-10-01/);
 });
 
