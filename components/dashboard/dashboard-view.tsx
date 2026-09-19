@@ -3,6 +3,7 @@ import type { RankingsErrorBody } from "@/lib/rankings/errors";
 import { summarize } from "@/lib/rankings/presentation";
 import { QueueTable } from "./queue-table";
 import { QuadrantBoard } from "./quadrant-board";
+import { PortfolioStrip } from "./portfolio-strip";
 import { SubmissionDetail } from "./submission-detail";
 import { SourceStatus } from "./source-status";
 import { EmptyPanel, ErrorPanel, LoadingPanel, StaleBanner } from "./state-panels";
@@ -39,6 +40,7 @@ export function DashboardView({ data, error, loading, expandedId, onToggle, onRe
 
   return (
     <>
+      <PortfolioStrip submissions={data.submissions} />
       <section className="summary-grid" aria-label="Queue summary">
         <SummaryCard label="In appetite" value={summary.in_appetite} tone="good" />
         <SummaryCard label="Investigate" value={summary.needs_investigation} tone="warn" />
