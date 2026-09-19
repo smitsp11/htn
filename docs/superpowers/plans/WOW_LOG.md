@@ -109,7 +109,12 @@ Status legend: `queued` · `planning` · `building` · `blocked` · `done`
 - **Risk:** low-medium (prompt/tooling; keep verdicts deterministic).
 
 ### W6 — Appetite × Completeness 2×2 quadrant queue view
-- **Status:** planned → `docs/superpowers/plans/2026-09-19-w6-appetite-completeness-quadrant.md` (depends on W2)
+- **Status:** DONE (2026-09-19) → plan `2026-09-19-w6-appetite-completeness-quadrant.md`. Built on branch
+  `w6-appetite-completeness-quadrant` (individual PR #7, stacked on PR #6). `lib/rankings/quadrant.ts`
+  + QuadrantBoard + Table/Quadrant toggle (+ in-quadrant detail). 202/202 tests green.
+- **Note:** fixed the plan's appetite-axis bug (out_of_appetite with high score was mislabeled "high");
+  now out_of_appetite is always low appetite. Real data has 0 in-appetite → Work-now/Worth-effort
+  empty, everything in Selective/Deprioritize (honest reflection of an off-appetite book).
 - **Goal:** Visual quadrant (work-now / worth-effort / selective / deprioritize) instead of a
   flat ranked list — Federato's own signature mechanic, but with our honest second axis
   (completeness/effort, not a black-box winnability score).
