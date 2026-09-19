@@ -1,6 +1,7 @@
 import type { RankingsResponse } from "@/lib/domain/types";
 import type { RankingsErrorBody } from "@/lib/rankings/errors";
 import { summarize } from "@/lib/rankings/presentation";
+import { OutOfScopeSection } from "./out-of-scope-section";
 import { QueueTable } from "./queue-table";
 import { SourceStatus } from "./source-status";
 import { EmptyPanel, ErrorPanel, LoadingPanel, StaleBanner } from "./state-panels";
@@ -29,6 +30,8 @@ export function DashboardView({ data, error, loading, expandedId, onToggle, onRe
   const visibleSubmissions = Array.isArray(matchedIds)
     ? data.submissions.filter((submission) => matchedIds.includes(submission.id))
     : data.submissions;
+  const rankedSubmissions = visibleSubmissions.filter((submission) => submission.status !== "out_of_scope");
+  const outOfScopeSubmissions = visibleSubmissions.filter((submission) => submission.status === "out_of_scope");
 
   return (
     <>
@@ -58,7 +61,9 @@ export function DashboardView({ data, error, loading, expandedId, onToggle, onRe
           </p>
         ) : null}
 
-        <QueueTable submissions={visibleSubmissions} expandedId={expandedId} onToggle={onToggle} />
+        <QueueTable submissions={rankedSubmissions} expandedId={expandedId} onToggle={onToggle} />
+
+        <OutOfScopeSection submissions={outOfScopeSubmissions} />
       </section>
 
       <details className="trace-panel">

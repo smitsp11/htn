@@ -21,7 +21,7 @@ const TOOLS: ChatTool[] = [
         properties: {
           lineOfBusiness: { type: "string" }, submissionType: { type: "string", enum: ["new", "renewal"] },
           state: { type: "string", description: "2-letter state code" },
-          status: { type: "string", enum: ["in_appetite", "needs_investigation", "out_of_appetite"] },
+          status: { type: "string", enum: ["in_appetite", "needs_investigation", "out_of_appetite", "out_of_scope"] },
           scoreMin: { type: "number" }, scoreMax: { type: "number" },
           tivMin: { type: "number" }, tivMax: { type: "number" },
           premiumMin: { type: "number" }, premiumMax: { type: "number" },

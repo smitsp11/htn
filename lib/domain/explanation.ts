@@ -8,6 +8,7 @@ const recommendations: Record<AppetiteStatus, string> = {
   in_appetite: "Review for acceptance",
   needs_investigation: "Investigate missing or ambiguous data",
   out_of_appetite: "Review for likely decline",
+  out_of_scope: "Out of scope — line not written",
 };
 
 export function recommendationFor(status: AppetiteStatus): string {
@@ -18,6 +19,7 @@ const statusPhrase: Record<AppetiteStatus, string> = {
   in_appetite: "and is in appetite",
   needs_investigation: "and needs investigation",
   out_of_appetite: "but is out of appetite",
+  out_of_scope: "and is out of scope",
 };
 
 function names(factors: FactorEvaluation[]) {
@@ -30,6 +32,7 @@ export interface ExplanationInput {
   score: number;
   factors: FactorEvaluation[];
   recommendation: string;
+  lineOfBusiness?: string;
 }
 
 /**
@@ -38,6 +41,11 @@ export interface ExplanationInput {
  * Contradictions are named explicitly rather than averaged into the score.
  */
 export function buildExplanation(input: ExplanationInput): string {
+  if (input.status === "out_of_scope") {
+    const line = input.lineOfBusiness?.trim() || "non-property";
+    return `${input.accountName} is a ${line} submission. The 2025 appetite guidelines cover commercial property only, so no appetite is defined for this line. Recommendation: ${input.recommendation}.`;
+  }
+
   const unacceptable = input.factors.filter((factor) => factor.verdict === "not_acceptable");
   const unknown = input.factors.filter((factor) => factor.verdict === "unknown");
   const targets = input.factors.filter((factor) => factor.verdict === "target");
