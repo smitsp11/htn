@@ -18,12 +18,17 @@ Design spec: `docs/superpowers/specs/2026-09-19-line-of-business-scoping-design.
 - Modify `lib/domain/appetite.ts` — `classifyScope()`, `evaluateAppetite` short-circuit, `statusOrder` entry.
 - Modify `lib/domain/explanation.ts` — `recommendations`/`statusPhrase` entries, `ExplanationInput.lineOfBusiness`, out-of-scope early return.
 - Modify `lib/rankings/presentation.ts` — `statusLabels` entry, `QueueSummary.out_of_scope`, `primaryReason` special-case.
+- Modify `lib/agent/query-tools.ts` — add `out_of_scope` to `StatusCounts` and its initializer (exhaustiveness for the ask-agent's status tally).
+- Modify `components/factor-breakdown/factor-breakdown.tsx` — add `out_of_scope` to its local `statusLabels` map (exhaustiveness).
 - Create `components/dashboard/out-of-scope-section.tsx` — collapsed section listing Account · Line · State.
 - Modify `components/dashboard/dashboard-view.tsx` — partition visible submissions, render the section.
 - Modify `app/globals.css` — minimal styles for `.out-of-scope-panel`.
 - Modify `tests/appetite.test.ts` — engine routing + `classifyScope` cases.
 - Create `tests/presentation.test.ts` — `summarize` count, `statusLabels`, `primaryReason` for out-of-scope.
+- Modify `tests/offline-data.test.ts` — relax the "every result has 8 factors" assertion to in-scope only.
 - Modify `tests/rankings-ui.test.ts` — collapsed section renders; out-of-scope excluded from the main table.
+
+> **Amendment (post-Task-1):** Adding `out_of_scope` to the `AppetiteStatus` union breaks every exhaustive `Record<AppetiteStatus, …>` / status-indexed consumer. Task 1 covered the domain modules; the remaining consumers (`query-tools.ts`, `factor-breakdown.tsx`) and the `offline-data.test.ts` factor-count assertion were missed in the first draft and are folded into Tasks 2 and 3 below. Repo-wide `typecheck`/`build` stay red until all consumers are updated (green at the end of Task 3).
 
 ---
 
@@ -225,11 +230,13 @@ git commit -m "feat(appetite): out_of_scope status for non-property lines"
 
 ---
 
-### Task 2: Presentation — count, label, and reason
+### Task 2: Presentation + non-UI consumers — count, label, reason, status tally
 
 **Files:**
 - Modify: `lib/rankings/presentation.ts`
+- Modify: `lib/agent/query-tools.ts`
 - Test: `tests/presentation.test.ts`
+- Test: `tests/offline-data.test.ts`
 
 - [ ] **Step 1: Write the failing test**
 
@@ -338,16 +345,57 @@ export function summarize(submissions: RankedSubmission[]): QueueSummary {
 }
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [ ] **Step 4: Fix the ask-agent status tally (`lib/agent/query-tools.ts`)**
+
+The `StatusCounts` interface and `filterQueue`'s initializer are exhaustive over `AppetiteStatus`, so they must include `out_of_scope`. Change the interface (currently lines 19-24):
+
+```ts
+export interface StatusCounts {
+  total: number;
+  in_appetite: number;
+  needs_investigation: number;
+  out_of_appetite: number;
+  out_of_scope: number;
+}
+```
+
+And the initializer in `filterQueue` (currently line 54):
+
+```ts
+  const counts: StatusCounts = { total: hits.length, in_appetite: 0, needs_investigation: 0, out_of_appetite: 0, out_of_scope: 0 };
+```
+
+- [ ] **Step 5: Fix the real-data factor-count assertion (`tests/offline-data.test.ts`)**
+
+The snapshot has ~120 non-property submissions that now short-circuit to 0 factors, so "every result has 8 factors" is no longer true. Replace the body of the `"out-of-appetite submissions are retained, and every result is evaluable"` test with:
+
+```ts
+test("out-of-appetite submissions are retained, and every result is evaluable", async () => {
+  const submissions = await loadOfflineSubmissions();
+  const ranked = rankSubmissions(submissions);
+  assert.equal(ranked.length, 158, "ranking must cover every submission, in or out of appetite");
+  // Every in-scope (property) submission carries all eight appetite factors.
+  const inScope = ranked.filter((item) => item.status !== "out_of_scope");
+  assert.ok(inScope.every((item) => item.factors.length === 8));
+  // Out-of-scope (non-property) submissions are scored on no property factors.
+  const outOfScope = ranked.filter((item) => item.status === "out_of_scope");
+  assert.ok(outOfScope.length > 0, "the snapshot includes non-property submissions");
+  assert.ok(outOfScope.every((item) => item.factors.length === 0));
+  // The snapshot is a mix that includes out-of-appetite property accounts.
+  assert.ok(ranked.some((item) => item.status === "out_of_appetite"));
+});
+```
+
+- [ ] **Step 6: Run tests to verify they pass**
 
 Run: `npm test`
-Expected: PASS — new presentation tests pass; existing tests unaffected.
+Expected: PASS — new presentation tests pass, the offline-data test passes with the relaxed assertion, and no other test regresses. (`npm run typecheck` will still fail only on `components/factor-breakdown/factor-breakdown.tsx` until Task 3.)
 
-- [ ] **Step 5: Commit**
+- [ ] **Step 7: Commit**
 
 ```bash
-git add lib/rankings/presentation.ts tests/presentation.test.ts
-git commit -m "feat(presentation): out_of_scope label, count, and reason"
+git add lib/rankings/presentation.ts lib/agent/query-tools.ts tests/presentation.test.ts tests/offline-data.test.ts
+git commit -m "feat(presentation): out_of_scope label, count, reason, and status tally"
 ```
 
 ---
@@ -357,6 +405,7 @@ git commit -m "feat(presentation): out_of_scope label, count, and reason"
 **Files:**
 - Create: `components/dashboard/out-of-scope-section.tsx`
 - Modify: `components/dashboard/dashboard-view.tsx`
+- Modify: `components/factor-breakdown/factor-breakdown.tsx`
 - Modify: `app/globals.css`
 - Test: `tests/rankings-ui.test.ts`
 
@@ -519,15 +568,30 @@ Append to `app/globals.css`:
 }
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [ ] **Step 4: Fix the factor-breakdown status map (`components/factor-breakdown/factor-breakdown.tsx`)**
+
+Its local `statusLabels: Record<AppetiteStatus, string>` (lines 3-7) is exhaustive over `AppetiteStatus`, so add the `out_of_scope` entry:
+
+```ts
+const statusLabels: Record<AppetiteStatus, string> = {
+  in_appetite: "In appetite",
+  needs_investigation: "Needs investigation",
+  out_of_appetite: "Out of appetite",
+  out_of_scope: "Out of scope",
+};
+```
+
+(In practice `FactorBreakdown` is only rendered for in-scope submissions — out-of-scope ones appear in the collapsed section, not the expandable detail — but the map must be exhaustive to typecheck.)
+
+- [ ] **Step 5: Run tests to verify they pass**
 
 Run: `npm test`
 Expected: PASS — the collapsed section renders with the count, "Cyber Co" is in the section (bodyRows === 1), and the in-scope-only render has no `out-of-scope-panel`.
 
-- [ ] **Step 5: Commit**
+- [ ] **Step 6: Commit**
 
 ```bash
-git add components/dashboard/out-of-scope-section.tsx components/dashboard/dashboard-view.tsx app/globals.css tests/rankings-ui.test.ts
+git add components/dashboard/out-of-scope-section.tsx components/dashboard/dashboard-view.tsx components/factor-breakdown/factor-breakdown.tsx app/globals.css tests/rankings-ui.test.ts
 git commit -m "feat(dashboard): collapsed out-of-scope section below the ranked queue"
 ```
 
