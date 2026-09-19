@@ -125,9 +125,10 @@ test("presentation: summary counts statuses and unresolved submissions", () => {
     in_appetite: 2,
     needs_investigation: 2,
     out_of_appetite: 2,
+    out_of_scope: 0,
     unresolved: 3,
   });
-  assert.deepEqual(summarize([]), { total: 0, in_appetite: 0, needs_investigation: 0, out_of_appetite: 0, unresolved: 0 });
+  assert.deepEqual(summarize([]), { total: 0, in_appetite: 0, needs_investigation: 0, out_of_appetite: 0, out_of_scope: 0, unresolved: 0 });
 });
 
 test("route: GET returns ranked demo submissions", async () => {
