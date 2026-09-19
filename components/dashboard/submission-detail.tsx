@@ -37,7 +37,7 @@ function InGoodOrder({ submission }: { submission: RankedSubmission }) {
   // until then the checklist above already names every broker chase.
   const anyResolved = Object.values(resolutions).some(Boolean);
   const factorLabels = Object.fromEntries(submission.factors.map((f) => [f.key, f.label]));
-  const rfi = draftRfi(submission);
+  const rfi = draftRfi(submission, resolutions);
   const reasonFor = (key: string) => submission.factors.find((factor) => factor.key === key)?.reason;
   return (
     <div className="in-good-order" aria-label="Submission completeness">
