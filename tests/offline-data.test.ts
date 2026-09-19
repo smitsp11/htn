@@ -37,8 +37,13 @@ test("out-of-appetite submissions are retained, and every result is evaluable", 
   const submissions = await loadOfflineSubmissions();
   const ranked = rankSubmissions(submissions);
   assert.equal(ranked.length, 158, "ranking must cover every submission, in or out of appetite");
-  // Every ranked submission carries all eight appetite factors.
-  assert.ok(ranked.every((item) => item.factors.length === 8));
-  // The snapshot contains a mix that includes out-of-appetite accounts.
+  // Every in-scope (property) submission carries all eight appetite factors.
+  const inScope = ranked.filter((item) => item.status !== "out_of_scope");
+  assert.ok(inScope.every((item) => item.factors.length === 8));
+  // Out-of-scope (non-property) submissions are scored on no property factors.
+  const outOfScope = ranked.filter((item) => item.status === "out_of_scope");
+  assert.ok(outOfScope.length > 0, "the snapshot includes non-property submissions");
+  assert.ok(outOfScope.every((item) => item.factors.length === 0));
+  // The snapshot is a mix that includes out-of-appetite property accounts.
   assert.ok(ranked.some((item) => item.status === "out_of_appetite"));
 });
