@@ -36,7 +36,7 @@
         "rating": "very high"
       },
       {
-        "type": "IFLD",
+        "type": "Inland Flooding",
         "rating": "very high"
       },
       {
@@ -60,7 +60,7 @@
         "rating": "very high"
       },
       {
-        "type": "IFLD",
+        "type": "Inland Flooding",
         "rating": "very high"
       },
       {
@@ -80,7 +80,7 @@
         "rating": "very high"
       },
       {
-        "type": "IFLD",
+        "type": "Inland Flooding",
         "rating": "very high"
       },
       {
@@ -108,7 +108,7 @@
         "rating": "relatively high"
       },
       {
-        "type": "IFLD",
+        "type": "Inland Flooding",
         "rating": "relatively high"
       }
     ],
@@ -228,7 +228,7 @@
         "rating": "relatively high"
       },
       {
-        "type": "IFLD",
+        "type": "Inland Flooding",
         "rating": "relatively high"
       }
     ],
@@ -296,7 +296,7 @@
         "rating": "relatively high"
       },
       {
-        "type": "IFLD",
+        "type": "Inland Flooding",
         "rating": "relatively high"
       },
       {

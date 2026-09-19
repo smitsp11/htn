@@ -21,6 +21,7 @@ const HAZARD_LABELS: Record<string, string> = {
   HAIL: "Hail",
   HWAV: "Heat Wave",
   HRCN: "Hurricane",
+  IFLD: "Inland Flooding",
   ISTM: "Ice Storm",
   LNDS: "Landslide",
   LTNG: "Lightning",
