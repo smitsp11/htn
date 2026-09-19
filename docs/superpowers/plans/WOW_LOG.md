@@ -1,0 +1,153 @@
+# Wow-Factor Backlog & Build Log
+
+Running log + prioritized backlog for the "productionize the underwriting agent" work.
+Grounded in four research briefs (competitor teardown, adjacent-industry patterns,
+underwriter day-in-the-life) summarized in `docs/superpowers/specs/` when each feature
+is picked up.
+
+## How we work
+
+- **One plan per feature.** Each backlog item below gets its own full
+  `docs/superpowers/plans/YYYY-MM-DD-<slug>.md` implementation plan — written only
+  when we pick it up, so later plans reflect what we learned building earlier ones.
+- **One feature at a time, diligently.** TDD, frequent commits, green
+  `typecheck` / `test` / `build` before moving on.
+- **Respect workstream ownership.** Only edit files owned by the current person's
+  brief. Shared / frozen-contract changes (`lib/domain/types.ts`) get described to the
+  engineer for approval before editing — not edited unilaterally.
+- Update the **Running Log** at the bottom every session so context survives resets.
+
+## The pitch this backlog serves
+
+Federato tells an underwriter *which* submissions to look at. We do that **and** resolve
+the missing data, show where every number came from, and draft the broker follow-ups — so
+the underwriter spends the day deciding, not chasing. Three sourced numbers behind it:
+
+1. **30–40%** of underwriter time is admin / re-keying, not risk analysis (McKinsey; Accenture).
+2. **~58%** of submissions arrive missing a mandatory field; **~60%** are never fully processed.
+3. **76%** of execs won't trust AI they can't explain — explainability is the adoption gate.
+
+Our architecture is the antidote: deterministic engine decides every verdict, the LLM only
+phrases and fetches, every value traces to a rule and a named source.
+
+---
+
+## Backlog (priority order)
+
+Status legend: `queued` · `planning` · `building` · `blocked` · `done`
+
+### W1 — Appetite flag taxonomy (red / yellow / preferred chips)
+- **Status:** DONE (2026-09-19) → plan `2026-09-19-w1-flag-taxonomy.md`. Built on branch
+  `federato-prompt-improvement`, 4 commits, 179/179 tests green, PR opened to `main`.
+- **Goal:** Render the existing `RankedSubmission.factors[]` verdicts as color-coded chips
+  (`not_acceptable` = red, `unknown` = yellow, `target`/`acceptable` = preferred/green) with
+  the factor `reason` on hover — the Kalepa "score shows its work / trust-or-override" pattern.
+- **Why:** Explainability is the adoption gate (brief #3). We already compute the signal and
+  throw it away into one number.
+- **Scope / files:** UI only (`components/dashboard/*`). No engine or contract change.
+- **Owner:** Person 4 (product UI).
+- **Risk:** none (pure presentation over data that already exists).
+
+### W2 — "In Good Order" completeness view + Effort-to-Decision axis
+- **Status:** planned → `docs/superpowers/plans/2026-09-19-w2-in-good-order.md` (awaiting go-ahead to build)
+- **Goal:** For each submission, show a completeness checklist derived from `unknown` factors
+  ("3 fields between this and a quote"), and add an **Effort-to-Decision** measure so the queue
+  can be read as *appetite × completeness* (Convr's shipped "fast-flow / referral / decline" lanes;
+  Indico's "In Good Order" checklist).
+- **Why:** Turns dead `needs_investigation` rows into an actionable gate; matches the
+  "expose missing or contradictory data" mandate.
+- **Scope / files:** completeness derivation could live in a new `lib/` module reading existing
+  `factors[]` (no contract change) + UI. Confirm module ownership.
+- **Owner:** Person 4 (UI) + possibly Person 3 (derivation helper).
+- **Risk:** low (reads existing fields; adds a derived view, not a new verdict).
+
+### W3 — Missing-data enrichment waterfall + provenance chips
+- **Status:** planned → `docs/superpowers/plans/2026-09-19-w3-enrichment-waterfall.md` (needs scope decision before Task 4)
+- **Goal:** Per missing required field, run a cheapest-first source chain (Federato field →
+  free inference → external dataset), stop at first confident source, record which source won,
+  and show a provenance chip (`value · source · confidence · as-of`) with click-through.
+  (Clay waterfall + Indico/Nutrient field-level confidence + provenance.)
+- **Why:** Directly attacks the ~58% missing-field / admin-time bottleneck.
+- **Scope / files:** enrichment layer (`lib/enrichment/*`), provenance types, UI.
+- **Owner:** Person 3/4 + **engineer approval** — lets a *resolved* field change status, which
+  brushes the "enrichment must not change appetite" rule and the frozen `CanonicalSubmission`
+  contract. Frame as "filling a documented required field so the deterministic engine can run,"
+  not "enrichment inventing a verdict."
+- **Risk:** medium (scope + contract). **Do not build unilaterally.**
+
+### W4 — RFI broker-chase loop (draft, human-approved)
+- **Status:** planned → `docs/superpowers/plans/2026-09-19-w4-rfi-broker-chase.md` (depends on W2; draft-only guardrail)
+- **Goal:** Per submission, list gaps vs. the required-field schema, auto-**draft** (not send)
+  a broker Request-For-Information email (checklist of exactly the missing items), and re-run
+  the engine + re-rank when the answer lands. (FurtherAI RFI loop; Alloy "route only exceptions
+  to a human"; kept draft-only for the read-only / compliance stance.)
+- **Why:** Eliminates the admin round-trips (1.4 broker touchpoints per incomplete submission).
+- **Scope / files:** `lib/agent/*` tool + UI. Read-only guardrail: draft only, never auto-send.
+- **Owner:** Person 4 + engineer sign-off on the outbound-drafting behavior.
+- **Risk:** medium (outward-facing content; keep human-in-the-loop).
+
+### W5 — Agentic narration layer around the deterministic engine
+- **Status:** planned → `docs/superpowers/plans/2026-09-19-w5-agentic-narration.md` (independent)
+- **Goal:** Extend the grounded LLM ask-layer with (a) **contradiction-first** phrasing and
+  (b) a **"what would flip this"** counterfactual tool (min factor change to raise status),
+  and (c) missing-vs-out-of-appetite distinction. The engine still owns every number.
+- **Why:** Makes the agent *reason* like an underwriter (the graded differentiator) without
+  letting the LLM decide appetite.
+- **Scope / files:** `lib/agent/ask.ts` (system prompt + tools). Aligns with existing ask layer.
+- **Owner:** Person 4 (ask layer owner) — confirm.
+- **Risk:** low-medium (prompt/tooling; keep verdicts deterministic).
+
+### W6 — Appetite × Completeness 2×2 quadrant queue view
+- **Status:** planned → `docs/superpowers/plans/2026-09-19-w6-appetite-completeness-quadrant.md` (depends on W2)
+- **Goal:** Visual quadrant (work-now / worth-effort / selective / deprioritize) instead of a
+  flat ranked list — Federato's own signature mechanic, but with our honest second axis
+  (completeness/effort, not a black-box winnability score).
+- **Why:** Beats FIFO framing; reads as senior underwriting tooling.
+- **Scope / files:** UI, depends on W2's Effort-to-Decision measure.
+- **Owner:** Person 4.
+- **Risk:** low (presentation; depends on W2).
+
+### W7 — Portfolio-impact strip ("Control Tower" lite)
+- **Status:** planned → `docs/superpowers/plans/2026-09-19-w7-portfolio-strip.md` (stretch; build after W1/W2)
+- **Goal:** Header strip showing queue-level aggregates (total TIV, state concentration, hazard
+  exposure) and how the selected submission shifts them.
+- **Why:** Highest-end differentiator; signals portfolio-level thinking.
+- **Scope / files:** UI + a small aggregation helper over already-ranked submissions.
+- **Owner:** Person 4.
+- **Risk:** low (read-only aggregation).
+
+---
+
+## Running Log
+
+### 2026-09-19
+- Completed four research briefs (Federato/Kalepa/Cytora/Send/hyperexponential/Convr/Indico/
+  Planck/Gradient competitor teardown; adjacent-industry patterns in clinical triage, lending,
+  sales enrichment, e-discovery, KYC; underwriter day-in-the-life with sourced bottleneck stats).
+- Read current main-branch engine (`lib/domain/appetite.ts`, `explanation.ts`, `types.ts`),
+  pipeline, hazard enrichment, and the ask layer (`lib/agent/ask.ts`). Key finding: every missing
+  field dead-ends at `unknown` → this is the wedge.
+- Created this log + prioritized backlog (W1–W7).
+- Removed the project `CLAUDE.md` (staged deletion; person-assignment/scope ceremony dropped at
+  engineer's request; restore via `git restore --staged CLAUDE.md && git checkout CLAUDE.md`).
+- Wrote full TDD plans for **W1** (flag taxonomy) and **W2** (In Good Order + Effort-to-Decision),
+  grounded in the real components (`queue-table.tsx`, `submission-detail.tsx`, `factor-breakdown.tsx`,
+  `presentation.ts`). Both are pure-helper-first + presentational, zero engine/contract change.
+- Wrote full TDD plans for **W3–W7** as well. All seven features (W1–W7) now have complete,
+  no-placeholder, TDD-structured plans in `docs/superpowers/plans/`.
+- Decision: **plans only, no build yet** (per engineer). Code untouched (only CLAUDE.md removal + docs).
+
+## Recommended build order (dependencies)
+
+1. **W1** flag taxonomy — independent, zero risk.
+2. **W2** In Good Order + `effortToDecision` — independent; unblocks W6.
+3. **W5** agentic narration — independent (reasoning differentiator).
+4. **W6** quadrant — needs W2.
+5. **W3** enrichment waterfall — needs scope sign-off (context-not-silent-rescore stance).
+6. **W4** RFI draft — needs W2 + draft-only sign-off.
+7. **W7** portfolio strip — stretch; after W1/W2.
+
+- **Built W1** (flag taxonomy) end-to-end on this branch: `lib/rankings/flags.ts` + queue-table
+  Flags column + chip styles, TDD (helper test + render test). `typecheck` clean, `npm test`
+  179/179 green, `npm run build` succeeds. Four commits. PR opened to `main`.
+- **Next:** engineer picks the next feature (recommend W2 → then W5/W6); I execute its plan task-by-task.
