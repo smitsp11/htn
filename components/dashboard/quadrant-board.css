@@ -1,0 +1,13 @@
+.quadrant { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 12px 0; }
+.quadrant-cell { border: 1px solid #e0e0e0; border-radius: 8px; padding: 10px; min-height: 120px; }
+.quadrant-cell header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px; }
+.quadrant-cell ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.quadrant-cell button { width: 100%; text-align: left; background: #f6f8fa; border: none; border-radius: 6px; padding: 6px 8px; cursor: pointer; font-size: 13px; }
+.qc-work-now { background: #f2fbf5; }
+.qc-worth-effort { background: #fffdf3; }
+.qc-selective { background: #f6f8fa; }
+.qc-deprioritize { background: #fbf2f2; }
+
+@media (max-width: 720px) {
+  .quadrant { grid-template-columns: 1fr; }
+}

@@ -3,6 +3,7 @@
 @import "../components/ask-queue/ask-bar.css";
 @import "../components/enrichment-resolution/resolution-chips.css";
 @import "../components/rfi-draft/rfi-draft.css";
+@import "../components/dashboard/quadrant-board.css";
 
 :root {
   color-scheme: light;
