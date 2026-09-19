@@ -82,7 +82,9 @@ Status legend: `queued` · `planning` · `building` · `blocked` · `done`
 - **Risk:** medium (scope + contract). **Do not build unilaterally.**
 
 ### W4 — RFI broker-chase loop (draft, human-approved)
-- **Status:** planned → `docs/superpowers/plans/2026-09-19-w4-rfi-broker-chase.md` (depends on W2; draft-only guardrail)
+- **Status:** DONE (2026-09-19) → plan `2026-09-19-w4-rfi-broker-chase.md`. Built on branch
+  `w4-rfi-broker-chase` (individual PR #5, stacked on PR #4). `lib/agent/rfi.ts` deterministic draft
+  + copy-only component + detail disclosure. Draft-only (no send path). 193/193 tests green.
 - **Goal:** Per submission, list gaps vs. the required-field schema, auto-**draft** (not send)
   a broker Request-For-Information email (checklist of exactly the missing items), and re-run
   the engine + re-rank when the answer lands. (FurtherAI RFI loop; Alloy "route only exceptions
