@@ -1,0 +1,6 @@
+.res-chips { list-style: none; margin: 6px 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.res-chip { display: flex; gap: 8px; align-items: baseline; font-size: 13px; padding: 4px 8px; border-radius: 6px; }
+.res-chip.res-found { background: #e6f4ea; }
+.res-chip.res-chase { background: #fef7e0; }
+.res-field { font-weight: 600; }
+.res-meta { color: #5f6368; }
