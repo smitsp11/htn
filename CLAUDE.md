@@ -20,8 +20,13 @@ The engineer should identify you as Person 1, 2, 3, or 4. If no assignment is st
 
 ## Non-negotiable scope
 
-- Use only Federato's supplied API and Auth0 flow.
-- Do not add enrichment APIs or external LLM calls.
+- Use only Federato's supplied API and Auth0 flow for submission data.
+- Enrichment (external risk data) is a separate decision-support layer that must NOT
+  change appetite scores or status — it only adds context (currently FEMA National
+  Risk Index hazard data per location).
+- An external LLM (OpenAI) is allowed only as a grounded natural-language interface
+  over the queue: it interprets questions and phrases answers, but every fact, row,
+  and verdict comes from the deterministic engine. The LLM never decides appetite.
 - Keep the product read-only; a human underwriter makes the final decision.
 - Call schema discovery before the production query.
 - Evaluate all 50+ submissions, including out-of-appetite submissions.
