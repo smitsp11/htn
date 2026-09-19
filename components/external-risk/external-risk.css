@@ -10,6 +10,9 @@
   display: grid;
   gap: 0.6rem;
   padding: 0.9rem 1rem;
+  /* Span the full width of the .detail-content grid so external risk reads as a
+     distinct band below the appetite factors (harmless when not in a grid). */
+  grid-column: 1 / -1;
 }
 
 .xr-label {
