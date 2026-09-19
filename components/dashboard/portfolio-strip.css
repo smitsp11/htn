@@ -1,0 +1,4 @@
+.portfolio-strip { display: flex; gap: 24px; padding: 12px 16px; border: 1px solid #e0e0e0; border-radius: 8px; margin-bottom: 12px; }
+.ps-metric { display: flex; flex-direction: column; }
+.ps-metric span { font-size: 12px; color: #5f6368; }
+.ps-metric strong { font-size: 18px; }
