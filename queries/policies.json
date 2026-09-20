@@ -1,0 +1,4 @@
+{
+  "resource": "Policy",
+  "pagination": { "limit": 5 }
+}

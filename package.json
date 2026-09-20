@@ -1,0 +1,32 @@
+{
+  "name": "federanorth",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "start": "node scripts/serve-dashboard.js",
+    "browserbase:check": "node --env-file=.env scripts/browserbase-check.js",
+    "browserbase:capture": "node --env-file=.env scripts/browserbase-capture.js",
+    "federato:check": "node --env-file=.env scripts/federato.js check",
+    "federato:schema": "node --env-file=.env scripts/federato.js schema",
+    "federato:query": "node --env-file=.env scripts/federato.js query",
+    "test": "node --test",
+    "agent:rank": "node --env-file=.env scripts/rank-submissions.js",
+    "dashboard:render": "node scripts/render-dashboard.js",
+    "enrich:probe": "node --env-file=.env scripts/enrich-probe.js",
+    "case": "node scripts/case.js",
+    "typecheck": "tsc --noEmit",
+    "check": "npm run typecheck && npm test"
+  },
+  "dependencies": {
+    "@browserbasehq/sdk": "^2.20.0",
+    "playwright-core": "^1.63.0"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.2",
+    "typescript": "^7.0.2"
+  }
+}

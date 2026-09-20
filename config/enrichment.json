@@ -1,0 +1,284 @@
+{
+  "version": "enrichment-v1",
+  "concurrency": 3,
+  "timeoutMs": 45000,
+  "providers": {
+    "census-geocode": {
+      "transport": "http",
+      "enabled": true,
+      "verified": true,
+      "resolves": [
+        "site.latitude",
+        "site.longitude",
+        "site.county",
+        "site.countyFips"
+      ],
+      "description": "US Census Bureau geocoder. Resolves a street address to coordinates and county FIPS, which every geographic provider below keys on.",
+      "requires": [
+        "address",
+        "city",
+        "state"
+      ],
+      "url": "https://geocoding.geo.census.gov/geocoder/geographies/address",
+      "query": {
+        "street": "{{address}}",
+        "city": "{{city}}",
+        "state": "{{state}}",
+        "benchmark": "Public_AR_Current",
+        "vintage": "Current_Current",
+        "format": "json"
+      },
+      "extract": {
+        "latitude": {
+          "path": "result.addressMatches.0.coordinates.y",
+          "type": "number",
+          "role": "keying"
+        },
+        "longitude": {
+          "path": "result.addressMatches.0.coordinates.x",
+          "type": "number",
+          "role": "keying"
+        },
+        "matchedAddress": {
+          "path": "result.addressMatches.0.matchedAddress",
+          "type": "string",
+          "role": "keying"
+        },
+        "county": {
+          "path": "result.addressMatches.0.geographies.Counties.0.NAME",
+          "type": "string"
+        },
+        "countyFips": {
+          "path": "result.addressMatches.0.geographies.Counties.0.GEOID",
+          "type": "string",
+          "role": "keying"
+        }
+      }
+    },
+    "fema-nfhl": {
+      "transport": "arcgis",
+      "enabled": true,
+      "verified": true,
+      "resolves": [
+        "site.floodZone"
+      ],
+      "description": "FEMA National Flood Hazard Layer flood zone at a coordinate. Routed through Browserbase: FEMA's hazard services drop direct server-to-server requests from many networks while serving a real browser normally, so `via: browser` is what makes this data reachable at all.",
+      "requires": [
+        "latitude",
+        "longitude"
+      ],
+      "url": "https://hazards.fema.gov/arcgis/rest/services/public/NFHL/MapServer/28/query",
+      "geometryFrom": {
+        "x": "longitude",
+        "y": "latitude"
+      },
+      "outFields": [
+        "FLD_ZONE",
+        "ZONE_SUBTY",
+        "SFHA_TF"
+      ],
+      "extract": {
+        "floodZone": {
+          "path": "features.0.attributes.FLD_ZONE",
+          "type": "string"
+        },
+        "floodZoneSubtype": {
+          "path": "features.0.attributes.ZONE_SUBTY",
+          "type": "string"
+        },
+        "specialFloodHazardArea": {
+          "path": "features.0.attributes.SFHA_TF",
+          "type": "string"
+        }
+      },
+      "advisory": {
+        "field": "floodZone",
+        "elevatedWhen": [
+          "A",
+          "AE",
+          "AH",
+          "AO",
+          "AR",
+          "A99",
+          "V",
+          "VE"
+        ],
+        "message": "Location sits in a FEMA Special Flood Hazard Area."
+      },
+      "via": "browser"
+    },
+    "assessor-portal": {
+      "transport": "browser",
+      "enabled": false,
+      "verified": false,
+      "resolves": [
+        "building.yearBuilt",
+        "building.constructionType",
+        "building.squareFootage"
+      ],
+      "description": "Declarative county assessor lookup driven through Browserbase. Each county is a recipe under `jurisdictions`, keyed by county FIPS. Recipes are data, not code: add a county by adding an entry and probing it with `npm run enrich:probe`.",
+      "requires": [
+        "address",
+        "countyFips"
+      ],
+      "jurisdictions": {
+        "_example_39035": {
+          "label": "Cuyahoga County, OH",
+          "hostAllowlist": [
+            "myplace.cuyahogacounty.gov"
+          ],
+          "steps": [
+            {
+              "action": "goto",
+              "url": "https://myplace.cuyahogacounty.gov/"
+            },
+            {
+              "action": "fill",
+              "selector": "input[name='search']",
+              "value": "{{address}}"
+            },
+            {
+              "action": "click",
+              "selector": "button[type='submit']"
+            },
+            {
+              "action": "waitFor",
+              "selector": ".property-summary"
+            }
+          ],
+          "extract": {
+            "yearBuilt": {
+              "selector": ".property-summary .year-built",
+              "type": "integer"
+            },
+            "squareFootage": {
+              "selector": ".property-summary .sqft",
+              "type": "integer"
+            }
+          }
+        }
+      }
+    },
+    "nws-conditions": {
+      "transport": "http",
+      "enabled": true,
+      "verified": true,
+      "resolves": [
+        "site.weatherZone",
+        "site.forecastOffice"
+      ],
+      "description": "US National Weather Service point metadata: the forecast office and county warning zone covering the location. Free, keyless, and the entry point for active alerts.",
+      "requires": [
+        "latitude",
+        "longitude"
+      ],
+      "url": "https://api.weather.gov/points/{{latitude}},{{longitude}}",
+      "query": {},
+      "headers": {
+        "User-Agent": "(federanorth-underwriting, underwriting@example.com)"
+      },
+      "extract": {
+        "forecastOffice": {
+          "path": "properties.gridId",
+          "type": "string"
+        },
+        "forecastUrl": {
+          "path": "properties.forecast",
+          "type": "string",
+          "role": "keying"
+        },
+        "weatherZone": {
+          "path": "properties.forecastZone",
+          "type": "string",
+          "role": "keying"
+        },
+        "countyZone": {
+          "path": "properties.county",
+          "type": "string",
+          "role": "keying"
+        },
+        "radarStation": {
+          "path": "properties.radarStation",
+          "type": "string",
+          "role": "keying"
+        }
+      }
+    },
+    "nws-forecast": {
+      "transport": "http",
+      "enabled": true,
+      "verified": true,
+      "resolves": ["site.forecast"],
+      "description": "The next NWS forecast period for this location, including wind and precipitation probability. Current context only, not historical catastrophe exposure.",
+      "requires": ["forecastUrl"],
+      "url": "{{forecastUrl}}",
+      "hostAllowlist": ["api.weather.gov"],
+      "headers": { "User-Agent": "Federanorth/0.1 (local underwriting research)" },
+      "query": {},
+      "extract": {
+        "period": { "path": "properties.periods.0.name", "type": "string" },
+        "startsAt": { "path": "properties.periods.0.startTime", "type": "string" },
+        "endsAt": { "path": "properties.periods.0.endTime", "type": "string" },
+        "forecast": { "path": "properties.periods.0.shortForecast", "type": "string" },
+        "temperature": { "path": "properties.periods.0.temperature", "type": "number" },
+        "temperatureUnit": { "path": "properties.periods.0.temperatureUnit", "type": "string" },
+        "wind": { "path": "properties.periods.0.windSpeed", "type": "string" },
+        "precipitationPercent": { "path": "properties.periods.0.probabilityOfPrecipitation.value", "type": "number" }
+      }
+    },
+    "nws-alerts": {
+      "featurePriority": { "path": "properties.severity", "values": ["Extreme", "Severe", "Moderate", "Minor", "Unknown"] },
+      "transport": "http",
+      "enabled": true,
+      "verified": true,
+      "resolves": [
+        "site.activeAlerts"
+      ],
+      "description": "Active National Weather Service alerts at the location. A severe-weather warning in force at the moment of underwriting is worth seeing before binding.",
+      "requires": [
+        "latitude",
+        "longitude"
+      ],
+      "url": "https://api.weather.gov/alerts/active",
+      "query": {
+        "point": "{{latitude}},{{longitude}}"
+      },
+      "headers": {
+        "User-Agent": "(federanorth-underwriting, underwriting@example.com)"
+      },
+      "extract": {
+        "alertCount": {
+          "path": "features.length",
+          "type": "integer"
+        },
+        "topAlert": {
+          "path": "features.0.properties.event",
+          "type": "string"
+        },
+        "topAlertSeverity": {
+          "path": "features.0.properties.severity",
+          "type": "string"
+        },
+        "topAlertExpires": {
+          "path": "features.0.properties.expires",
+          "type": "string"
+        }
+      },
+      "advisory": {
+        "field": "topAlertSeverity",
+        "elevatedWhen": [
+          "Severe",
+          "Extreme"
+        ],
+        "message": "A severe weather alert is active at this location right now."
+      }
+    }
+  },
+  "notes": [
+    "Providers are tried in declaration order, so geocoding runs first and every geographic lookup keys on its coordinates.",
+    "`via: browser` routes a provider's request through the Browserbase session instead of a direct fetch. FEMA's hazard services are unreachable server-to-server from many networks but serve a real browser normally; without this the flood zone simply is not available.",
+    "Fields marked `\"role\": \"keying\"` are plumbing (coordinates, FIPS codes) used to reach the next provider. They are recorded as evidence but never raised as underwriter questions.",
+    "Run `npm run enrich:probe -- <provider>` to exercise one provider against a single address and print exactly what it extracted before enabling it for the queue.",
+    "Every value produced here is advisory. It is recorded with its source and retrieval time, marked unreviewed, and can raise an escalation for an underwriter. It never changes an appetite score on its own."
+  ]
+}
