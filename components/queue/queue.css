@@ -478,23 +478,131 @@ select {
   color: var(--ink-faint);
 }
 
-/* W6 — Appetite × Completeness quadrant board */
-.quadrant { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 16px 0; }
-.quadrant-cell { border: 1px solid var(--border); border-radius: 10px; padding: 12px; min-height: 130px; }
-.quadrant-cell header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px; }
-.quadrant-cell header strong { font-size: 14px; color: var(--ink); }
-.quadrant-cell header small { font-size: 12px; color: var(--ink-faint); }
-.quadrant-cell ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
-.quadrant-cell li button { width: 100%; display: flex; justify-content: space-between; gap: 8px; text-align: left; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 7px 9px; cursor: pointer; font-size: 13px; color: var(--ink); }
-.quadrant-cell li button:hover { background: var(--surface-hover); }
-.quadrant-cell li button small { color: var(--ink-faint); }
-.quadrant-cell li button[aria-pressed="true"] { border-color: var(--mint); outline: 1px solid var(--mint); }
-.quadrant-empty { margin: 0; font-size: 13px; color: var(--ink-faint); }
-.qc-work-now { background: var(--mint-tint); }
-.qc-worth-effort { background: var(--amber-tint); }
-.qc-selective { background: var(--surface-muted); }
-.qc-deprioritize { background: var(--danger-tint); }
-@media (max-width: 720px) { .quadrant { grid-template-columns: 1fr; } }
+/* W6 — Appetite × effort-to-decide quadrant board.
+   Styled to match the queue/case cards: cream page, white cells with a hairline
+   border and a status-colored left rail, a serif count, and warm item rows. */
+.quadrant-board {
+  margin: 16px 0;
+}
+.quadrant-caption {
+  font-size: 12px;
+  color: var(--ink-faint);
+  margin: 0 0 12px;
+  line-height: 1.5;
+}
+.quadrant {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+.quadrant-cell {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  height: 300px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 16px 16px 14px;
+  overflow: hidden;
+}
+/* Status-colored left rail marks each quadrant's disposition. */
+.quadrant-cell::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  border-radius: 10px 0 0 10px;
+  background: var(--qc-accent, var(--border-strong));
+}
+.qc-work-now { --qc-accent: var(--mint); }
+.qc-worth-effort { --qc-accent: var(--amber); }
+.qc-selective { --qc-accent: var(--ink-faint); }
+.qc-deprioritize { --qc-accent: var(--danger); }
+
+.quadrant-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+  flex-shrink: 0;
+}
+.quadrant-head-text strong {
+  display: block;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--ink);
+}
+.quadrant-head-text span {
+  font-size: 11px;
+  color: var(--ink-faint);
+}
+.quadrant-count {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 26px;
+  font-weight: 400;
+  line-height: 1;
+  letter-spacing: -0.5px;
+  color: var(--ink);
+}
+.quadrant-cell ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+.quadrant-cell li button {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  text-align: left;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  padding: 8px 11px;
+  cursor: pointer;
+  font-size: 12px;
+  color: var(--ink);
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+.quadrant-cell li button:hover {
+  background: var(--surface-hover);
+  border-color: var(--border-strong);
+}
+.quadrant-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.quadrant-cell li button small {
+  color: var(--ink-faint);
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+}
+.quadrant-cell li button[aria-pressed="true"] {
+  border-color: var(--mint);
+  background: var(--mint-tint);
+}
+.quadrant-empty {
+  margin: auto 0;
+  text-align: center;
+  font-size: 12px;
+  color: var(--ink-faint);
+}
+@media (max-width: 720px) {
+  .quadrant { grid-template-columns: 1fr; }
+  .quadrant-cell { height: 240px; }
+}
 
 /* W6 — List / Quadrant view toggle */
 .view-toggle { display: inline-flex; border: 1px solid var(--border-strong); border-radius: 6px; overflow: hidden; }
