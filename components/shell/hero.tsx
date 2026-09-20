@@ -1,11 +1,11 @@
 import { Icon } from "@/components/ui/icon";
+import { HeroMap } from "@/components/shell/hero-map";
 
 /**
- * Marketing hero ported from federanorth's `federanorth-shell.js`: a two-column grid
- * with the serif headline + CTA on the left and an aerial photo with a dashed
- * route-overlay, map-grid hairlines, a map-star, and corner coordinate labels on the
- * right. The CTA and skip link both target `#queue`, the id the queue workspace section
- * renders under (added in a later task).
+ * Marketing hero: a two-column grid with the serif headline + CTA on the left and, on the
+ * right, an aerial map rendered as a dithered dot matrix (see `HeroMap`) under thin
+ * coral hairlines, dashed cream sightlines, and a coral route squiggle. The CTA and skip
+ * link both target `#queue`, the id the queue workspace section renders under.
  */
 export function Hero() {
   return (
@@ -28,31 +28,29 @@ export function Hero() {
         </a>
       </div>
       <div className="hero-visual">
-        <img className="hero-photo" src="/federanorth-aerial.png" alt="" />
-        <div className="image-shade" />
+        <HeroMap />
         <svg
-          className="route-overlay"
-          viewBox="0 0 1536 1024"
-          preserveAspectRatio="xMidYMid slice"
+          className="hero-hairlines"
+          viewBox="0 0 100 100"
+          preserveAspectRatio="none"
           aria-hidden="true"
         >
-          <path d="M-40 750C400 580 960 485 1580 383" />
-          <path d="M385-20C475 224 630 410 820 535S1250 858 1540 1075" />
-          <path d="M575 260C695 154 822 70 932 101S1080 224 1112 343" />
+          <line className="hairline" x1="28" y1="0" x2="28" y2="100" />
+          <line className="hairline" x1="0" y1="62" x2="100" y2="62" />
+          <line className="sightline" x1="52" y1="8" x2="88" y2="46" />
+          <line className="sightline" x1="34" y1="88" x2="96" y2="70" />
         </svg>
-        <span className="map-grid vertical one" />
-        <span className="map-grid vertical two" />
-        <span className="map-grid horizontal" />
-        <span className="map-star">
-          <Icon name="north-star" />
-        </span>
-        <div className="image-coordinates">
-          THE VIEW FROM ABOVE
-          <span>A NEW PERSPECTIVE</span>
-        </div>
-        <div className="image-label">
-          <span className="status-dot" /> CONNECTING THE DOTS
-        </div>
+        <svg
+          className="map-squiggle"
+          width="52"
+          height="68"
+          viewBox="0 0 46 60"
+          fill="none"
+          aria-hidden="true"
+        >
+          <path d="M4 56C16 50 28 38 34 8" />
+          <path d="M34 8C34 22 39 32 44 37" />
+        </svg>
       </div>
     </section>
   );

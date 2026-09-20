@@ -173,93 +173,51 @@
   position: relative;
   overflow: hidden;
   min-height: 400px;
+  background: #211d17;
   border-left: 1px solid #4a392f;
 }
-.hero-photo {
+/* Dithered dot-matrix aerial map. Fills the visual column; its left/bottom margins
+   dissolve into the #211d17 background so it blends into the copy column. */
+.hero-map-canvas {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
-  object-fit: cover;
-  object-position: center;
-  filter: saturate(1.02);
+  display: block;
 }
-.image-shade {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(0deg, #1a140e8f, transparent 42%, #1a140e18);
-}
-.route-overlay {
+/* Thin coral hairlines + dashed cream sightlines, drawn in a 0..100 user space that
+   stretches to the column (preserveAspectRatio="none"), so vector-effect keeps them 1px. */
+.hero-hairlines {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
+  pointer-events: none;
+}
+.hero-hairlines .hairline {
+  stroke: #e08a5c;
+  stroke-width: 1;
+  opacity: 0.6;
+  vector-effect: non-scaling-stroke;
+}
+.hero-hairlines .sightline {
+  stroke: #f7f5f0;
+  stroke-width: 1;
+  stroke-dasharray: 4 8;
+  opacity: 0.7;
+  vector-effect: non-scaling-stroke;
+}
+/* Coral route squiggle echoing the brand mark, dropped over the map. */
+.map-squiggle {
+  position: absolute;
+  right: 11%;
+  top: 48%;
+  pointer-events: none;
   fill: none;
-  stroke: #ffb98c;
-  stroke-width: 5;
+  stroke: #eda578;
+  stroke-width: 2.6;
   stroke-linecap: round;
-  stroke-dasharray: 0.1 12;
-  opacity: 0.95;
-}
-.map-grid {
-  position: absolute;
-  background: #ffb98c;
-  opacity: 0.75;
-}
-.map-grid.vertical {
-  width: 1px;
-  top: 0;
-  bottom: 0;
-}
-.map-grid.one {
-  left: 29%;
-}
-.map-grid.two {
-  left: 79%;
-}
-.map-grid.horizontal {
-  left: 0;
-  right: 0;
-  top: 70%;
-  height: 1px;
-}
-.map-star {
-  position: absolute;
-  top: 70%;
-  left: 79%;
-  width: 55px;
-  height: 55px;
-  color: #ffb98c;
-  transform: translate(-50%, -50%);
-}
-.map-star svg {
-  width: 100%;
-  height: 100%;
-}
-.image-coordinates {
-  position: absolute;
-  top: 24px;
-  left: 27px;
-  right: 27px;
-  display: flex;
-  justify-content: space-between;
-  font-size: 8px;
-  letter-spacing: 1.5px;
-  color: #fdf7edd0;
-}
-.image-label {
-  position: absolute;
-  bottom: 28px;
-  left: 27px;
-  font-size: 9px;
-  letter-spacing: 1.6px;
-  display: flex;
-  gap: 10px;
-  align-items: center;
-  color: #fdf7ed;
-}
-.image-label .status-dot {
-  background: #ffb98c;
+  filter: drop-shadow(0 0 5px rgba(33, 29, 23, 0.85));
 }
 
 .site-footer {
