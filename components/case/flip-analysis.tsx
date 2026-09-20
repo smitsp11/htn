@@ -18,11 +18,12 @@ export function FlipAnalysis({ submission }: { submission: RankedSubmission }) {
     <details className="flip-analysis" open>
       <summary>
         <span>
-          <span
-            className="flip-info"
-            title="Each factor blocking or missing on this submission, marked Actionable when you can fix it (re-quote, request a document) or Fixed when it is a fact of the risk you cannot change."
-          >
+          <span className="flip-info" tabIndex={0}>
             <Icon name="info" />
+            <span className="flip-tooltip" role="tooltip">
+              Each factor blocking or missing on this submission, marked Actionable when you can fix it (re-quote, request a
+              document) or Fixed when it is a fact of the risk you cannot change.
+            </span>
           </span>{" "}
           Flip analysis
         </span>
