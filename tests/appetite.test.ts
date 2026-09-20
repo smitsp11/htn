@@ -167,7 +167,7 @@ test("status: all acceptable is in appetite even with no targets", () => {
 
 test("recommendation vocabulary never implies an automatic decision", () => {
   assert.equal(recommendationFor("in_appetite"), "Review for acceptance");
-  assert.equal(recommendationFor("needs_investigation"), "Investigate missing or ambiguous data");
+  assert.equal(recommendationFor("needs_investigation"), "Investigate data");
   assert.equal(recommendationFor("out_of_appetite"), "Review for likely decline");
   for (const status of ["in_appetite", "needs_investigation", "out_of_appetite"] as const) {
     assert.doesNotMatch(recommendationFor(status), /\b(bind|bound|accepted|rejected|declined)\b/i);
@@ -208,7 +208,7 @@ test("explanation: unknown factors are listed as unresolved", () => {
   const result = evaluateAppetite(missingLosses);
   assert.equal(
     result.explanation,
-    "Missing Losses Account scores 92/100 and needs investigation. Unresolved: five-year losses; target matches on primary risk state, total insured value, total premium, building year. Recommendation: Investigate missing or ambiguous data.",
+    "Missing Losses Account scores 92/100 and needs investigation. Unresolved: five-year losses; target matches on primary risk state, total insured value, total premium, building year. Recommendation: Investigate data.",
   );
 });
 

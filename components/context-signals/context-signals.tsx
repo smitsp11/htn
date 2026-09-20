@@ -21,7 +21,6 @@ export function ContextSignals({ signals }: { signals: ContextSignal[] }) {
           </li>
         ))}
       </ul>
-      <small className="ctx-note">Outside data — not part of the carrier appetite score.</small>
     </section>
   );
 }

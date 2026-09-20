@@ -108,12 +108,8 @@ export function RunConsolidation({
     <section className="consol" aria-label="Live channel consolidation">
       <div className="consol-head">
         <div>
-          <span className="consol-eyebrow">Browserbase · multi-channel intake</span>
+          <span className="consol-eyebrow">Browserbase</span>
           <h4 className="consol-title">Consolidate broker channels</h4>
-          <p className="consol-copy">
-            Recover missing submission fields from broker email, schedule of values, and portal
-            sources via a live browser session.
-          </p>
         </div>
         <button type="button" className="consol-btn" onClick={run} disabled={busy}>
           {busy ? "Consolidating…" : "Consolidate"}

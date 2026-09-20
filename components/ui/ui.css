@@ -15,6 +15,13 @@
 .badge.lane-declined{color:var(--danger);background:var(--danger-tint)}
 .badge.lane-not-property{color:var(--ink-faint);background:var(--surface-muted)}
 
+/* Flag chips: red/yellow/preferred factor-tone counts, ported from federanorth's .flag-chip. */
+.flag-chips{display:inline-flex;flex-wrap:wrap;gap:5px;margin-top:2px}
+.flag-chip{display:inline-flex;align-items:center;padding:4px 8px;font-size:9px;font-weight:600;border-radius:5px;white-space:nowrap}
+.flag-chip b{margin-right:4px;font-weight:700}
+.flag-chip.flag-red{color:var(--danger);background:var(--danger-tint)}
+.flag-chip.flag-yellow{color:var(--amber);background:var(--amber-tint)}
+.flag-chip.flag-preferred{color:var(--mint-strong);background:var(--mint-tint)}
 
 /* Track: generic tone-colored progress fill, ported from federanorth's .score-track/.line-track. */
 .track{display:inline-block;width:60px;height:6px;background:var(--border);border-radius:99px;overflow:hidden;vertical-align:middle}

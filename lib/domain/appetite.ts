@@ -28,6 +28,13 @@ export function classifyScope(lineOfBusiness?: string, extended = false): LineSc
   return "out_of_scope";
 }
 
+// Shared guideline cutoffs used by the flip-analysis presentation layer.
+export const TIV_MAX = 150_000_000;
+export const PREMIUM_MIN = 50_000;
+export const PREMIUM_MAX = 175_000;
+export const YEAR_ACCEPTABLE_AFTER = 1990;
+export const LOSS_MAX = 100_000;
+
 /**
  * Naive additive score. A target verdict earns 2 points, acceptable earns 1,
  * unknown and not acceptable earn 0. Four factors have a target tier (state,

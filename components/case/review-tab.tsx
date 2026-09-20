@@ -3,6 +3,7 @@ import { completenessOf } from "@/lib/rankings/completeness";
 import { fixturesFor } from "@/lib/demo/fixtures";
 import { Badge, type BadgeTone } from "@/components/ui/badge";
 import { Icon } from "@/components/ui/icon";
+import { FlipAnalysis } from "@/components/case/flip-analysis";
 import { ResearchPanel } from "@/components/case/research-panel";
 import { ResolutionPanel } from "@/components/case/resolution-panel";
 import { EvidenceIntake } from "@/components/case/evidence-intake";
@@ -151,18 +152,7 @@ export function ReviewTab({ submission }: { submission: RankedSubmission }) {
 
   return (
     <div className="review-tab">
-      <section className="recommendation">
-        <span>
-          <Icon name="shield" /> NEXT STEP
-        </span>
-        <p>{submission.recommendation}</p>
-        <small>{submission.accountName} · {completeness.resolved}/{completeness.total} factors established</small>
-      </section>
-
-      <section className="assessment-summary">
-        <h3>Assessment</h3>
-        <p>{submission.explanation}</p>
-      </section>
+      <FlipAnalysis submission={submission} />
 
       <ResolutionPanel resolution={submission.resolution} />
 
@@ -198,13 +188,11 @@ export function ReviewTab({ submission }: { submission: RankedSubmission }) {
                 <b className="lead-value">{lead.value}</b>
                 <p>{lead.detail}</p>
                 <p className="lead-caution">
-                  <Icon name="info" /> {lead.caution ?? "Context only. Not scored."}
+                  <Icon name="info" /> Context only.
                 </p>
-                {lead.sources.length > 0 ? <p className="lead-sources">{lead.sources.join(", ")}</p> : null}
               </article>
             ))}
           </div>
-          <p className="lead-footer">Context only. None of this is scored, and none of it closes an open request.</p>
         </details>
       ) : null}
 
