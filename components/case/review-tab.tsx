@@ -13,8 +13,7 @@ import { RunConsolidation } from "@/components/consolidation/run-consolidation";
 import { scenarioSubmissionIds } from "@/lib/consolidation/scenario/pages";
 import { tableFor } from "@/lib/domain/appetite/registry";
 
-/** Submissions with a staged scattered-channel scenario (W8). Only these expose
- *  the live "Consolidate" affordance; every other submission chases gaps normally. */
+/** Curated scattered-channel scenarios (W8); always expose the Consolidate affordance. */
 const CONSOLIDATION_DEMO_IDS = new Set(scenarioSubmissionIds());
 
 /**
@@ -217,9 +216,10 @@ export function ReviewTab({ submission }: { submission: RankedSubmission }) {
 
       <EvidenceRequest submission={submission} openGaps={openGaps} />
 
-      {CONSOLIDATION_DEMO_IDS.has(submission.id) ? (
+      {submission.status === "needs_investigation" || CONSOLIDATION_DEMO_IDS.has(submission.id) ? (
         <RunConsolidation
           submissionId={submission.id}
+          fields={completeness.absent}
           labels={Object.fromEntries(submission.factors.map((factor) => [factor.key, factor.label]))}
         />
       ) : null}

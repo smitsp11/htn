@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import type { FactorKey } from "@/lib/domain/types";
 import type { ResolvedValue } from "@/lib/enrichment/provenance";
+import { formatFieldValue } from "@/lib/consolidation/steps";
 
 interface LiveStep {
   channel: string;
@@ -23,17 +24,6 @@ function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-function formatChipValue(value: number | string): string {
-  if (typeof value !== "number" || !Number.isFinite(value)) return String(value);
-  if (value === 0) return "$0";
-  if (Math.abs(value) >= 10_000) return `$${Math.round(value / 1000)}k`;
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-    maximumFractionDigits: 0,
-  }).format(value);
-}
-
 function impactLine(count: number): string {
   const n = Math.max(count, 0);
   const noun = n === 1 ? "broker follow-up" : "broker follow-ups";
@@ -42,9 +32,12 @@ function impactLine(count: number): string {
 
 export function RunConsolidation({
   submissionId,
+  fields,
   labels,
 }: {
   submissionId: string;
+  /** Unknown factor keys to recover; sent so the engine can synthesize channel data for them. */
+  fields: FactorKey[];
   labels: Record<string, string>;
 }) {
   const [busy, setBusy] = useState(false);
@@ -87,7 +80,7 @@ export function RunConsolidation({
       const response = await fetch("/api/consolidate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ submissionId }),
+        body: JSON.stringify({ submissionId, fields }),
       });
       const payload = (await response.json()) as ConsolidateResponse & { error?: string };
       if (!response.ok) throw new Error(payload.error || "Consolidation failed.");
@@ -134,7 +127,7 @@ export function RunConsolidation({
                 {resolvedEntries.map(([key, value]) => (
                   <li key={key}>
                     <strong>{labels[key] ?? key}</strong>
-                    <span>{formatChipValue(value.value)}</span>
+                    <span>{formatFieldValue(key, value.value)}</span>
                     <small>{value.provenance.source}</small>
                   </li>
                 ))}

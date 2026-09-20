@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { runLiveConsolidation } from "@/lib/consolidation/browserbase-live";
-import { scenarioEntry } from "@/lib/consolidation/scenario/pages";
+import type { FactorKey } from "@/lib/domain/types";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -13,24 +13,17 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Request body must be JSON." }, { status: 400 });
   }
 
-  const submissionId =
-    typeof body === "object" && body !== null && "submissionId" in body
-      ? String((body as { submissionId?: unknown }).submissionId ?? "").trim()
-      : "";
+  const record = typeof body === "object" && body !== null ? (body as Record<string, unknown>) : {};
+  const submissionId = String(record.submissionId ?? "").trim();
+  // The unknown factors the case view wants recovered; synthesized when no curated scenario exists.
+  const fields = Array.isArray(record.fields) ? (record.fields.map(String) as FactorKey[]) : [];
 
   if (!submissionId) {
     return NextResponse.json({ error: "submissionId is required." }, { status: 400 });
   }
 
-  if (!scenarioEntry(submissionId)) {
-    return NextResponse.json(
-      { error: "No scattered-channel scenario for this submission." },
-      { status: 404 },
-    );
-  }
-
   try {
-    const result = await runLiveConsolidation(submissionId);
+    const result = await runLiveConsolidation(submissionId, fields);
     return NextResponse.json(result);
   } catch (error) {
     const message = error instanceof Error ? error.message : "Consolidation failed.";
