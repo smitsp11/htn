@@ -1,60 +1,89 @@
-import type { QueryTrace } from "@/lib/federato/query-trace";
+import type { QueryReasoning } from "@/lib/domain/types";
 
 export interface QueryTraceViewProps {
-  trace: QueryTrace;
+  trace: QueryReasoning;
 }
 
 /**
- * Read-only view of the schema-driven query trace (Person 2's UI contribution).
- * Shows the underwriter which data the agent requested and why, and flags any
- * field the schema could not resolve. Styles live in ./query-trace.css and are
- * loaded by the package index, so this file imports no CSS and stays importable
- * under node tests. All class names are prefixed `qt-` to avoid collisions.
+ * Read-only view of the query agent's reasoning (Person 2's UI contribution).
+ * Shows the underwriter which resource the agent chose, which discovered
+ * field answers each appetite requirement and why, what it could not resolve,
+ * and the steps it took (queries, repairs, derivations, warnings). Styles live
+ * in ./query-trace.css and are loaded globally, so this file imports no CSS and
+ * stays importable under node tests. Class names are prefixed `qt-`.
  */
 export function QueryTraceView({ trace }: QueryTraceViewProps) {
-  const resolvedCount = trace.fields.length - trace.unresolvedFields.length;
+  const resolved = trace.fields.filter((field) => field.schemaPath).length;
+  const total = trace.fields.length + trace.unresolved.length;
+  const queries = trace.steps.filter((step) => step.stage === "query").length;
+  const repairs = trace.steps.filter((step) => step.stage === "repair").length;
+  const warnings = trace.steps.filter((step) => step.stage === "warning").length;
 
   return (
-    <section className="qt" aria-label="Query trace">
+    <section className="qt" aria-label="Query reasoning">
       <header className="qt-header">
         <span className="qt-resource">
-          Resource: <strong>{trace.resource}</strong>
-          {!trace.resourceResolved && <em className="qt-flag"> (fallback — not confirmed in schema)</em>}
+          Root resource: <strong>{trace.rootResource}</strong>
+          {trace.queueResource && (
+            <>
+              {" "}· queue: <strong>{trace.queueResource}</strong>
+            </>
+          )}
         </span>
         <span className="qt-summary">
-          {trace.generatedFromSchema ? "Generated from discovered schema" : "Generated from fixtures"} ·{" "}
-          {resolvedCount}/{trace.fields.length} fields resolved
+          Planned from the discovered schema{trace.plannedBy === "llm" ? " with a model's field choices" : ""} ·{" "}
+          {resolved}/{total} requirements resolved · {queries} quer{queries === 1 ? "y" : "ies"}
+          {repairs > 0 ? ` · ${repairs} repair${repairs === 1 ? "" : "s"}` : ""}
+          {warnings > 0 ? ` · ${warnings} warning${warnings === 1 ? "" : "s"}` : ""}
         </span>
       </header>
 
       <ul className="qt-grid">
         {trace.fields.map((field) => (
-          <li
-            key={field.field}
-            className={`qt-field ${field.resolved ? "qt-resolved" : "qt-unresolved"}`}
-            data-resolved={field.resolved}
-          >
+          <li key={field.field} className="qt-field qt-resolved" data-resolved="true">
             <div className="qt-field-top">
-              <span className="qt-field-name">{field.field}</span>
-              <code className="qt-match">{field.schemaMatch}</code>
+              <span className="qt-field-name">{field.label}</span>
+              <code className="qt-match">{field.schemaPath}</code>
             </div>
             <p className="qt-reason">{field.appetiteReason}</p>
-            {field.behavior && <p className="qt-behavior">{field.behavior}</p>}
-            {field.unresolvedReason && <p className="qt-warning">{field.unresolvedReason}</p>}
+            {field.requires && <p className="qt-behavior">{field.requires}</p>}
+            {field.chosenBy === "llm" && <p className="qt-behavior">Chosen by the planner model; validated against the schema.</p>}
+          </li>
+        ))}
+        {trace.unresolved.map((item) => (
+          <li key={item.field} className="qt-field qt-unresolved" data-resolved="false">
+            <div className="qt-field-top">
+              <span className="qt-field-name">{item.field}</span>
+              <code className="qt-match">unresolved</code>
+            </div>
+            <p className="qt-warning">{item.reason}</p>
           </li>
         ))}
       </ul>
 
-      {trace.assumptions.length > 0 && (
+      {trace.fallbacks.length > 0 && (
         <details className="qt-assumptions">
-          <summary>Assumptions ({trace.assumptions.length})</summary>
+          <summary>Fallbacks ({trace.fallbacks.length})</summary>
           <ul>
-            {trace.assumptions.map((assumption) => (
-              <li key={assumption}>{assumption}</li>
+            {trace.fallbacks.map((line) => (
+              <li key={line}>{line}</li>
             ))}
           </ul>
         </details>
       )}
+
+      <details className="qt-assumptions">
+        <summary>Steps ({trace.steps.length})</summary>
+        <ol className="qt-steps">
+          {trace.steps.map((step, index) => (
+            <li key={`${index}-${step.title}`} className={`qt-step qt-step-${step.stage}`}>
+              <span className="qt-stage">{step.stage}</span>
+              <span className="qt-step-title">{step.title}</span>
+              <p className="qt-step-detail">{step.detail}</p>
+            </li>
+          ))}
+        </ol>
+      </details>
     </section>
   );
 }

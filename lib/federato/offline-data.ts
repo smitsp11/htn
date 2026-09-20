@@ -1,19 +1,16 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
-import type { CanonicalSubmission, HazardProfile } from "@/lib/domain/types";
-import { normalizeQueryResponse } from "@/lib/federato/adapter";
+import type { HazardProfile } from "@/lib/domain/types";
 import { hazardForLocation, loadHazardIndex } from "@/lib/enrichment/hazard";
 
 /**
  * Offline Federato data source (server-only).
  *
  * The `raw/full_<Resource>.json` files are a real Federato snapshot captured via
- * schema discovery + full-resource queries. This module reads them from disk,
- * indexes each resource by id, performs the documented per-Submission joins to
- * build one EXPANDED record per submission (the shape `normalizeQueryResponse`
- * consumes), and returns the resulting `CanonicalSubmission[]`. It never reaches
- * the network, so it is a deterministic, credential-free data source for the
- * read-only underwriting agent.
+ * schema discovery + full-resource queries. Submissions themselves are now
+ * produced by the query agent replaying that snapshot (`lib/federato/replay.ts`);
+ * this module keeps the id-join only to resolve each submission's primary risk
+ * location for the FEMA hazard enrichment. It never reaches the network.
  */
 
 type UnknownRecord = Record<string, unknown>;
@@ -229,11 +226,6 @@ async function joinSubmissions(): Promise<JoinedSubmission[]> {
       primaryLocation,
     } satisfies JoinedSubmission;
   });
-}
-
-export async function loadOfflineSubmissions(): Promise<CanonicalSubmission[]> {
-  const joined = await joinSubmissions();
-  return normalizeQueryResponse({ data: joined.map((submission) => submission.expanded) });
 }
 
 /**

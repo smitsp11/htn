@@ -55,7 +55,7 @@ Given one valid `CanonicalSubmission`, return one stable `RankedSubmission` cont
 - Short explanation.
 - Human recommendation.
 
-The same input must always produce the same result; no network or LLM call is allowed.
+The same input must always produce the same result, so the evaluator stays a pure function. Any LLM-generated or enriched data reaches it as part of the input rather than being fetched from inside the evaluator.
 
 ## Completion evidence
 

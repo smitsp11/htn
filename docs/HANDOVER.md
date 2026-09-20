@@ -75,8 +75,8 @@ Conductor is configured for concurrent local development using a different `$CON
 - Exact boundaries not classified by the PDF remain visible as ambiguous until the engineer decides otherwise.
 - Out-of-appetite submissions remain in the queue and receive explanations.
 - The score is subordinate to appetite status; a high score cannot hide an unacceptable factor.
-- Explanations are deterministic for this MVP; no external LLM is required.
-- External enrichment is out of scope.
+- Explanations are template-based and deterministic by default. An LLM may be used to plan queries or phrase explanations, but it is optional and never replaces the Federato API as the source of submission data.
+- External enrichment APIs (for example Nominatim, OpenFEMA, Open-Meteo) are optional. Enrichment that is used must visibly change the ranking, must be explained in the result, and must fail gracefully when the external service is unavailable.
 
 ## Whole-product definition of done
 

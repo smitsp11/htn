@@ -1,6 +1,7 @@
 import type { RankingsResponse } from "@/lib/domain/types";
 import type { RankingsErrorBody } from "@/lib/rankings/errors";
 import { summarize } from "@/lib/rankings/presentation";
+import { QueryTraceView } from "@/components/query-trace/query-trace";
 import { OutOfScopeSection } from "./out-of-scope-section";
 import { QueueTable } from "./queue-table";
 import { SourceStatus } from "./source-status";
@@ -65,6 +66,13 @@ export function DashboardView({ data, error, loading, expandedId, onToggle, onRe
 
         <OutOfScopeSection submissions={outOfScopeSubmissions} />
       </section>
+
+      {data.queryTrace ? (
+        <details className="trace-panel">
+          <summary>Query reasoning</summary>
+          <QueryTraceView trace={data.queryTrace} />
+        </details>
+      ) : null}
 
       <details className="trace-panel">
         <summary>Decision trace</summary>

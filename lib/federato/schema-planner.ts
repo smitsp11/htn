@@ -1,498 +1,480 @@
-import type { CanonicalSubmission, FactorKey } from "@/lib/domain/types";
-
 /**
- * Schema-driven query planner (Person 2).
+ * Turns a discovered schema into a data plan: which resource holds the queue,
+ * which path answers each appetite requirement, what fetching it costs
+ * (expansion, array traversal), and where to look when the risk schedule is
+ * empty.
  *
- * This planner targets the REAL Federato schema captured under `raw/schema.json`
- * (shape: `{ output: [ { data: { <Resource>: { fields: { <field>: { type,
- * optional, resource?, cardinality? } } } } } ] }`). The root queue resource is
- * `Submission`; references are joined by numeric id.
- *
- * Each canonical field declares WHY it is needed plus candidate schema paths in
- * real Federato field names (dot-notation across reference joins, including the
- * reverse `Submission <- Policy.submission` relation surfaced as `policy`). The
- * planner resolves each path against the discovered schema, records unresolved
- * fields (never invents them), and emits a `$expand` projection covering insured,
- * policy, policy.exposure_units.location.buildings and policy.claims. `where` /
- * `filter` stay empty so all 158 submissions are retained and appetite is judged
- * client-side. Everything stays overridable via the adapter's env seams.
+ * The plan is produced from the schema every run. Nothing here hardcodes
+ * Federato field names; `requirements.ts` supplies name fragments to search
+ * for, and every chosen path is validated back against the live schema.
  */
 
-type UnknownRecord = Record<string, unknown>;
+import {
+  REQUIREMENTS,
+  REQUIREMENTS_BY_KEY,
+  type RequirementKey,
+  type RequirementSpec,
+} from "./requirements";
+import { objectFields, referenceTarget, type LeafPath, type SchemaIndex } from "./schema-index";
+import type { QueryTrace } from "./query-trace";
 
-export type FieldContainer = "scalar" | "array" | "reference";
-
-/** One discovered schema field, normalized from the real schema shape. */
-export interface DiscoveredField {
-  name: string;
-  type?: string;
-  isArray: boolean;
-  isReference: boolean;
-  /** Target resource name for references. */
-  resource?: string;
+export interface PathCandidate {
+  path: string;
+  terminalType: string;
+  expandChain: string[];
+  manyAt: string[];
+  score: number;
 }
 
-export interface DiscoveredResource {
-  name: string;
-  fields: DiscoveredField[];
-}
-
-export interface ParsedSchema {
-  resources: DiscoveredResource[];
-}
-
-/** A single appetite/display data requirement the query must satisfy. */
-export interface FieldRequirement {
-  canonicalField: keyof CanonicalSubmission;
-  /** Set when this requirement backs one of the eight appetite factors. */
-  factor?: FactorKey;
+export interface FieldChoice {
+  key: RequirementKey;
+  label: string;
   appetiteReason: string;
-  container: FieldContainer;
-  /** Candidate schema paths, in preference order (real Federato field names). */
-  candidatePaths: string[];
-  /** Documented aggregation rule when the source is an array of records. */
-  aggregation?: string;
-  /** Documented `$expand` behavior when the source is a reference. */
-  expansionNote?: string;
-  /** Documented `$elemMatch` behavior when the source is an array. */
-  arrayNote?: string;
+  path?: string;
+  terminalType?: string;
+  expandChain: string[];
+  manyAt: string[];
+  /** Sibling paths the derivation reads; already confirmed to exist. */
+  supporting: string[];
+  reason: string;
+  chosenBy: "heuristic" | "llm";
+  alternatives: string[];
 }
 
-/** Result of resolving one requirement against the discovered schema. */
-export interface PlannedField {
-  canonicalField: keyof CanonicalSubmission;
-  factor?: FactorKey;
-  appetiteReason: string;
-  container: FieldContainer;
-  candidatePaths: string[];
-  /** The candidate path matched in the schema, or undefined when unresolved. */
-  matchedPath?: string;
-  resolved: boolean;
-  unresolvedReason?: string;
-  aggregation?: string;
-  expansionNote?: string;
-  arrayNote?: string;
-  /** Developer-facing `$elemMatch` template for targeted array drill-downs. */
-  elemMatchExample?: UnknownRecord;
+/**
+ * Where to look for a location when the risk schedule is empty: a single
+ * (non-array) reference from the root to the same resource that holds the
+ * risk state — in practice the insured's headquarters.
+ */
+export interface FallbackLocation {
+  /** Path to the location record itself, e.g. `insured.hq`. */
+  locationPath: string;
+  statePath: string;
+  /** Path to the buildings under it, when the schema has any. */
+  buildingsPath?: string;
+  /** Every leaf the query must project so the fallback can be derived. */
+  projectPaths: string[];
+  expandChain: string[];
+  reason: string;
 }
 
-export interface QueryPlan {
+export interface DataPlan {
+  rootResource: string;
+  /** Resource that represents the queue itself, when the root is not it. */
+  queueResource?: string;
+  /** Reference field on the root resource that points at the queue resource. */
+  queueLinkPath?: string;
+  choices: FieldChoice[];
+  unresolved: Array<{ key: RequirementKey; label: string; reason: string }>;
+  fallback?: FallbackLocation;
+  plannedBy: "heuristic" | "llm";
+}
+
+/** The plan for the queue resource itself, used for submissions with no policy. */
+export interface QueuePlan {
   resource: string;
-  resourceResolved: boolean;
-  fields: PlannedField[];
-  /** The generated Federato-style query payload (the projection). */
-  projection: unknown;
-  assumptions: string[];
+  choices: FieldChoice[];
+  fallback?: FallbackLocation;
 }
 
-/**
- * Queue resource names, in preference order. `Submission` is the real root; the
- * rest are conservative fallbacks. The first present in the discovered schema
- * wins (matched case-insensitively; the real resource name is preserved).
- */
-export const QUEUE_RESOURCE_CANDIDATES = ["submission", "policy", "insured"] as const;
+const MIN_SCORE = 30;
 
 /**
- * The requirements catalogue: display fields plus all eight appetite factors,
- * expressed against the real Submission -> Policy -> ExposureUnit -> Location ->
- * Building / Claim / Insured reference graph.
+ * Reference hops that lead away from the insured risk. A building at the
+ * insured's head office, a broker's region or an underlying carrier's limit all
+ * match the same field names as the risk itself and must lose to it.
  */
-export const FIELD_REQUIREMENTS: FieldRequirement[] = [
-  {
-    canonicalField: "id",
-    appetiteReason: "Stable identity for de-duplication and linking back to Federato.",
-    container: "scalar",
-    candidatePaths: ["submission_number", "id"],
-  },
-  {
-    canonicalField: "accountName",
-    appetiteReason: "Human-readable label shown to the underwriter.",
-    container: "reference",
-    candidatePaths: ["insured.name"],
-    expansionNote: "$expand Submission.insured -> Insured.name; a bare id stays unknown.",
-  },
-  {
-    canonicalField: "submissionType",
-    factor: "submissionType",
-    appetiteReason: "Appetite accepts new business and declines renewals.",
-    container: "reference",
-    candidatePaths: ["policy.business_type"],
-    expansionNote: "$expand the policy bound to this submission for Policy.business_type (new/renewal).",
-  },
-  {
-    canonicalField: "lineOfBusiness",
-    factor: "lineOfBusiness",
-    appetiteReason: "Appetite is scoped to commercial property.",
-    container: "scalar",
-    candidatePaths: ["line_of_business", "policy.line_of_business"],
-  },
-  {
-    canonicalField: "primaryRiskState",
-    factor: "primaryRiskState",
-    appetiteReason: "Target/acceptable state list is a hard appetite gate.",
-    container: "array",
-    candidatePaths: ["policy.exposure_units.location.state"],
-    aggregation: "State of the risk location with the greatest summed Building.tiv; fallback the HQ location's state.",
-    arrayNote: "Reference joins across exposure_units[] -> location; a targeted state query would need $elemMatch on exposure_units.",
-  },
-  {
-    canonicalField: "effectiveDate",
-    appetiteReason: "Policy period context and the trailing-5-year loss window anchor.",
-    container: "reference",
-    candidatePaths: ["policy.dates.effective", "target_effective_date"],
-    expansionNote: "Prefer Policy.dates.effective; fall back to Submission.target_effective_date.",
-  },
-  {
-    canonicalField: "expirationDate",
-    appetiteReason: "Policy period context.",
-    container: "reference",
-    candidatePaths: ["policy.dates.expiration"],
-    expansionNote: "$expand the bound policy for Policy.dates.expiration.",
-  },
-  {
-    canonicalField: "tiv",
-    factor: "tiv",
-    appetiteReason: "Total insured value drives the $50M-$150M appetite band.",
-    container: "array",
-    candidatePaths: ["policy.exposure_units.location.buildings.tiv"],
-    aggregation: "SUM of Building.tiv (fallback Building.building_value) across all risk buildings.",
-    arrayNote: "Sums every building across every risk location; no $elemMatch filter so no building is dropped.",
-  },
-  {
-    canonicalField: "totalPremium",
-    factor: "totalPremium",
-    appetiteReason: "Premium drives the $50K-$175K appetite band.",
-    container: "reference",
-    candidatePaths: ["policy.premium"],
-    expansionNote: "$expand the bound policy for Policy.premium; no policy -> unknown.",
-  },
-  {
-    canonicalField: "buildingYear",
-    factor: "buildingYear",
-    appetiteReason: "Construction year gates on 1990/2010 thresholds.",
-    container: "array",
-    candidatePaths: ["policy.exposure_units.location.buildings.year_built"],
-    aggregation: "MIN (oldest) Building.year_built across all risk buildings — the conservative worst case.",
-    arrayNote: "Reads every building across every risk location; the oldest year governs the verdict.",
-  },
-  {
-    canonicalField: "approvedConstructionPercentage",
-    factor: "construction",
-    appetiteReason: "More than 50% approved (non-combustible) construction is required.",
-    container: "array",
-    candidatePaths: ["policy.exposure_units.location.buildings.construction_type"],
-    aggregation:
-      "TIV-weighted share (0..1) of buildings whose construction_type is approved (JM/non-combustible/steel/fire resistive); equal-weight fallback. The >50% threshold itself is applied in lib/domain/appetite.",
-    arrayNote: "Classifies each building's construction_type against the approved set; never infers approval otherwise.",
-  },
-  {
-    canonicalField: "constructionDescription",
-    appetiteReason: "Context for the construction verdict shown to the underwriter.",
-    container: "array",
-    candidatePaths: ["policy.exposure_units.location.buildings.construction_type"],
-    aggregation: "Sorted distinct construction_type values across all risk buildings, joined by ', '.",
-  },
-  {
-    canonicalField: "fiveYearLossValue",
-    factor: "fiveYearLossValue",
-    appetiteReason: "Trailing five-year losses must be under $100K.",
-    container: "array",
-    candidatePaths: ["policy.claims.paid_indemnity"],
-    aggregation:
-      "SUM of (Claim.paid_indemnity + Claim.paid_expense) within the trailing 5 years ending at the effective-date year (else newest claim year); undated claims included. 0 when a policy has no qualifying claims; undefined when there is no policy.",
-    arrayNote: "Reads every claim on the bound policy; no $elemMatch filter so no claim is dropped.",
-  },
+const OFF_RISK_SEGMENTS = [
+  "hq",
+  "parent",
+  "underlying_layer",
+  "producer",
+  "broker",
+  "contact",
+  "underwriter",
 ];
 
-function isRecord(value: unknown): value is UnknownRecord {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
-}
+function scoreCandidate(spec: RequirementSpec, leaf: LeafPath): number {
+  const path = leaf.path.toLowerCase();
+  const name = leaf.leaf.toLowerCase();
 
-/** Parse the `fields` map of one resource ({ name: { type, resource?, cardinality? } }). */
-function parseFields(rawFields: unknown): DiscoveredField[] {
-  if (!isRecord(rawFields)) return [];
-  return Object.entries(rawFields).map(([name, value]) => {
-    const descriptor = isRecord(value) ? value : {};
-    const type = typeof value === "string" ? value : typeof descriptor.type === "string" ? descriptor.type : undefined;
-    const lowered = (type ?? "").toLowerCase();
-    const isReference = lowered === "reference" || typeof descriptor.resource === "string";
-    const isArray = lowered === "array" || descriptor.cardinality === "many";
-    const resource = typeof descriptor.resource === "string" ? descriptor.resource : undefined;
-    return { name, type, isArray, isReference, resource };
+  let best = 0;
+  spec.synonyms.forEach((synonym, index) => {
+    // Earlier synonyms are the better answer when several match.
+    const priority = (spec.synonyms.length - index) * 5;
+    const needle = synonym.toLowerCase();
+    if (needle.includes(".")) {
+      if (path === needle || path.endsWith(`.${needle}`)) best = Math.max(best, 110 + priority);
+      return;
+    }
+    if (name === needle) best = Math.max(best, 100 + priority);
+    else if (name.includes(needle)) best = Math.max(best, 65 + priority);
+    else if (path.includes(needle)) best = Math.max(best, 45 + priority);
   });
+  if (best === 0) return 0;
+
+  let score = best;
+  const segments = path.split(".");
+  for (const segment of OFF_RISK_SEGMENTS) {
+    if (segments.includes(segment)) score -= 45;
+  }
+  const numeric = leaf.terminalType === "number";
+  const textual = leaf.terminalType === "string";
+  if (spec.expectedType === "number") score += numeric ? 20 : -60;
+  if (spec.expectedType === "string") score += textual ? 20 : -60;
+
+  for (const token of spec.avoid ?? []) {
+    if (path.includes(token.toLowerCase())) score -= 70;
+  }
+
+  score -= 4 * (leaf.path.split(".").length - 1);
+  return score;
 }
 
-function parseResource(name: string, value: unknown): DiscoveredResource {
-  if (isRecord(value)) {
-    const rawFields = value.fields ?? value.properties ?? value;
-    return { name, fields: parseFields(rawFields) };
-  }
-  return { name, fields: [] };
+export function candidatesFor(
+  index: SchemaIndex,
+  resource: string,
+  spec: RequirementSpec,
+  limit = 5,
+): PathCandidate[] {
+  return index
+    .leaves(resource)
+    .map((leaf) => ({
+      path: leaf.path,
+      terminalType: leaf.terminalType,
+      expandChain: leaf.expandChain,
+      manyAt: leaf.manyAt,
+      score: scoreCandidate(spec, leaf),
+    }))
+    .filter((candidate) => candidate.score >= MIN_SCORE)
+    .sort((left, right) => right.score - left.score)
+    .slice(0, limit);
 }
 
 /**
- * Normalize the discovered schema into a flat resource/field list. Unwraps the
- * real `{ output: [ { data: { ... } } ] }` envelope (and a few common wrappers)
- * and tolerates empty/alien inputs without throwing.
+ * Picks the resource that answers the most appetite requirements with the
+ * fewest reference hops. Depth matters more here than when choosing a field:
+ * a claim can reach every policy fact through `claim.policy`, but the policy
+ * is the record the queue is made of, not the claim.
  */
-export function parseSchema(schema: unknown): ParsedSchema {
-  let root: unknown = schema;
-
-  // Unwrap the real capture envelope: output[0].data.
-  if (isRecord(root) && Array.isArray(root.output)) {
-    const first = root.output[0];
-    root = isRecord(first) ? first.data : undefined;
+export function chooseRootResource(index: SchemaIndex): string {
+  const ROOT_DEPTH_PENALTY = 15;
+  let best = { resource: index.resources[0] ?? "", coverage: -Infinity };
+  for (const resource of index.resources) {
+    const coverage = REQUIREMENTS.filter((spec) => spec.required).reduce((total, spec) => {
+      const [top] = candidatesFor(index, resource, spec, 1);
+      if (!top) return total;
+      const depth = top.path.split(".").length - 1;
+      return total + Math.min(top.score, 120) - ROOT_DEPTH_PENALTY * depth;
+    }, 0);
+    if (coverage > best.coverage) best = { resource, coverage };
   }
-  // Unwrap a few common alternative wrappers.
-  if (isRecord(root)) {
-    for (const key of ["schema", "data", "result"]) {
-      if (root[key] !== undefined) {
-        root = root[key];
-        break;
-      }
+  return best.resource;
+}
+
+/**
+ * Finds the resource that represents the submission queue: a single-cardinality
+ * reference off the root whose target carries a "received"-style date.
+ */
+export function findQueueLink(
+  index: SchemaIndex,
+  rootResource: string,
+): { queueResource: string; queueLinkPath: string } | undefined {
+  const fields = objectFields(index.raw[rootResource]);
+  if (!fields) return undefined;
+
+  for (const [name, node] of Object.entries(fields)) {
+    const reference = referenceTarget(node);
+    if (!reference || reference.cardinality !== "one") continue;
+    const target = reference.resource;
+    const looksLikeQueue = index
+      .leaves(target, 1)
+      .some((leaf) => /received|submitted/.test(leaf.leaf) || /submission/i.test(leaf.leaf));
+    if (looksLikeQueue || /submission/i.test(target)) {
+      return { queueResource: target, queueLinkPath: name };
     }
   }
-
-  // Array-of-resources shape: [{ name, fields }, ...].
-  if (Array.isArray(root)) {
-    return {
-      resources: root.filter(isRecord).flatMap((entry) => {
-        const name = typeof entry.name === "string" ? entry.name : undefined;
-        return name ? [parseResource(name, entry)] : [];
-      }),
-    };
-  }
-
-  // Map-of-resources shape: { Submission: { fields: {...} }, ... }.
-  if (isRecord(root)) {
-    return { resources: Object.entries(root).map(([name, value]) => parseResource(name, value)) };
-  }
-
-  return { resources: [] };
+  return undefined;
 }
 
-function resourceByName(parsed: ParsedSchema, name: string | undefined): DiscoveredResource | undefined {
-  if (!name) return undefined;
-  return parsed.resources.find((resource) => resource.name.toLowerCase() === name.toLowerCase());
+function parentOf(path: string): string {
+  const cut = path.lastIndexOf(".");
+  return cut === -1 ? "" : path.slice(0, cut);
 }
 
-function fieldByName(resource: DiscoveredResource | undefined, name: string): DiscoveredField | undefined {
-  return resource?.fields.find((field) => field.name.toLowerCase() === name.toLowerCase());
+function leafOf(path: string): string {
+  return path.slice(path.lastIndexOf(".") + 1);
 }
 
-/**
- * Reverse relations: any resource whose reference field targets the root implies
- * a reverse accessor on the root (Policy.submission -> Submission surfaces as
- * `Submission.policy`). Maps accessor name (lowercased) -> target resource name.
- */
-function reverseRelations(parsed: ParsedSchema, rootName: string): Map<string, string> {
-  const map = new Map<string, string>();
-  for (const resource of parsed.resources) {
-    for (const field of resource.fields) {
-      if (field.isReference && field.resource && field.resource.toLowerCase() === rootName.toLowerCase()) {
-        map.set(resource.name.toLowerCase(), resource.name);
-      }
-    }
-  }
-  return map;
-}
-
-interface ResolvedSegment {
-  name: string;
-  isReference: boolean;
-  isArray: boolean;
-}
-
-interface PathResolution {
-  resolved: boolean;
-  segments: ResolvedSegment[];
-  matchedPath?: string;
-  unresolvedReason?: string;
-}
-
-/**
- * Resolve a dotted candidate path across the reference graph. Reference segments
- * descend into their target resource; a mid-path `object` field (e.g. Policy.dates)
- * resolves at that object because the schema does not enumerate its interior.
- */
-function resolvePath(
-  parsed: ParsedSchema,
-  rootName: string,
-  reverse: Map<string, string>,
+/** Sibling paths named by the spec that actually exist next to the chosen path. */
+export function supportingPaths(
+  index: SchemaIndex,
+  resource: string,
   path: string,
-): PathResolution {
-  const parts = path.split(".");
-  const segments: ResolvedSegment[] = [];
-  let current = resourceByName(parsed, rootName);
+  spec: RequirementSpec | undefined,
+): string[] {
+  if (!spec?.supporting) return [];
+  const parent = parentOf(path);
+  return spec.supporting
+    .map((name) => (parent ? `${parent}.${name}` : name))
+    .filter((candidate) => candidate !== path && index.resolve(resource, candidate));
+}
 
-  for (let index = 0; index < parts.length; index += 1) {
-    const part = parts[index];
-    const isLast = index === parts.length - 1;
-    const field = fieldByName(current, part);
-    const reverseTarget = current ? reverse.get(part.toLowerCase()) : undefined;
+/** Matches a set of requirements against one resource and its references. */
+export function choicesForResource(
+  index: SchemaIndex,
+  resource: string,
+  specs: RequirementSpec[],
+): { choices: FieldChoice[]; unresolved: DataPlan["unresolved"] } {
+  const choices: FieldChoice[] = [];
+  const unresolved: DataPlan["unresolved"] = [];
 
-    let isReference: boolean;
-    let isArray: boolean;
-    let target: string | undefined;
-    if (field) {
-      isReference = field.isReference;
-      isArray = field.isArray;
-      target = field.resource;
-    } else if (reverseTarget) {
-      isReference = true;
-      isArray = false;
-      target = reverseTarget;
-    } else {
-      return {
-        resolved: false,
-        segments,
-        unresolvedReason: `"${part}" is not a field on ${current?.name ?? "the root resource"}.`,
-      };
-    }
-
-    segments.push({ name: field?.name ?? part, isReference, isArray });
-    if (isLast) return { resolved: true, segments, matchedPath: path };
-
-    if (isReference && target) {
-      current = resourceByName(parsed, target);
-      if (!current) {
-        return { resolved: false, segments, unresolvedReason: `Reference target "${target}" is not in the schema.` };
+  for (const spec of specs) {
+    const [top, ...rest] = candidatesFor(index, resource, spec);
+    if (!top) {
+      if (spec.required) {
+        unresolved.push({
+          key: spec.key,
+          label: spec.label,
+          reason: `No field in ${resource} or its references matched ${spec.synonyms.join(", ")}.`,
+        });
       }
       continue;
     }
-    if (field?.type === "object") {
-      // Opaque object: the rest of the path lives inside it; resolve here.
-      return { resolved: true, segments, matchedPath: parts.slice(0, index + 1).join(".") };
-    }
-    return { resolved: false, segments, unresolvedReason: `Cannot traverse into scalar "${part}".` };
+    choices.push({
+      key: spec.key,
+      label: spec.label,
+      appetiteReason: spec.appetiteReason,
+      path: top.path,
+      terminalType: top.terminalType,
+      expandChain: top.expandChain,
+      manyAt: top.manyAt,
+      supporting: supportingPaths(index, resource, top.path, spec),
+      reason: `Matched ${resource}.${top.path} (${top.terminalType}).`,
+      chosenBy: "heuristic",
+      alternatives: rest.map((candidate) => candidate.path),
+    });
   }
 
-  return { resolved: false, segments, unresolvedReason: "Empty path." };
-}
-
-function pickResource(parsed: ParsedSchema): { resource: string; resolved: boolean } {
-  for (const candidate of QUEUE_RESOURCE_CANDIDATES) {
-    const match = parsed.resources.find((resource) => resource.name.toLowerCase() === candidate);
-    if (match) return { resource: match.name, resolved: true };
-  }
-  if (parsed.resources.length > 0) return { resource: parsed.resources[0].name, resolved: false };
-  return { resource: "Submission", resolved: false };
-}
-
-function elemMatchTemplate(segments: ResolvedSegment[]): UnknownRecord | undefined {
-  const arraySegment = segments.find((segment) => segment.isArray);
-  if (!arraySegment) return undefined;
-  const leaf = segments[segments.length - 1]?.name ?? "value";
-  // Demonstrative only: the clause a developer would add to `filter` to drill
-  // into a specific array element. It is NOT part of the live projection because
-  // filtering here would drop records we must retain for evaluation.
-  return { [arraySegment.name]: { $elemMatch: { [leaf]: "<value>" } } };
-}
-
-function planField(
-  requirement: FieldRequirement,
-  parsed: ParsedSchema,
-  rootName: string,
-  reverse: Map<string, string>,
-): PlannedField {
-  const base: PlannedField = {
-    canonicalField: requirement.canonicalField,
-    factor: requirement.factor,
-    appetiteReason: requirement.appetiteReason,
-    container: requirement.container,
-    candidatePaths: requirement.candidatePaths,
-    resolved: false,
-    aggregation: requirement.aggregation,
-    expansionNote: requirement.container === "reference" ? requirement.expansionNote : undefined,
-    arrayNote: requirement.container === "array" ? requirement.arrayNote : undefined,
-  };
-
-  for (const path of requirement.candidatePaths) {
-    const resolution = resolvePath(parsed, rootName, reverse, path);
-    if (resolution.resolved) {
-      base.resolved = true;
-      base.matchedPath = resolution.matchedPath;
-      if (requirement.container === "array") base.elemMatchExample = elemMatchTemplate(resolution.segments);
-      return base;
-    }
-  }
-
-  base.unresolvedReason = `No discovered field matched any of: ${requirement.candidatePaths.join(", ")}.`;
-  return base;
+  return { choices, unresolved };
 }
 
 /**
- * Add one resolved reference path to a nested `$expand` select tree. Every
- * non-terminal reference segment becomes `{ $expand: { select: {...} } }`; the
- * terminal leaf is selected with `true`.
+ * Looks for a location reachable from the resource without crossing an array:
+ * the place to read a state and buildings from when the risk schedule is
+ * empty. The building leaf names come from the plan (or the requirement
+ * synonyms), so nothing here assumes a field name either.
  */
-function addProjectionPath(select: UnknownRecord, path: string): void {
-  const parts = path.split(".");
-  let node = select;
-  parts.forEach((part, index) => {
-    if (index === parts.length - 1) {
-      if (!isRecord(node[part])) node[part] = true;
-      return;
+export function findFallbackLocation(
+  index: SchemaIndex,
+  resource: string,
+  riskChoices: FieldChoice[],
+): FallbackLocation | undefined {
+  const riskStatePath = riskChoices.find((choice) => choice.key === "riskState")?.path;
+  const stateSpec = REQUIREMENTS_BY_KEY.get("riskState")!;
+  const stateLeaf = riskStatePath ? leafOf(riskStatePath) : stateSpec.synonyms[0];
+
+  const candidate = index
+    .leaves(resource)
+    .filter(
+      (leaf) =>
+        leaf.leaf === stateLeaf &&
+        leaf.terminalType === "string" &&
+        leaf.manyAt.length === 0 &&
+        leaf.path !== riskStatePath &&
+        !(stateSpec.avoid ?? [])
+          .filter((token) => token !== "hq")
+          .some((token) => leaf.path.includes(token)),
+    )
+    .sort((left, right) => left.path.split(".").length - right.path.split(".").length)[0];
+  if (!candidate) return undefined;
+
+  const locationPath = parentOf(candidate.path);
+  if (!locationPath) return undefined;
+
+  const projectPaths = [candidate.path];
+  const supportingState = supportingPaths(index, resource, candidate.path, stateSpec);
+  projectPaths.push(...supportingState);
+
+  // Buildings under the fallback location: the collection that carries the
+  // same leaf the plan uses for building year (or the requirement's synonyms).
+  const yearChoice = riskChoices.find((choice) => choice.key === "buildingYear");
+  const yearSpec = REQUIREMENTS_BY_KEY.get("buildingYear")!;
+  const yearLeaves = yearChoice?.path ? [leafOf(yearChoice.path)] : yearSpec.synonyms;
+  const yearLeaf = index
+    .leaves(resource)
+    .find(
+      (leaf) =>
+        leaf.path.startsWith(`${locationPath}.`) &&
+        yearLeaves.includes(leaf.leaf) &&
+        leaf.terminalType === "number",
+    );
+
+  let buildingsPath: string | undefined;
+  const expandChain = new Set<string>(candidate.expandChain);
+  if (yearLeaf) {
+    buildingsPath = [...yearLeaf.manyAt].sort((left, right) => right.length - left.length)[0];
+    projectPaths.push(yearLeaf.path, ...supportingPaths(index, resource, yearLeaf.path, yearSpec));
+    yearLeaf.expandChain.forEach((hop) => expandChain.add(hop));
+
+    const constructionChoice = riskChoices.find((choice) => choice.key === "constructionType");
+    const constructionSpec = REQUIREMENTS_BY_KEY.get("constructionType")!;
+    const constructionLeaves = constructionChoice?.path
+      ? [leafOf(constructionChoice.path)]
+      : constructionSpec.synonyms;
+    const construction = index
+      .leaves(resource)
+      .find(
+        (leaf) =>
+          buildingsPath !== undefined &&
+          leaf.path.startsWith(`${buildingsPath}.`) &&
+          constructionLeaves.includes(leaf.leaf),
+      );
+    if (construction) projectPaths.push(construction.path);
+  }
+
+  return {
+    locationPath,
+    statePath: candidate.path,
+    buildingsPath,
+    projectPaths: [...new Set(projectPaths)],
+    expandChain: [...expandChain],
+    reason: `${resource}.${locationPath} is the only location reachable without a risk schedule${
+      buildingsPath ? ` and carries buildings at ${buildingsPath}` : ""
+    }; it stands in, at low confidence, when a submission has no risk locations.`,
+  };
+}
+
+export function planFromSchema(index: SchemaIndex, trace: QueryTrace): DataPlan {
+  const rootResource = chooseRootResource(index);
+  const queueLink = findQueueLink(index, rootResource);
+
+  trace.add(
+    "plan",
+    "Selected the root resource",
+    `${rootResource} answers more appetite requirements than any other resource in the schema.`,
+    { resources: index.resources.length, root: rootResource },
+  );
+  if (queueLink) {
+    trace.add(
+      "plan",
+      "Identified the submission queue",
+      `${rootResource}.${queueLink.queueLinkPath} points at ${queueLink.queueResource}, which holds the queue itself; submissions without a ${rootResource} are fetched separately so they stay in the queue.`,
+    );
+  }
+
+  const { choices, unresolved } = choicesForResource(
+    index,
+    rootResource,
+    REQUIREMENTS.filter((spec) => spec.scope !== "queue"),
+  );
+  const fallback = findFallbackLocation(index, rootResource, choices);
+  if (fallback) {
+    trace.add("plan", "Planned a fallback location", fallback.reason);
+  }
+
+  return { rootResource, ...queueLink, choices, unresolved, fallback, plannedBy: "heuristic" };
+}
+
+/** Requirements a submission can answer before it becomes a policy. */
+const QUEUE_KEYS: RequirementKey[] = [
+  "submissionIdentifier",
+  "accountName",
+  "lineOfBusiness",
+  "effectiveDate",
+  "requestedLimit",
+];
+
+/**
+ * Plans the queue resource on its own terms: the few fields a submission
+ * carries before it is bound, plus the same kind of fallback location so an
+ * unbound submission is not stateless.
+ */
+export function planQueueResource(index: SchemaIndex, plan: DataPlan, trace: QueryTrace): QueuePlan | undefined {
+  if (!plan.queueResource) return undefined;
+  const { choices } = choicesForResource(
+    index,
+    plan.queueResource,
+    REQUIREMENTS.filter((spec) => QUEUE_KEYS.includes(spec.key)),
+  );
+  const fallback = findFallbackLocation(index, plan.queueResource, plan.choices);
+  if (fallback) {
+    trace.add(
+      "plan",
+      "Planned a fallback location for unbound submissions",
+      `${plan.queueResource}.${fallback.locationPath} is the only location on a submission with no policy. It is used at low confidence and flagged on every submission that relies on it.`,
+    );
+  }
+  return { resource: plan.queueResource, choices, fallback };
+}
+
+export interface LlmSelection {
+  key: string;
+  path: string | null;
+  reason: string;
+}
+
+/**
+ * Applies the model's field selections on top of the heuristic plan. Any path
+ * the schema cannot resolve is rejected and the heuristic choice is kept, so a
+ * hallucinated field name can never reach the API.
+ */
+export function applyLlmSelections(
+  plan: DataPlan,
+  index: SchemaIndex,
+  selections: LlmSelection[],
+  trace: QueryTrace,
+): DataPlan {
+  const byKey = new Map(selections.map((selection) => [selection.key, selection]));
+  let accepted = 0;
+  let rejected = 0;
+
+  const choices = plan.choices.map((choice) => {
+    const selection = byKey.get(choice.key);
+    if (!selection?.path || selection.path === choice.path) return choice;
+
+    const resolved = index.resolve(plan.rootResource, selection.path);
+    if (!resolved) {
+      rejected += 1;
+      trace.add(
+        "repair",
+        `Rejected a model field choice for ${choice.label}`,
+        `${plan.rootResource}.${selection.path} does not exist in the discovered schema, so the schema-matched path ${choice.path} was kept.`,
+      );
+      return choice;
     }
-    const existing = node[part];
-    let entry: UnknownRecord;
-    if (isRecord(existing) && isRecord(existing.$expand)) {
-      entry = existing;
-    } else {
-      entry = { $expand: { select: {} } };
-      node[part] = entry;
-    }
-    const expand = entry.$expand as UnknownRecord;
-    node = expand.select as UnknownRecord;
+
+    accepted += 1;
+    return {
+      ...choice,
+      path: resolved.path,
+      terminalType: resolved.terminalType,
+      expandChain: resolved.expandChain,
+      manyAt: resolved.manyAt,
+      supporting: supportingPaths(index, plan.rootResource, resolved.path, REQUIREMENTS_BY_KEY.get(choice.key)),
+      reason: selection.reason || `Model selected ${plan.rootResource}.${resolved.path}.`,
+      chosenBy: "llm" as const,
+      alternatives: choice.path ? [choice.path, ...choice.alternatives] : choice.alternatives,
+    };
   });
+
+  trace.add(
+    "plan",
+    "Applied the model's field mapping",
+    `${accepted} field choice(s) came from the model and were validated against the schema; ${rejected} were rejected as unresolvable.`,
+    { accepted, rejected },
+  );
+
+  return { ...plan, choices, plannedBy: accepted > 0 ? "llm" : plan.plannedBy };
 }
 
-/**
- * Build the query projection from resolved requirements.
- *
- * - Scalars are selected directly (`true`).
- * - References (including the reverse `policy` join and deep chains through
- *   exposure_units -> location -> buildings and policy -> claims) use `$expand`.
- * - `where` (pre-expansion) and `filter` (post-expansion) are intentionally
- *   empty: every submission is retained and appetite is judged client-side.
- */
-function buildProjection(resource: string, fields: PlannedField[]): unknown {
-  const select: UnknownRecord = {};
-  for (const field of fields) {
-    if (field.matchedPath) addProjectionPath(select, field.matchedPath);
-  }
-  return {
-    resource,
-    select,
-    where: {},
-    filter: {},
-  };
-}
-
-/** Turn the discovered schema into a full query plan (projection + trace inputs). */
-export function planQuery(schema: unknown): QueryPlan {
-  const parsed = parseSchema(schema);
-  const { resource, resolved } = pickResource(parsed);
-  const reverse = reverseRelations(parsed, resource);
-  const fields = FIELD_REQUIREMENTS.map((requirement) => planField(requirement, parsed, resource, reverse));
-
-  const unresolved = fields.filter((field) => !field.resolved).map((field) => field.canonicalField);
-  const assumptions = [
-    `Root queue resource "${resource}"${resolved ? "" : " (not found in schema; using a fallback)"}.`,
-    "References are joined by numeric id; the reverse Policy.submission relation is surfaced as Submission.policy.",
-    "Projection $expands insured, policy, policy.exposure_units.location.buildings, and policy.claims.",
-    "Projection retains ALL submissions: where/filter are empty by design; appetite is evaluated client-side.",
-    "$elemMatch templates are provided for developers but never applied as a live filter.",
-    unresolved.length > 0
-      ? `Unresolved against the discovered schema (kept visible as unknown): ${unresolved.join(", ")}.`
-      : "Every canonical field resolved against the discovered schema.",
-  ];
-
-  return {
-    resource,
-    resourceResolved: resolved,
-    fields,
-    projection: buildProjection(resource, fields),
-    assumptions,
-  };
+/** Compact prompt view: every requirement with its schema-matched shortlist. */
+export function describePlanForPrompt(index: SchemaIndex, plan: DataPlan): string {
+  return REQUIREMENTS.filter((spec) => spec.scope !== "queue").map((spec) => {
+    const candidates = candidatesFor(index, plan.rootResource, spec, 6);
+    const rendered = candidates.length
+      ? candidates.map((candidate) => `${candidate.path} (${candidate.terminalType})`).join(", ")
+      : "no schema match";
+    return `- ${spec.key} — ${spec.appetiteReason}\n  candidates: ${rendered}`;
+  }).join("\n");
 }
