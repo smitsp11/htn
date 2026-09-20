@@ -1105,3 +1105,165 @@
   font-style: italic;
   color: var(--ink-faint);
 }
+
+/* ---- Decision sidebar (Task 4.5) -------------------------------------------------
+   Ported from federanorth's `workflowPanel` (src/decision/dashboard.js) and its
+   `.workflow`/`.decision-choice`/`.decided-banner`/`.pricing`/`.field`/`.decide-*`
+   rules (federanorth.css). This sidebar persists to localStorage via
+   `lib/demo/decision-store`, not a server-recorded workflow, so there is no
+   `.review-progress`/`data-*` wiring to port -- only the visual shell. */
+
+.decision-sidebar .decided-banner {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  justify-content: space-between;
+  border: 1px solid var(--mint);
+  border-radius: 6px;
+  padding: 13px 15px;
+  margin: 18px 0;
+  background: var(--mint-tint);
+}
+
+.decision-sidebar .decided-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--mint-strong);
+  text-transform: capitalize;
+}
+
+.decision-sidebar .decided-banner p {
+  font-size: 12px;
+  line-height: 1.7;
+  margin-top: 5px;
+  color: var(--ink);
+}
+
+.decision-sidebar .decided-banner small {
+  display: block;
+  margin-top: 6px;
+  color: var(--ink-soft);
+}
+
+.decision-sidebar .decided-banner .button {
+  padding: 8px 14px;
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.decide-form {
+  margin-top: 16px;
+  border-top: 1px solid var(--border);
+  padding-top: 14px;
+}
+
+.decision-choices {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 12px 0;
+}
+
+.decision-choice {
+  border: 1px solid var(--border-strong);
+  border-radius: 6px;
+  padding: 9px 14px;
+  font-size: 12px;
+  transition: border-color 0.15s, color 0.15s;
+  color: var(--ink);
+  background: transparent;
+}
+
+.decision-choice:hover:not(:disabled) {
+  border-color: var(--mint);
+  color: var(--mint-strong);
+}
+
+.decision-choice.selected {
+  border-color: var(--mint);
+  background: var(--mint-tint);
+  color: var(--mint-strong);
+}
+
+.decision-choice:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.pricing {
+  margin: 18px 0;
+}
+
+.field {
+  display: block;
+  margin-top: 12px;
+}
+
+.field > span {
+  display: block;
+  font-size: 11px;
+  color: var(--ink-soft);
+  margin-bottom: 5px;
+}
+
+.field input,
+.field textarea {
+  width: 100%;
+  box-sizing: border-box;
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: 6px;
+  color: var(--ink);
+  padding: 9px 11px;
+  font: inherit;
+  font-size: 13px;
+}
+
+.field input:focus,
+.field textarea:focus {
+  outline: none;
+  border-color: var(--mint);
+}
+
+.field textarea {
+  resize: vertical;
+  line-height: 1.6;
+}
+
+.decide-actions {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  margin-top: 16px;
+}
+
+.decision-errors {
+  list-style: none;
+  margin: 12px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.decision-errors li {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  font-size: 11px;
+  line-height: 1.6;
+  color: var(--amber);
+}
+
+.decision-errors .icon {
+  width: 12px;
+  height: 12px;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+@media (max-width: 700px) {
+  .decision-choice {
+    font-size: 13px;
+  }
+}
