@@ -1,10 +1,11 @@
-/* Public-data context panel. Prefixed `ctx-` — visually sibling to `.xr`
-   (external risk), never styled like the appetite factor breakdown. */
+/* Public-data context panel — Federanorth-aligned. Prefixed `ctx-` — visually
+   sibling to the external-risk panel, never styled like the appetite factor
+   breakdown. */
 
 .ctx {
-  background: var(--paper, #f4f7f5);
-  border: 1px dashed var(--line, #dce5e0);
-  border-radius: 0.6rem;
+  background: var(--surface-muted, #f1ede3);
+  border: 1px solid var(--border, #e3ddd0);
+  border-radius: 8px;
   display: grid;
   gap: 0.6rem;
   padding: 0.9rem 1rem;
@@ -12,10 +13,10 @@
 }
 
 .ctx-label {
-  color: var(--muted, #66736e);
+  color: var(--orange-strong, #a4471a);
   font-size: 0.7rem;
   font-weight: 700;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
 }
 
@@ -29,15 +30,15 @@
 
 .ctx-item {
   background: var(--surface, #ffffff);
-  border: 1px solid var(--line, #dce5e0);
-  border-radius: 0.4rem;
+  border: 1px solid var(--border, #e3ddd0);
+  border-radius: 6px;
   display: grid;
   gap: 0.15rem;
   padding: 0.55rem 0.7rem;
 }
 
 .ctx-field {
-  color: var(--muted, #66736e);
+  color: var(--ink-soft, #5c5646);
   font-size: 0.72rem;
   font-weight: 600;
 }
@@ -48,14 +49,14 @@
 }
 
 .ctx-src {
-  color: var(--green, #126447);
+  color: var(--mint-strong, #0a7c4e);
   font-size: 0.72rem;
   text-decoration: underline;
   width: fit-content;
 }
 
 .ctx-note {
-  color: var(--muted, #66736e);
+  color: var(--ink-faint, #8d8268);
   font-size: 0.7rem;
   font-style: italic;
 }

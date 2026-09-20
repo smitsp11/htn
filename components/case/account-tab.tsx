@@ -1,6 +1,7 @@
 import type { RankedSubmission } from "@/lib/domain/types";
 import { fixturesFor } from "@/lib/demo/fixtures";
 import { Icon } from "@/components/ui/icon";
+import { ContextSignals } from "@/components/context-signals/context-signals";
 
 /**
  * Case account-context tab: underwriting signals, relationship / loss-history
@@ -34,6 +35,8 @@ export function AccountTab({ submission }: { submission: RankedSubmission }) {
           </article>
         ))}
       </div>
+
+      <ContextSignals signals={submission.context ?? []} />
 
       {bundle.leads.length > 0 ? (
         <div className="context-card">

@@ -1,12 +1,25 @@
-import { readFileSync, writeFileSync } from "node:fs";
+import { writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ALL_SOURCES } from "../lib/consolidation/channel-source";
 import { consolidateSubmission } from "../lib/consolidation/consolidate";
 import { rankSubmissions } from "../lib/domain/appetite";
 import type { FactorKey } from "../lib/domain/types";
 import type { ResolvedValue } from "../lib/enrichment/provenance";
-import { loadOfflineSubmissions } from "../lib/federato/offline-data";
+import { runQueryAgent } from "../lib/federato/adapter";
+import { createReplaySource } from "../lib/federato/replay";
 import { completenessOf } from "../lib/rankings/completeness";
+
+/** The offline canonical submissions, replayed through the query agent — the
+ *  same path the pipeline uses in offline mode (loadOfflineSubmissions was
+ *  retired in favour of the replay source). */
+async function loadOfflineSubmissions() {
+  const source = createReplaySource();
+  const { submissions } = await runQueryAgent({
+    discoverSchema: source.discoverSchema,
+    execute: source.execute,
+  });
+  return submissions;
+}
 
 export type ConsolidationIndex = Record<
   string,

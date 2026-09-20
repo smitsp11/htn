@@ -1,7 +1,20 @@
 import { writeFileSync } from "node:fs";
 import { join } from "node:path";
 import type { ContextSignal } from "@/lib/domain/types";
-import { loadOfflineSubmissions } from "@/lib/federato/offline-data";
+import { runQueryAgent } from "@/lib/federato/adapter";
+import { createReplaySource } from "@/lib/federato/replay";
+
+/** The offline canonical submissions, replayed through the query agent — the
+ *  same path the pipeline uses in offline mode (loadOfflineSubmissions was
+ *  retired in favour of the replay source). */
+async function loadOfflineSubmissions() {
+  const source = createReplaySource();
+  const { submissions } = await runQueryAgent({
+    discoverSchema: source.discoverSchema,
+    execute: source.execute,
+  });
+  return submissions;
+}
 
 const asOf = new Date().toISOString().slice(0, 10);
 
