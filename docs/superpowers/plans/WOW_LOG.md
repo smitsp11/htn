@@ -124,7 +124,10 @@ Status legend: `queued` · `planning` · `building` · `blocked` · `done`
 - **Risk:** low (presentation; depends on W2).
 
 ### W7 — Portfolio-impact strip ("Control Tower" lite)
-- **Status:** planned → `docs/superpowers/plans/2026-09-19-w7-portfolio-strip.md` (stretch; build after W1/W2)
+- **Status:** DONE (2026-09-19) → plan `2026-09-19-w7-portfolio-strip.md`. Built on branch
+  `w7-portfolio-strip` (individual PR #8, stacked on PR #7). `lib/rankings/portfolio.ts` +
+  header strip (Submissions / In-appetite TIV / Top states). 205/205 tests green.
+  Real data: In-appetite TIV $0 (0 in appetite); top states CA/FL/TN.
 - **Goal:** Header strip showing queue-level aggregates (total TIV, state concentration, hazard
   exposure) and how the selected submission shifts them.
 - **Why:** Highest-end differentiator; signals portfolio-level thinking.

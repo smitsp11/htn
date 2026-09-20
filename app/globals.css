@@ -4,6 +4,7 @@
 @import "../components/enrichment-resolution/resolution-chips.css";
 @import "../components/rfi-draft/rfi-draft.css";
 @import "../components/dashboard/quadrant-board.css";
+@import "../components/dashboard/portfolio-strip.css";
 
 :root {
   color-scheme: light;
