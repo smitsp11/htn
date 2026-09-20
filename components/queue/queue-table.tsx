@@ -6,6 +6,7 @@ import { primaryReason } from "@/lib/rankings/presentation";
 import { laneForStatus } from "@/lib/rankings/lanes";
 import { LaneBadge } from "@/components/ui/lane-badge";
 import { Icon } from "@/components/ui/icon";
+import { DistanceChips } from "@/components/ui/distance-chips";
 
 export interface QueueTableProps {
   submissions: RankedSubmission[];
@@ -89,6 +90,7 @@ export function QueueTable({ submissions, onOpen }: QueueTableProps) {
                   <b className="score-value" title="Appetite score (orders ties)">
                     {submission.score}
                   </b>
+                  <DistanceChips submission={submission} />
                 </span>
               </td>
               <td className="next-action">

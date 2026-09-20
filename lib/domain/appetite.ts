@@ -9,6 +9,15 @@ import type {
   RankedSubmission,
 } from "./types";
 
+// Property-specific near-miss bands and the building-year sensitivity note
+// live with the property table; re-exported here so callers keep one import.
+export {
+  buildingYearSensitivity,
+  NEAR_MISS_CONSTRUCTION_POINTS,
+  NEAR_MISS_MONEY_SHARE,
+  NEAR_MISS_YEARS,
+} from "./appetite/lines/property";
+
 export type LineScope = "property" | "in_scope_line" | "out_of_scope" | "unknown_line";
 
 /**
@@ -42,13 +51,26 @@ export const SCORE_POINTS: Record<AppetiteVerdict, number> = {
 };
 export const MAX_SCORE_POINTS = 12;
 
-/** All eight factor verdicts, always in the order of the published table. */
+/**
+ * Copy the query agent's provenance onto the matching factor. Evidence never
+ * influences a verdict; it exists so an underwriter can see where each number
+ * came from.
+ */
+function attachEvidence(factors: FactorEvaluation[], submission: CanonicalSubmission): FactorEvaluation[] {
+  for (const item of factors) {
+    const evidence = submission.derivations?.[item.key];
+    if (evidence) item.evidence = { ...evidence };
+  }
+  return factors;
+}
+
+/** All of the line's factor verdicts, always in the order of the published table, each carrying its provenance when the input had one. */
 export function evaluateFactors(
   submission: CanonicalSubmission,
   extended = false,
 ): FactorEvaluation[] {
   const table = extended ? tableFor(submission.lineOfBusiness) : APPETITE_TABLES.property;
-  return (table ?? APPETITE_TABLES.property).evaluate(submission);
+  return attachEvidence((table ?? APPETITE_TABLES.property).evaluate(submission), submission);
 }
 
 export function computeScore(
@@ -57,6 +79,11 @@ export function computeScore(
 ): number {
   const points = factors.reduce((sum, item) => sum + SCORE_POINTS[item.verdict], 0);
   return Math.round((points / maxScorePoints) * 100);
+}
+
+/** How many factors are not acceptable: the distance, in fixes, from appetite. */
+export function failureCount(factors: FactorEvaluation[]): number {
+  return factors.filter((item) => item.verdict === "not_acceptable").length;
 }
 
 /**
@@ -69,6 +96,12 @@ export function deriveStatus(factors: FactorEvaluation[]): AppetiteStatus {
   return "in_appetite";
 }
 
+/** The canonical fields carried onto the ranked row; provenance inputs stay behind. */
+function stripInputs(submission: CanonicalSubmission): CanonicalSubmission {
+  const { derivations: _derivations, ...rest } = submission;
+  return rest;
+}
+
 export function evaluateAppetite(
   submission: CanonicalSubmission,
   extended = false,
@@ -76,7 +109,7 @@ export function evaluateAppetite(
   if (classifyScope(submission.lineOfBusiness, extended) === "out_of_scope") {
     const recommendation = recommendationFor("out_of_scope");
     return {
-      ...submission,
+      ...stripInputs(submission),
       status: "out_of_scope",
       score: 0,
       factors: [],
@@ -94,12 +127,12 @@ export function evaluateAppetite(
 
   const table = extended ? tableFor(submission.lineOfBusiness) : APPETITE_TABLES.property;
   const selectedTable = table ?? APPETITE_TABLES.property;
-  const factors = selectedTable.evaluate(submission);
+  const factors = attachEvidence(selectedTable.evaluate(submission), submission);
   const status = deriveStatus(factors);
   const score = computeScore(factors, selectedTable.maxScorePoints);
   const recommendation = recommendationFor(status);
   return {
-    ...submission,
+    ...stripInputs(submission),
     status,
     score,
     factors,
@@ -115,7 +148,12 @@ const statusOrder: Record<AppetiteStatus, number> = {
   out_of_scope: 3,
 };
 
-/** Stable ordering: status, then score descending, then account name, then id. */
+/**
+ * Stable ordering: status, then fewest not-acceptable factors, then score
+ * descending, then account name, then id. Failure count sits before score so
+ * a row that is one fix from appetite outranks one that is three fixes away
+ * even when both count the same number of good factors.
+ */
 export function rankSubmissions(
   submissions: CanonicalSubmission[],
   opts?: { extended?: boolean },
@@ -124,6 +162,7 @@ export function rankSubmissions(
   return submissions.map((submission) => evaluateAppetite(submission, extended)).sort(
     (left, right) =>
       statusOrder[left.status] - statusOrder[right.status] ||
+      failureCount(left.factors) - failureCount(right.factors) ||
       right.score - left.score ||
       left.accountName.localeCompare(right.accountName) ||
       left.id.localeCompare(right.id),

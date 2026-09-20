@@ -10,7 +10,21 @@
  */
 
 import type { CanonicalSubmission, QueryReasoning } from "@/lib/domain/types";
-import { assembleSubmissions, type AssembledSubmission } from "./assemble";
+import { assembleSubmissions, type AssembledSubmission, refreshDerivations } from "./assemble";
+import {
+  buildConfirmLossesQuery,
+  buildPriorTermQuery,
+  confirmLosses,
+  explainUnaddressed,
+  groupGaps,
+  insuredIdsFor,
+  mergePriorTermLosses,
+  MAX_FOLLOW_UP_QUERIES,
+  pickTargets,
+  planPriorTermRoute,
+  type FollowUpGap,
+  type PriorTermRoute,
+} from "./follow-up";
 import { selectFieldsWithModel } from "./llm-planner";
 import { repairQueryWithModel } from "./llm-repair";
 import { buildQueueQuery, buildRootQuery, buildTivCheckQuery } from "./query-compiler";
@@ -34,6 +48,19 @@ export interface QueryAgentDependencies {
   useModel?: boolean;
 }
 
+/** What one adaptive pass did: the patched queue and everything it logged. */
+export interface FollowUpResult {
+  submissions: CanonicalSubmission[];
+  /** Submission ids whose canonical values changed. */
+  updated: string[];
+  /** Follow-up queries actually sent (validated payloads, pages counted once). */
+  queries: number;
+  /** Flat sentences for `RankingsResponse.trace`, this pass only. */
+  traceSummary: string[];
+  /** The full reasoning, first pass plus this one. */
+  reasoning: QueryReasoning;
+}
+
 export interface QueryAgentResult {
   submissions: CanonicalSubmission[];
   assembled: AssembledSubmission[];
@@ -45,6 +72,13 @@ export interface QueryAgentResult {
   reasoning: QueryReasoning;
   /** Records the API reported for the root resource, before assembly. */
   totals: { root?: number; queue?: number; assembled: number };
+  /**
+   * The adaptive second pass. Given the factors the ranking could not settle,
+   * plans and runs focused follow-up queries, patches the affected
+   * submissions and reports what it did. Runs at most once per agent run;
+   * a second call is a no-op with a warning on the trace.
+   */
+  followUp: (gaps: FollowUpGap[]) => Promise<FollowUpResult>;
 }
 
 export async function runQueryAgent({
@@ -86,8 +120,12 @@ export async function runQueryAgent({
   const root = await runPaged(execute, (offset) => buildRootQuery(plan, offset), trace, options);
 
   const queuePlan = planQueueResource(index, plan, trace);
+  // The queue projection also carries the insured's id, so a later follow-up
+  // can look up prior terms without a second read of the queue.
+  const route = planPriorTermRoute(index, plan, queuePlan, trace);
+  const queueExtras = route ? [`${route.queueInsuredPath}.id`] : [];
   const queue = queuePlan
-    ? await runPaged(execute, (offset) => buildQueueQuery(queuePlan, offset), trace, options)
+    ? await runPaged(execute, (offset) => buildQueueQuery(queuePlan, offset, undefined, queueExtras), trace, options)
     : undefined;
 
   const assembled = assembleSubmissions({
@@ -112,6 +150,27 @@ export async function runQueryAgent({
   await crossCheckTiv(execute, plan, assembled, trace, options);
   reportUnresolved(plan, trace);
 
+  let followUpRan = false;
+  const followUp = async (gaps: FollowUpGap[]): Promise<FollowUpResult> => {
+    const before = trace.steps.length;
+    let outcome: FollowUpOutcome = { updated: [], queries: 0 };
+    if (followUpRan) {
+      trace.add("warning", "Follow-up already ran", "The adaptive pass runs once per agent run; a second request was ignored.");
+    } else {
+      followUpRan = true;
+      outcome = await runFollowUp({ gaps, route, plan, assembled, queueRows: queue?.rows ?? [], execute, trace, options });
+      for (const entry of assembled) refreshDerivations(entry);
+    }
+    const added = trace.steps.slice(before);
+    return {
+      submissions: assembled.map((entry) => entry.submission),
+      updated: [...new Set(outcome.updated)],
+      queries: outcome.queries,
+      traceSummary: added.map((step) => `${step.title}: ${step.detail}`),
+      reasoning: buildQueryReasoning(plan, queuePlan, trace.steps),
+    };
+  };
+
   return {
     submissions: assembled.map((entry) => entry.submission),
     assembled,
@@ -121,7 +180,130 @@ export async function runQueryAgent({
     traceSummary: trace.summarize(),
     reasoning: buildQueryReasoning(plan, queuePlan, trace.steps),
     totals: { root: root.total, queue: queue?.total, assembled: assembled.length },
+    followUp,
   };
+}
+
+interface FollowUpOutcome {
+  /** Submission ids whose canonical values changed. */
+  updated: string[];
+  /** Follow-up queries sent. */
+  queries: number;
+}
+
+interface FollowUpContext {
+  gaps: FollowUpGap[];
+  route: PriorTermRoute | undefined;
+  plan: DataPlan;
+  assembled: AssembledSubmission[];
+  queueRows: UnknownRecord[];
+  execute: QueryExecutor;
+  trace: QueryTrace;
+  options: RunQueryOptions;
+}
+
+/**
+ * The adaptive pass. Each follow-up kind runs at most once, batched over
+ * every row that needs it, and every payload goes through the same
+ * validator and fallback chain as the first pass.
+ */
+async function runFollowUp({ gaps, route, plan, assembled, queueRows, execute, trace, options }: FollowUpContext): Promise<FollowUpOutcome> {
+  const outcome: FollowUpOutcome = { updated: [], queries: 0 };
+  const grouped = groupGaps(gaps);
+  const rows = new Set(gaps.map((gap) => gap.submissionId));
+  trace.add(
+    "follow-up",
+    "Selected rows for a second look",
+    `${rows.size} submission(s) were left undecided or narrowly out of appetite after the first ranking: ${grouped.priorTermLosses.length} with no loss history, ${grouped.confirmLosses.length} borderline on losses, ${grouped.unaddressed.length} gap(s) with no follow-up available.`,
+    { rows: rows.size },
+  );
+  if (rows.size === 0) return outcome;
+
+  const budget = () => {
+    if (outcome.queries >= MAX_FOLLOW_UP_QUERIES) {
+      trace.add("warning", "Follow-up budget exhausted", `Stopped after ${MAX_FOLLOW_UP_QUERIES} follow-up queries.`);
+      return false;
+    }
+    return true;
+  };
+
+  if (!route && (grouped.priorTermLosses.length || grouped.confirmLosses.length)) {
+    trace.add("warning", "No follow-up route for losses", "The schema gave no route from the queue to prior terms, so loss gaps stay unknown.");
+  }
+
+  if (route && grouped.priorTermLosses.length && budget()) {
+    const targets = pickTargets(assembled, grouped.priorTermLosses);
+    const insuredByQueueId = insuredIdsFor(queueRows, route);
+    const insuredIds = [...new Set(targets.map((entry) => (entry.sourceRecordId ? insuredByQueueId.get(entry.sourceRecordId) : undefined)).filter((id) => id !== undefined && id !== null))];
+    trace.add(
+      "follow-up",
+      "Follow-up: prior-term losses for unbound submissions",
+      `Purpose: resolve five-year losses for ${targets.length} submission(s) that have no policy. Asking ${route.rootResource} for every term held by their ${insuredIds.length} insured(s), with claims expanded, instead of assuming zero.`,
+      { targets: targets.length, insureds: insuredIds.length },
+    );
+    if (insuredIds.length) {
+      try {
+        const result = await runPaged(execute, (offset) => buildPriorTermQuery(route, insuredIds, offset), trace, options);
+        outcome.queries += 1;
+        const merged = mergePriorTermLosses(targets, insuredByQueueId, result.rows, route, plan);
+        outcome.updated.push(...merged.resolved);
+        trace.add(
+          "follow-up",
+          "Merged prior-term losses",
+          `${result.rows.length} prior term(s) returned. Five-year losses resolved for ${merged.resolved.length} submission(s), counting claims on every line the insured holds; ${merged.unresolved.length} still unknown${
+            merged.unresolved.length ? ` (${merged.unresolved.map((item) => `${item.submissionId}: ${item.reason}`).join("; ")})` : ""
+          }.`,
+          { resolved: merged.resolved.length, unresolved: merged.unresolved.length },
+        );
+      } catch (error) {
+        trace.add("warning", "Prior-term follow-up failed", `${error instanceof Error ? error.message : String(error)} Loss history stays unknown for these submissions.`);
+      }
+    } else {
+      trace.add("warning", "No insured on the queue rows", "The queue projection carried no insured id, so prior terms could not be looked up.");
+    }
+  }
+
+  if (route && grouped.confirmLosses.length && budget()) {
+    const targets = pickTargets(assembled, grouped.confirmLosses);
+    const recordIds = targets.map((entry) => entry.sourceRecordId).filter((id): id is string => Boolean(id)).map((id) => (Number.isFinite(Number(id)) ? Number(id) : id));
+    trace.add(
+      "follow-up",
+      "Follow-up: confirm a borderline loss figure",
+      `Purpose: ${targets.length} submission(s) fail only on five-year losses with a strong score. Re-reading their claims with reserves before the row is written off.`,
+      { targets: targets.length },
+    );
+    if (recordIds.length) {
+      try {
+        const result = await runPaged(execute, (offset) => buildConfirmLossesQuery(route, recordIds, offset), trace, options);
+        outcome.queries += 1;
+        const confirmations = confirmLosses(targets, result.rows, route, plan);
+        const changed = confirmations.filter((item) => item.changed);
+        outcome.updated.push(...changed.map((item) => item.submissionId));
+        trace.add(
+          changed.length ? "warning" : "follow-up",
+          changed.length ? "Borderline losses disagreed with the first pass" : "Confirmed borderline losses",
+          confirmations
+            .map((item) => `${item.submissionId}: $${item.paid.toLocaleString("en-US")} paid on ${item.claims} claim(s) in the window, $${item.reserved.toLocaleString("en-US")} still reserved${item.changed ? " (replaced the first-pass figure)" : ""}`)
+            .join("; ") || "No matching records were returned.",
+          { confirmed: confirmations.length, changed: changed.length },
+        );
+      } catch (error) {
+        trace.add("warning", "Loss confirmation failed", `${error instanceof Error ? error.message : String(error)} The first-pass figure stands.`);
+      }
+    }
+  }
+
+  if (grouped.unaddressed.length) {
+    const byFactor = new Map<string, FollowUpGap[]>();
+    for (const gap of grouped.unaddressed) byFactor.set(gap.factor, [...(byFactor.get(gap.factor) ?? []), gap]);
+    trace.add(
+      "follow-up",
+      "Gaps with no follow-up available",
+      [...byFactor.entries()].map(([factor, list]) => `${factor} on ${list.length} submission(s): ${explainUnaddressed(list[0])}`).join("; ") + ". These stay unknown and are flagged for the underwriter.",
+      { gaps: grouped.unaddressed.length },
+    );
+  }
+  return outcome;
 }
 
 function describePlan(plan: DataPlan, trace: QueryTrace): void {

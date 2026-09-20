@@ -7,6 +7,7 @@ import type { RankingsErrorBody, RankingsErrorCategory } from "@/lib/rankings/er
 import { SearchBar } from "@/components/queue/search-bar";
 import { QueueWorkspace } from "@/components/queue/queue-workspace";
 import { PortfolioStrip } from "@/components/queue/portfolio-strip";
+import { PortfolioInsights } from "@/components/queue/portfolio-insights";
 import { QueueSkeleton } from "@/components/queue/queue-skeleton";
 import { PipelineTrace } from "@/components/queue/pipeline-trace";
 import { CaseView } from "@/components/case/case-view";
@@ -190,6 +191,7 @@ export function AppShell() {
               </button>
             </div>
             <PortfolioStrip submissions={data.submissions} />
+            <PortfolioInsights submissions={data.submissions} />
             <QueueWorkspace submissions={data.submissions} onOpen={setSelectedId} matchedIds={matchedIds} />
             <PipelineTrace trace={data.trace} queryTrace={data.queryTrace} />
           </motion.div>

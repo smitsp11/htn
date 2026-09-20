@@ -15,11 +15,14 @@ import { loadOfflineContext } from "@/lib/enrichment/context";
 import { loadConsolidationIndex } from "@/lib/enrichment/consolidation-index";
 import { buildResolution } from "@/lib/enrichment/resolution-result";
 import type { ConsolidationIndex } from "@/lib/enrichment/resolve-submission";
-import { runQueryAgent } from "@/lib/federato/adapter";
+import { runQueryAgent, type FollowUpResult } from "@/lib/federato/adapter";
+import type { FollowUpGap } from "@/lib/federato/follow-up";
 import { FederatoClient } from "@/lib/federato/client";
 import { loadOfflineEnrichment, loadOfflineOutcomes } from "@/lib/federato/offline-data";
 import type { QueryPayload } from "@/lib/federato/query-compiler";
 import { createReplaySource } from "@/lib/federato/replay";
+import { diffRankings, selectFollowUpTargets } from "./follow-up-targets";
+import { portfolioTrace } from "./portfolio-insights";
 import { summarize } from "./presentation";
 
 /** What the pipeline needs back from the query agent, whichever executor ran it. */
@@ -28,6 +31,12 @@ export interface AgentOutput {
   traceSummary: string[];
   reasoning?: QueryReasoning;
   totals?: { root?: number; queue?: number; assembled: number };
+  /**
+   * The adaptive second pass, when the agent offers one. The pipeline hands
+   * it the factors the first ranking could not settle and re-ranks whatever
+   * comes back. Optional so injected test agents without it keep working.
+   */
+  followUp?: (gaps: FollowUpGap[]) => Promise<FollowUpResult>;
 }
 
 /** Every upstream capability is injected so the pipeline is testable offline. */
@@ -119,6 +128,7 @@ function rankingTrace(ranked: RankedSubmission[]): string[] {
   return [
     `Ranked ${summary.total} submissions: ${summary.in_appetite} in appetite, ${summary.needs_investigation} needs investigation, ${summary.out_of_appetite} out of appetite.`,
     `${summary.unresolved} of ${summary.total} submissions have unresolved appetite fields; unknowns never count as acceptable.`,
+    ...portfolioTrace(ranked),
   ];
 }
 
@@ -155,7 +165,30 @@ export async function buildRankings(
   }
 
   const agent = await deps.runAgent();
-  const ranked = deps.rank([...agent.submissions, ...synthetic]);
+  const firstPass = deps.rank([...agent.submissions, ...synthetic]);
+
+  // Adaptive second pass: the rows the check could not decide, or narrowly
+  // rejected, go back to the agent with the factor that is missing. Whatever
+  // it resolves is re-ranked by the same deterministic engine; the agent
+  // never touches a verdict itself. Synthetic rows never go back to the agent.
+  let ranked = firstPass;
+  let reasoning = agent.reasoning;
+  const followUpLines: string[] = [];
+  const gaps = agent.followUp ? selectFollowUpTargets(firstPass.filter((s) => !syntheticIds.has(s.id))) : [];
+  if (agent.followUp && gaps.length > 0) {
+    const round = await agent.followUp(gaps);
+    ranked = deps.rank([...round.submissions, ...synthetic]);
+    reasoning = round.reasoning;
+    const delta = diffRankings(firstPass, ranked);
+    followUpLines.push(
+      ...round.traceSummary,
+      `Second pass: ${round.queries} follow-up quer${round.queries === 1 ? "y" : "ies"} for ${new Set(gaps.map((gap) => gap.submissionId)).size} undecided or borderline submission(s); ${round.updated.length} updated, ${delta.statusChanged.length} changed status${
+        delta.statusChanged.length ? ` (${delta.statusChanged.join(", ")})` : ""
+      }, ${delta.scoreChanged.length} changed score only.`,
+    );
+  } else if (agent.followUp) {
+    followUpLines.push("Second pass: every submission was decided by the first query; no follow-up was needed.");
+  }
   for (const s of ranked) if (syntheticIds.has(s.id)) s.synthetic = true;
 
   if (deps.loadEnrichment) {
@@ -203,8 +236,8 @@ export async function buildRankings(
     dataset,
     generatedAt,
     schemaDiscovered: true,
-    trace: [sourceLine, ...agent.traceSummary, countLine, ...rankingTrace(ranked)],
-    queryTrace: agent.reasoning,
+    trace: [sourceLine, ...agent.traceSummary, countLine, ...followUpLines, ...rankingTrace(ranked)],
+    queryTrace: reasoning,
     submissions: ranked,
   };
 }
