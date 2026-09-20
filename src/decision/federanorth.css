@@ -35,6 +35,13 @@ dialog{color:var(--ink);background:var(--surface);border:1px solid var(--border)
 /* Triage lanes, evidence requests and external provenance. */
 .lane-stat.active{border-color:var(--mint);background:var(--mint-tint)}
 .badge.lane-work-now i{background:var(--mint)}.badge.lane-chase-evidence i{background:var(--orange)}.badge.lane-declined i{background:var(--danger)}.badge.lane-not-property i{background:var(--ink-faint)}
+.badge.good-order{color:var(--mint-strong);background:var(--mint-tint)}
+.flag-chips{display:inline-flex;flex-wrap:wrap;gap:5px;margin-top:2px}
+.flag-chip{display:inline-flex;align-items:center;padding:3px 7px;font-size:9px;font-weight:600;border-radius:5px;white-space:nowrap}
+.flag-chip.flag-red{color:var(--danger);background:var(--danger-tint)}
+.flag-chip.flag-yellow{color:var(--amber);background:var(--amber-tint)}
+.flag-chip.flag-preferred{color:var(--mint-strong);background:var(--mint-tint)}
+.case-verdict .flag-chips{margin-left:4px}
 .priority-cell{display:flex;flex-direction:column;gap:2px}.priority-cell b{font-size:16px;color:var(--orange-strong)}.muted-cell{color:var(--ink-faint)}
 .task-list{display:flex;flex-direction:column;gap:10px;margin:14px 0 26px}
 .task{border:1px solid var(--border);border-left-width:3px;border-radius:6px;padding:14px 16px;background:var(--surface)}

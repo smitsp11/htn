@@ -8,6 +8,7 @@ import { caseSignals } from './casefile.js';
 import { decisionOptions, pricingGuidance, reviewStage } from './workflow.js';
 import { researchPanel, caseSummary, resolveResearch } from './research-panel.js';
 import { attentionFor, evidenceRequest, isPropertyCase, isHistoricalCase, reviewTasks } from './review.js';
+import { flagSummary, reasonsByTone, inGoodOrder } from './portfolio.js';
 
 const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 const money = value => value == null ? '—' : new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(value);
@@ -54,6 +55,14 @@ function prepare(report) {
 }
 
 const confidenceChip = value => `<span class="conf conf-${esc(value)}" title="${esc(CONFIDENCE_LABELS[value] ?? value)}">${esc(value)}</span>`;
+
+const flagToneLabels = { red: 'exceptions', yellow: 'evidence gaps', preferred: 'in appetite' };
+function flagChips(row) {
+  const summary = flagSummary(row);
+  const reasons = reasonsByTone(row);
+  return `<span class="flag-chips">${['red', 'yellow', 'preferred'].filter(tone => summary[tone] > 0).map(tone =>
+    `<span class="flag-chip flag-${tone}" title="${esc(reasons[tone].join(' · '))}">${summary[tone]} ${esc(flagToneLabels[tone])}</span>`).join('')}</span>`;
+}
 
 function taskCard(task, row, open = true) {
   return `<details class="task sev-${esc(task.severity)}" data-task="${esc(task.id)}" data-requestable="${task.requestable}" data-severity="${esc(task.severity)}"${open ? ' open' : ''}>
@@ -234,7 +243,7 @@ function queueRow(r, i) {
     <td><button class="account-link" data-detail="${i}" aria-label="View ${esc(r.accountName)} submission ${esc(r.submissionNumber)}"><span><strong>${esc(r.accountName)}</strong><small>${esc(r.submissionNumber)}</small></span></button></td>
     <td>${esc(lineLabels[r.lineOfBusiness] ?? title(r.lineOfBusiness))}<small>Federato: ${esc(title(r.queueStatus))}</small></td>
     <td>${esc(dateLabel(r.effectiveDate))}</td><td class="number">${money(r.premium)}</td>
-    <td>${property ? `<span class="badge lane-${esc(r.verdict)}">${esc(laneLabels[r.verdict])}</span><small>${r.evidenceCoverage}% established · ${r.factors.filter(f => f.status === 'fail').length} exceptions</small><small>Appetite points ${r.score}/100</small>` : '<span class="muted-cell">Not evaluated</span><small>Property rules do not apply</small>'}</td>
+    <td>${property ? `<span class="badge lane-${esc(r.verdict)}">${esc(laneLabels[r.verdict])}</span>${inGoodOrder(r) ? '<span class="badge good-order">In good order</span>' : ''}${flagChips(r)}<small>${r.evidenceCoverage}% established</small><small>Appetite points ${r.score}/100</small>` : '<span class="muted-cell">Not evaluated</span><small>Property rules do not apply</small>'}</td>
     <td class="next-action"><span data-queue-next>${esc(next)}</span><small data-queue-work>Not yet reviewed here</small></td>
     <td><button class="icon-button open-record" data-detail="${i}" aria-label="Open ${esc(r.submissionNumber)}">${icon('chevron')}</button></td></tr>`;
 }
@@ -246,7 +255,7 @@ export function caseTemplate(r, i, report) {
   return `<template id="record-${i}"><header class="case-bar" data-case-id="${esc(r.id)}" data-demo-case="${Boolean(r.demoScenario)}">
     <button class="case-back" data-close-case>${icon('arrow')}<span>Back to queue</span></button>
     <div class="case-ident"><strong id="record-title">${esc(r.accountName)}</strong><span>${esc(r.submissionNumber)} · ${esc(lineLabels[r.lineOfBusiness] ?? title(r.lineOfBusiness))} · Federato status: ${esc(title(r.queueStatus))}</span></div>
-    <div class="case-verdict"><span class="badge lane-${esc(r.verdict)}">${r.demoScenario ? 'Demo scoring' : esc(laneLabels[r.verdict])}</span>${property ? `<div class="case-score"><strong>${r.evidenceCoverage}%</strong><span>factors established</span></div>` : ''}</div></header>
+    <div class="case-verdict"><span class="badge lane-${esc(r.verdict)}">${r.demoScenario ? 'Demo scoring' : esc(laneLabels[r.verdict])}</span>${property && !r.demoScenario ? `${inGoodOrder(r) ? '<span class="badge good-order">In good order</span>' : ''}${flagChips(r)}` : ''}${property ? `<div class="case-score"><strong>${r.evidenceCoverage}%</strong><span>factors established</span></div>` : ''}</div></header>
     ${r.demoScenario ? '' : caseSummary(r, resolveResearch(r))}
     ${property ? `<nav class="case-tabs" role="tablist" aria-label="Submission information">
       ${[['review','Review & next steps'],['property','Property details'],['account','Account context · all lines']].map(([key,label],index) => `<button role="tab" data-case-tab="${key}" aria-selected="${index === 0}" tabindex="${index === 0 ? 0 : -1}" aria-controls="case-${key}-${esc(r.id)}" id="tab-${key}-${esc(r.id)}">${label}</button>`).join('')}</nav>` : ''}
