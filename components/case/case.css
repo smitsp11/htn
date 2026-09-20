@@ -867,3 +867,241 @@
     flex-wrap: wrap;
   }
 }
+
+/* ---- Property details tab (Task 4.3) ---------------------------------------------
+   Ported from federanorth's `exposurePanel`/`buildingPanel`/`propertyLossPanel` and
+   the `case-property` factor-list markup (src/decision/dashboard.js) plus
+   `.section-title`/`.record-metrics`/`.detail-section`/`.factor*` rules
+   (federanorth.css). `.appetite-check` is this repo's own row class -- the source
+   used a nested `<details class="factor">` per row; ranked submissions here only
+   carry a flat verdict + reason, so a plain row is enough. */
+
+.section-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 26px 0 6px;
+}
+
+.section-title h3 {
+  font-size: 15px;
+  font-weight: 600;
+  margin: 0;
+  color: var(--ink);
+}
+
+.section-title > span {
+  font-size: 10px;
+  color: var(--ink-soft);
+}
+
+.record-metrics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 18px 25px;
+  padding: 16px 0 22px;
+  border-bottom: 1px solid var(--border);
+}
+
+.record-metrics small {
+  display: block;
+  font-size: 10px;
+  color: var(--ink-soft);
+  margin-bottom: 6px;
+}
+
+.record-metrics strong {
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.detail-section {
+  border-top: 1px solid var(--border);
+  padding: 16px 0;
+}
+
+.detail-section > summary {
+  cursor: pointer;
+  font-size: 14px;
+  color: var(--ink);
+  margin-bottom: 6px;
+}
+
+.factor-caption {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--ink-faint);
+  margin: 12px 0;
+}
+
+.factor-caption .icon {
+  width: 13px;
+  height: 13px;
+}
+
+.factor-list {
+  margin-top: 10px;
+}
+
+.appetite-check {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.appetite-check:last-child {
+  border-bottom: 0;
+}
+
+.appetite-check-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+  flex: 1 1 200px;
+}
+
+.appetite-check p {
+  flex-basis: 100%;
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.7;
+  color: var(--ink-soft);
+}
+
+@media (max-width: 700px) {
+  .record-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+  }
+}
+
+/* ---- Account context tab (Task 4.4) ----------------------------------------------
+   Ported from federanorth's `signalsPanel`/`relationshipPanel`/`lossPanel`/`brokerPanel`
+   and `.signal*`/`.context-card`/`.source-records` rules (src/decision/{casefile,
+   dashboard}.js, federanorth.css). Everything here is context: it never changes
+   `submission.status`/`score`/`explanation`. */
+
+.signal-list {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  margin: 13px 0 26px;
+}
+
+.signal {
+  display: flex;
+  gap: 11px;
+  align-items: flex-start;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 13px 15px;
+  background: var(--surface);
+}
+
+.signal-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  margin-top: 5px;
+  background: var(--ink-faint);
+}
+
+.signal.tone-warning {
+  border-color: #ecd7ab;
+  background: var(--amber-tint);
+}
+
+.signal.tone-warning .signal-dot {
+  background: var(--amber);
+}
+
+.signal.tone-positive {
+  border-color: #bfe6d1;
+  background: var(--mint-tint);
+}
+
+.signal.tone-positive .signal-dot {
+  background: var(--mint);
+}
+
+.signal strong {
+  font-size: 13px;
+  display: block;
+  margin-bottom: 4px;
+  color: var(--ink);
+}
+
+.signal p {
+  font-size: 12px;
+  line-height: 1.7;
+  margin: 0;
+  color: var(--ink-soft);
+}
+
+.context-card {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 18px 20px 6px;
+  margin-bottom: 16px;
+  background: var(--surface);
+}
+
+.context-card .section-title {
+  margin-top: 0;
+}
+
+.context-card-caution {
+  display: flex;
+  gap: 6px;
+  align-items: flex-start;
+  margin: 0 0 14px;
+  font-size: 11px;
+  color: var(--amber);
+}
+
+.context-card-caution .icon {
+  width: 12px;
+  height: 12px;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.source-records {
+  margin-top: 25px;
+  font-size: 11px;
+  color: var(--ink-soft);
+}
+
+.source-records summary {
+  display: flex;
+  justify-content: space-between;
+  cursor: pointer;
+}
+
+.source-records .icon {
+  width: 12px;
+  height: 12px;
+}
+
+.source-records p {
+  font-size: 11px;
+  line-height: 1.8;
+  margin: 15px 0;
+  overflow-wrap: anywhere;
+  color: var(--ink-faint);
+}
+
+.account-tab-footer {
+  margin-top: 25px;
+  font-size: 11px;
+  font-style: italic;
+  color: var(--ink-faint);
+}
