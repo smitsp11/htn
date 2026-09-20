@@ -256,3 +256,60 @@ select {
 #page-label {
   white-space: nowrap;
 }
+
+/* Search bar: ported from federanorth's `.global-search` bottom-border field, restyled
+   as the LLM ask-the-queue entry point. */
+.search-bar-wrap {
+  margin-bottom: 18px;
+}
+.search-bar {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  border-bottom: 1px solid var(--border-strong);
+  padding: 12px 0;
+  min-width: 255px;
+  color: var(--ink-soft);
+}
+.search-bar .icon {
+  width: 15px;
+  height: 15px;
+  flex-shrink: 0;
+}
+.search-bar:focus-within {
+  border-color: var(--mint);
+}
+.search-input {
+  flex: 1;
+  width: 100%;
+  background: none;
+  border: 0;
+  outline: none;
+  min-width: 0;
+  color: var(--ink);
+  font-size: 13px;
+}
+.search-input::placeholder {
+  color: var(--ink-faint);
+}
+.search-bar kbd {
+  font-family: monospace;
+  border: 1px solid var(--border-strong);
+  border-radius: 2px;
+  font-size: 10px;
+  padding: 0 4px;
+  color: var(--ink-soft);
+}
+.search-clear {
+  font-size: 11px;
+  color: var(--ink-soft);
+  padding: 5px;
+}
+.search-clear:hover {
+  color: var(--mint-strong);
+}
+.search-answer {
+  margin-top: 10px;
+  font-size: 12px;
+  color: var(--ink-soft);
+}
