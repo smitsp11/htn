@@ -14,9 +14,8 @@ export function CaseSummary({ submission }: { submission: RankedSubmission }) {
       <p className="case-summary-headline">{submission.recommendation}</p>
       {isOffStrategyBind(submission) ? (
         <p className="case-summary-offstrategy">
-          <b>Off-strategy bind:</b> this account was bound, but the appetite engine independently places it out
-          of appetite. Possible appetite drift — a risk on the books the carrier&rsquo;s stated appetite would
-          not have written.
+          <b>Off-strategy bind:</b> the carrier bound this account, but it sits outside the 2025 appetite. Worth a
+          portfolio conversation.
         </p>
       ) : null}
     </section>

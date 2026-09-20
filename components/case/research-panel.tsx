@@ -110,9 +110,7 @@ export function ResearchPanel({ submission }: { submission: RankedSubmission }) 
         </details>
       ) : null}
 
-      <p className="research-notice">
-        Research and engine context are decision support only. They never change the appetite score or status.
-      </p>
+      <p className="research-notice">Decision support only. Nothing here changes the score or status.</p>
     </details>
   );
 }

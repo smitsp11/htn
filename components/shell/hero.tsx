@@ -18,11 +18,7 @@ export function Hero() {
           <br />
           to underwrite.
         </h1>
-        <p>
-          Review the submission. Check local conditions.
-          <br />
-          Get the context to make your next decision.
-        </p>
+        <p>Every submission ranked against the 2025 appetite, with the reason beside the verdict.</p>
         <a className="button mint hero-cta" href="#queue">
           Explore your queue <Icon name="arrow" />
         </a>

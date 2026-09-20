@@ -1,6 +1,5 @@
 import type { AppetiteVerdict, FactorEvaluation, FactorKey, RankedSubmission } from "@/lib/domain/types";
 import { completenessOf } from "@/lib/rankings/completeness";
-import { fixturesFor } from "@/lib/demo/fixtures";
 import { Badge, type BadgeTone } from "@/components/ui/badge";
 import { Icon } from "@/components/ui/icon";
 import { ResearchPanel } from "@/components/case/research-panel";
@@ -123,7 +122,7 @@ function gapFor(factor: FactorEvaluation, kind: "absent" | "ambiguous", submissi
 }
 
 /**
- * Case review tab: recommendation, assessment, related account leads, research digest,
+ * Case review tab: recommendation, assessment, appetite breakdown, research digest,
  * evidence intake, an evidence-request draft, and one task card per open gap. Ported from
  * federanorth's `reviewPanel` (`src/decision/dashboard.js`) against this repo's simpler
  * `RankedSubmission` + `completenessOf` model rather than federanorth's richer task/lead
@@ -134,7 +133,6 @@ function gapFor(factor: FactorEvaluation, kind: "absent" | "ambiguous", submissi
  */
 export function ReviewTab({ submission }: { submission: RankedSubmission }) {
   const completeness = completenessOf(submission);
-  const bundle = fixturesFor(submission.id);
   const factorByKey = new Map(submission.factors.map((factor) => [factor.key, factor]));
 
   const gaps: Gap[] = [
@@ -178,35 +176,6 @@ export function ReviewTab({ submission }: { submission: RankedSubmission }) {
           ))}
         </div>
       </details>
-
-      {bundle.leads.length > 0 ? (
-        <details className="leads">
-          <summary>
-            <span>
-              <Icon name="book" /> Related information we already hold
-            </span>
-            <span className="lead-count">{bundle.leads.length}</span>
-            <Icon name="chevron" />
-          </summary>
-          <div className="lead-list">
-            {bundle.leads.map((lead) => (
-              <article className="lead" key={lead.label}>
-                <header>
-                  <span className="lead-kind">{lead.kind}</span>
-                  <strong>{lead.label}</strong>
-                </header>
-                <b className="lead-value">{lead.value}</b>
-                <p>{lead.detail}</p>
-                <p className="lead-caution">
-                  <Icon name="info" /> {lead.caution ?? "Context only. Not scored."}
-                </p>
-                {lead.sources.length > 0 ? <p className="lead-sources">{lead.sources.join(", ")}</p> : null}
-              </article>
-            ))}
-          </div>
-          <p className="lead-footer">Context only. None of this is scored, and none of it closes an open request.</p>
-        </details>
-      ) : null}
 
       <ResearchPanel submission={submission} />
 

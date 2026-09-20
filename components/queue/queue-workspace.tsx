@@ -148,7 +148,6 @@ export function QueueWorkspace({ submissions, onOpen, matchedIds }: QueueWorkspa
   return (
     <section id="queue">
       <header className="queue-heading">
-        <p className="eyebrow">Opportunity, in focus.</p>
         <h2>Commercial underwriting queue</h2>
       </header>
       <ScopeSwitch

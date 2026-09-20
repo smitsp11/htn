@@ -478,23 +478,36 @@ select {
   color: var(--ink-faint);
 }
 
-/* W6 — Appetite × Completeness quadrant board */
-.quadrant { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 16px 0; }
+/* W6 — Appetite × effort triage board */
+.quadrant-board { margin: 16px 0; }
+.quadrant-caption { margin: 0 0 12px; max-width: 720px; font-size: 12px; line-height: 1.5; color: var(--ink-soft); }
+.quadrant { display: grid; grid-template-columns: 120px 1fr 1fr; gap: 10px 12px; align-items: stretch; }
+.quadrant-axis-x, .quadrant-axis-y { display: flex; flex-direction: column; gap: 2px; font-size: 12px; font-weight: 600; letter-spacing: 0.02em; color: var(--ink); }
+.quadrant-axis-x { padding: 0 4px 2px; }
+.quadrant-axis-y { padding: 12px 4px 0 0; }
+.quadrant-axis-x small, .quadrant-axis-y small { font-size: 11px; font-weight: 400; color: var(--ink-faint); }
 .quadrant-cell { border: 1px solid var(--border); border-radius: 10px; padding: 12px; min-height: 130px; }
-.quadrant-cell header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px; }
+.quadrant-cell header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 4px; }
 .quadrant-cell header strong { font-size: 14px; color: var(--ink); }
 .quadrant-cell header small { font-size: 12px; color: var(--ink-faint); }
+.quadrant-meaning { margin: 0 0 10px; font-size: 12px; line-height: 1.45; color: var(--ink-soft); }
 .quadrant-cell ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
-.quadrant-cell li button { width: 100%; display: flex; justify-content: space-between; gap: 8px; text-align: left; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 7px 9px; cursor: pointer; font-size: 13px; color: var(--ink); }
+.quadrant-cell li button { width: 100%; display: flex; flex-direction: column; gap: 2px; text-align: left; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 7px 9px; cursor: pointer; font-size: 13px; color: var(--ink); }
 .quadrant-cell li button:hover { background: var(--surface-hover); }
-.quadrant-cell li button small { color: var(--ink-faint); }
+.quadrant-item-head { display: flex; justify-content: space-between; gap: 8px; }
+.quadrant-item-head small { color: var(--ink-faint); }
+.quadrant-item-reason { font-size: 12px; line-height: 1.4; color: var(--ink-soft); }
 .quadrant-cell li button[aria-pressed="true"] { border-color: var(--mint); outline: 1px solid var(--mint); }
-.quadrant-empty { margin: 0; font-size: 13px; color: var(--ink-faint); }
+.quadrant-empty, .quadrant-more { margin: 6px 0 0; font-size: 12px; color: var(--ink-faint); }
 .qc-work-now { background: var(--mint-tint); }
 .qc-worth-effort { background: var(--amber-tint); }
 .qc-selective { background: var(--surface-muted); }
 .qc-deprioritize { background: var(--danger-tint); }
-@media (max-width: 720px) { .quadrant { grid-template-columns: 1fr; } }
+@media (max-width: 720px) {
+  .quadrant { grid-template-columns: 1fr; }
+  .quadrant-corner, .quadrant-axis-x { display: none; }
+  .quadrant-axis-y { padding-top: 0; }
+}
 
 /* W6 — List / Quadrant view toggle */
 .view-toggle { display: inline-flex; border: 1px solid var(--border-strong); border-radius: 6px; overflow: hidden; }

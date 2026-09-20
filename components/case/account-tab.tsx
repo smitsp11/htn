@@ -52,11 +52,6 @@ export function AccountTab({ submission }: { submission: RankedSubmission }) {
               </header>
               <b className="lead-value">{lead.value}</b>
               <p>{lead.detail}</p>
-              {lead.caution ? (
-                <p className="context-card-caution">
-                  <Icon name="info" /> {lead.caution}
-                </p>
-              ) : null}
               {lead.sources.length > 0 ? <p className="lead-sources">{lead.sources.join(", ")}</p> : null}
             </div>
           ))}
