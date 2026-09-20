@@ -56,14 +56,14 @@ export function RunConsolidation({
     (async () => {
       setVisibleCount(0);
       setShowDetails(false);
+      // Animate the "thinking" over ~5.4s: spread the trace steps evenly across that
+      // window so it reads as a real channel sweep before the recovered fields land.
+      const THINK_MS = 5400;
+      const perStep = result.steps.length > 0 ? THINK_MS / result.steps.length : THINK_MS;
       for (let i = 1; i <= result.steps.length; i++) {
         if (cancelled) return;
         setVisibleCount(i);
-        const justShown = result.steps[i - 1];
-        // Brief stagger so the trace still reads as a live sweep, but the recovered
-        // fields land within ~1s rather than making the underwriter wait.
-        const pauseMs = justShown?.message.startsWith("Reading") ? 320 : 110;
-        await sleep(pauseMs);
+        await sleep(perStep);
       }
       if (!cancelled) setShowDetails(true);
     })();

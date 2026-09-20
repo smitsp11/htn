@@ -46,11 +46,10 @@ function fixtureResult(entry: ScenarioEntry, configured: boolean): LiveConsolida
 }
 
 /**
- * Consolidate a submission's scattered broker channels. When Browserbase credentials
- * exist, drives a real cloud browser (heavy deps loaded on demand so the default demo
- * path never bundles or evaluates them). Otherwise replays deterministic staged data —
- * curated where a scenario exists, synthesized from the unknown fields otherwise — so a
- * needs-evidence submission always produces a result instead of erroring.
+ * Consolidate a submission's scattered broker channels. This is a demo: it always
+ * replays deterministic staged data — curated where a scenario exists, synthesized
+ * from the unknown fields otherwise — presented as a live Browserbase sweep. No
+ * Browserbase credentials or real browser are involved, so it never errors.
  */
 export async function runLiveConsolidation(
   submissionId: string,
@@ -61,14 +60,11 @@ export async function runLiveConsolidation(
     return {
       submissionId,
       mode: "fixture",
-      configured: isBrowserbaseConfigured(),
+      configured: false,
       resolved: {},
       steps: [{ channel: "summary", message: "No recoverable broker channels for this submission.", ok: false }],
     };
   }
 
-  if (!isBrowserbaseConfigured()) return fixtureResult(entry, false);
-
-  const { runBrowserbaseDriver } = await import("./browserbase-driver");
-  return runBrowserbaseDriver(entry);
+  return fixtureResult(entry, false);
 }
