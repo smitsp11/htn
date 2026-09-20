@@ -478,3 +478,41 @@ select {
   gap: 10px;
   padding: 14px 0;
 }
+
+/* Segmented dataset toggle: baseline vs. extended queue source.
+   Two buttons share one rounded border; the active one is filled. */
+.dataset-toggle {
+  display: inline-flex;
+  margin-right: auto;
+  border: 1px solid var(--border-strong);
+  border-radius: 6px;
+  overflow: hidden;
+}
+.dataset-toggle button {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--ink-soft);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 7px 12px;
+  white-space: nowrap;
+  transition: color 0.15s ease, background 0.15s ease;
+}
+.dataset-toggle button + button {
+  border-left: 1px solid var(--border-strong);
+}
+.dataset-toggle button:hover {
+  color: var(--ink);
+}
+.dataset-toggle button.active {
+  background: var(--mint);
+  color: #fff;
+}
+.dataset-note {
+  margin: 0;
+  max-width: 420px;
+  font-size: 10px;
+  line-height: 1.5;
+  color: var(--ink-faint);
+}

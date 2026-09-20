@@ -60,12 +60,13 @@ export function AppShell() {
   const [matchedIds, setMatchedIds] = useState<string[] | null>(null);
   const [chaseOpen, setChaseOpen] = useState(false);
   const [methodOpen, setMethodOpen] = useState(false);
+  const [dataset, setDataset] = useState<"baseline" | "extended">("baseline");
 
   const loadRankings = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch("/api/rankings", { cache: "no-store" });
+      const response = await fetch(`/api/rankings?dataset=${dataset}`, { cache: "no-store" });
       const body: unknown = await response.json();
       if (!response.ok || typeof body !== "object" || body === null || !("submissions" in body)) {
         setError(toErrorBody(body, `Unable to load rankings (${response.status})`));
@@ -77,7 +78,7 @@ export function AppShell() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [dataset]);
 
   useEffect(() => {
     void loadRankings();
@@ -135,6 +136,29 @@ export function AppShell() {
       ) : (
         <>
           <div className="queue-toolbar">
+            <div className="dataset-toggle" role="group" aria-label="Dataset">
+              <button
+                type="button"
+                className={dataset === "baseline" ? "active" : ""}
+                aria-pressed={dataset === "baseline"}
+                onClick={() => setDataset("baseline")}
+              >
+                Federato baseline
+              </button>
+              <button
+                type="button"
+                className={dataset === "extended" ? "active" : ""}
+                aria-pressed={dataset === "extended"}
+                onClick={() => setDataset("extended")}
+              >
+                Extended
+              </button>
+            </div>
+            {dataset === "extended" && (
+              <p className="dataset-note">
+                Extended adds ~24 synthetic property submissions and scores every line of business through our researched appetite tables.
+              </p>
+            )}
             <button type="button" className="button ghost" onClick={() => setChaseOpen(true)}>
               Chase list
             </button>
