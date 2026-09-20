@@ -1530,3 +1530,18 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* W3 — consolidated-data resolution panel */
+.resolution-panel { border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; margin: 16px 0; background: var(--panel); }
+.resolution-panel header { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin-bottom: 10px; }
+.resolution-panel header span { font-weight: 600; color: var(--ink); display: inline-flex; align-items: center; gap: 6px; }
+.resolution-panel header small { color: var(--ink-faint); }
+.res-chips { list-style: none; margin: 0 0 12px; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.res-chip { display: flex; gap: 8px; align-items: baseline; font-size: 13px; padding: 5px 9px; border-radius: 6px; }
+.res-chip.res-found { background: var(--mint-tint); }
+.res-field { font-weight: 600; color: var(--ink); }
+.res-meta { color: var(--ink-soft); }
+.res-verdict { display: inline-flex; align-items: center; gap: 10px; font-size: 14px; }
+.res-before { color: var(--ink-faint); }
+.res-after { color: var(--ink); font-weight: 600; }
+.res-verdict.res-flip .res-after { color: var(--mint-strong); }

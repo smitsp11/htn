@@ -131,7 +131,7 @@ test("presentation: summary counts statuses and unresolved submissions", () => {
 test("route: GET returns ranked demo submissions", async () => {
   process.env.FEDERATO_USE_DEMO_DATA = "true";
   const { GET } = await import("../app/api/rankings/route");
-  const res = await GET();
+  const res = await GET(new Request("http://localhost/api/rankings"));
   assert.equal(res.status, 200);
   const body = await res.json();
   assert.equal(body.source, "demo");
@@ -144,7 +144,7 @@ test("route: GET maps live-mode failures to a categorised error body", async () 
   delete process.env.FEDERATO_CLIENT_ID;
   delete process.env.FEDERATO_CLIENT_SECRET;
   const { GET } = await import("../app/api/rankings/route");
-  const res = await GET();
+  const res = await GET(new Request("http://localhost/api/rankings"));
   process.env.FEDERATO_USE_DEMO_DATA = "true";
   assert.equal(res.status, 401);
   const body = await res.json();

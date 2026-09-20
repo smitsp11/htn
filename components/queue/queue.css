@@ -439,3 +439,72 @@ select {
   gap: 10px;
   padding: 14px 0;
 }
+
+/* Segmented dataset toggle: baseline vs. extended queue source.
+   Two buttons share one rounded border; the active one is filled. */
+.dataset-toggle {
+  display: inline-flex;
+  margin-right: auto;
+  border: 1px solid var(--border-strong);
+  border-radius: 6px;
+  overflow: hidden;
+}
+.dataset-toggle button {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--ink-soft);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 7px 12px;
+  white-space: nowrap;
+  transition: color 0.15s ease, background 0.15s ease;
+}
+.dataset-toggle button + button {
+  border-left: 1px solid var(--border-strong);
+}
+.dataset-toggle button:hover {
+  color: var(--ink);
+}
+.dataset-toggle button.active {
+  background: var(--mint);
+  color: #fff;
+}
+.dataset-note {
+  margin: 0;
+  max-width: 420px;
+  font-size: 10px;
+  line-height: 1.5;
+  color: var(--ink-faint);
+}
+
+/* W6 — Appetite × Completeness quadrant board */
+.quadrant { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 16px 0; }
+.quadrant-cell { border: 1px solid var(--border); border-radius: 10px; padding: 12px; min-height: 130px; }
+.quadrant-cell header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px; }
+.quadrant-cell header strong { font-size: 14px; color: var(--ink); }
+.quadrant-cell header small { font-size: 12px; color: var(--ink-faint); }
+.quadrant-cell ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.quadrant-cell li button { width: 100%; display: flex; justify-content: space-between; gap: 8px; text-align: left; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 7px 9px; cursor: pointer; font-size: 13px; color: var(--ink); }
+.quadrant-cell li button:hover { background: var(--surface-hover); }
+.quadrant-cell li button small { color: var(--ink-faint); }
+.quadrant-cell li button[aria-pressed="true"] { border-color: var(--mint); outline: 1px solid var(--mint); }
+.quadrant-empty { margin: 0; font-size: 13px; color: var(--ink-faint); }
+.qc-work-now { background: var(--mint-tint); }
+.qc-worth-effort { background: var(--amber-tint); }
+.qc-selective { background: var(--surface-muted); }
+.qc-deprioritize { background: var(--danger-tint); }
+@media (max-width: 720px) { .quadrant { grid-template-columns: 1fr; } }
+
+/* W6 — List / Quadrant view toggle */
+.view-toggle { display: inline-flex; border: 1px solid var(--border-strong); border-radius: 6px; overflow: hidden; }
+.view-toggle button { padding: 4px 12px; font-size: 13px; background: var(--surface); color: var(--ink-soft); border: 0; cursor: pointer; }
+.view-toggle button + button { border-left: 1px solid var(--border-strong); }
+.view-toggle button.active { background: var(--mint); color: #fff; }
+
+/* W7 — Portfolio overview strip */
+.portfolio-strip { display: flex; flex-wrap: wrap; gap: 28px; padding: 14px 18px; border: 1px solid var(--border); border-radius: 10px; margin: 0 0 16px; background: var(--panel); }
+.ps-metric { display: flex; flex-direction: column; gap: 2px; }
+.ps-metric span { font-size: 11px; letter-spacing: 0.04em; text-transform: uppercase; color: var(--ink-faint); }
+.ps-metric strong { font-size: 18px; color: var(--ink); }
+.ps-metric small { font-size: 12px; color: var(--ink-faint); }

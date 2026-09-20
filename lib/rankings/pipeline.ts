@@ -1,15 +1,20 @@
+import { syntheticPropertySubmissions } from "@/lib/demo/synthetic-property";
 import { demoSubmissions } from "@/lib/demo/submissions";
 import { rankSubmissions } from "@/lib/domain/appetite";
 import type {
   ActualOutcome,
   CanonicalSubmission,
   ContextSignal,
+  Dataset,
   HazardProfile,
   QueryReasoning,
   RankedSubmission,
   RankingsResponse,
 } from "@/lib/domain/types";
 import { loadOfflineContext } from "@/lib/enrichment/context";
+import { loadConsolidationIndex } from "@/lib/enrichment/consolidation-index";
+import { buildResolution } from "@/lib/enrichment/resolution-result";
+import type { ConsolidationIndex } from "@/lib/enrichment/resolve-submission";
 import { runQueryAgent } from "@/lib/federato/adapter";
 import { FederatoClient } from "@/lib/federato/client";
 import { loadOfflineEnrichment, loadOfflineOutcomes } from "@/lib/federato/offline-data";
@@ -55,6 +60,13 @@ export interface RankingsPipelineDeps {
    * after ranking. Context never enters appetite scoring.
    */
   loadContext?: () => Promise<Map<string, ContextSignal[]>>;
+  /**
+   * When present, resolves each submission's absent required fields from the
+   * consolidation index and attaches a before/after re-score
+   * (`RankedSubmission.resolution`). Mirrors the other optional loaders
+   * (offline only); it never changes the queue's own status or score.
+   */
+  loadConsolidation?: () => Promise<ConsolidationIndex>;
   rank: (submissions: CanonicalSubmission[]) => RankedSubmission[];
   now: () => Date;
 }
@@ -66,10 +78,11 @@ export interface RankingsPipelineDeps {
  * - unset   -> the captured raw Federato snapshot under raw/, replayed through
  *              the query agent (offline, default).
  */
-export function defaultPipelineDeps(): RankingsPipelineDeps {
+export function defaultPipelineDeps(dataset: Dataset = "baseline"): RankingsPipelineDeps {
   const mode = process.env.FEDERATO_USE_DEMO_DATA;
   const useDemoData = mode === "true";
   const explicitLive = mode === "false";
+  const extended = dataset === "extended";
 
   const runAgent = explicitLive
     ? async () => {
@@ -95,7 +108,8 @@ export function defaultPipelineDeps(): RankingsPipelineDeps {
     loadEnrichment: useDemoData || explicitLive ? undefined : loadOfflineEnrichment,
     loadOutcomes: useDemoData || explicitLive ? undefined : loadOfflineOutcomes,
     loadContext: useDemoData || explicitLive ? undefined : async () => loadOfflineContext(),
-    rank: rankSubmissions,
+    loadConsolidation: useDemoData || explicitLive ? undefined : async () => loadConsolidationIndex(),
+    rank: (s) => rankSubmissions(s, { extended }),
     now: () => new Date(),
   };
 }
@@ -113,13 +127,22 @@ function rankingTrace(ranked: RankedSubmission[]): string[] {
  * normalize), rank, attach enrichment. The route calls this and only
  * translates errors. Domain behaviour stays in the injected modules.
  */
-export async function buildRankings(deps: RankingsPipelineDeps): Promise<RankingsResponse> {
+export async function buildRankings(
+  deps: RankingsPipelineDeps,
+  options: { dataset?: Dataset } = {},
+): Promise<RankingsResponse> {
   const generatedAt = deps.now().toISOString();
+  const dataset = options.dataset ?? "baseline";
+  const extended = dataset === "extended";
+  const synthetic = extended ? syntheticPropertySubmissions() : [];
+  const syntheticIds = new Set(synthetic.map((s) => s.id));
 
   if (deps.useDemoData) {
-    const ranked = deps.rank(deps.demoSubmissions);
+    const ranked = deps.rank([...deps.demoSubmissions, ...synthetic]);
+    for (const submission of ranked) if (syntheticIds.has(submission.id)) submission.synthetic = true;
     return {
       source: "demo",
+      dataset,
       generatedAt,
       schemaDiscovered: false,
       trace: [
@@ -132,7 +155,8 @@ export async function buildRankings(deps: RankingsPipelineDeps): Promise<Ranking
   }
 
   const agent = await deps.runAgent();
-  const ranked = deps.rank(agent.submissions);
+  const ranked = deps.rank([...agent.submissions, ...synthetic]);
+  for (const s of ranked) if (syntheticIds.has(s.id)) s.synthetic = true;
 
   if (deps.loadEnrichment) {
     const hazards = await deps.loadEnrichment();
@@ -158,6 +182,14 @@ export async function buildRankings(deps: RankingsPipelineDeps): Promise<Ranking
     }
   }
 
+  if (deps.loadConsolidation) {
+    const index = await deps.loadConsolidation();
+    for (const submission of ranked) {
+      const resolution = buildResolution(submission, index, extended);
+      if (resolution) submission.resolution = resolution;
+    }
+  }
+
   const sourceLine =
     deps.dataSource === "offline"
       ? "Replayed the captured raw Federato snapshot (raw/) through the query agent; no live Federato call was made."
@@ -168,6 +200,7 @@ export async function buildRankings(deps: RankingsPipelineDeps): Promise<Ranking
 
   return {
     source: "federato",
+    dataset,
     generatedAt,
     schemaDiscovered: true,
     trace: [sourceLine, ...agent.traceSummary, countLine, ...rankingTrace(ranked)],

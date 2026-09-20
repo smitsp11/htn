@@ -6,6 +6,7 @@ import type { RankingsResponse } from "@/lib/domain/types";
 import type { RankingsErrorBody, RankingsErrorCategory } from "@/lib/rankings/errors";
 import { SearchBar } from "@/components/queue/search-bar";
 import { QueueWorkspace } from "@/components/queue/queue-workspace";
+import { PortfolioStrip } from "@/components/queue/portfolio-strip";
 import { QueueSkeleton } from "@/components/queue/queue-skeleton";
 import { PipelineTrace } from "@/components/queue/pipeline-trace";
 import { CaseView } from "@/components/case/case-view";
@@ -69,11 +70,12 @@ export function AppShell() {
   const [matchedIds, setMatchedIds] = useState<string[] | null>(null);
   const [chaseOpen, setChaseOpen] = useState(false);
   const [methodOpen, setMethodOpen] = useState(false);
+  const [dataset, setDataset] = useState<"baseline" | "extended">("baseline");
 
-  const loadRankings = useCallback(async () => {
+  const loadRankings = useCallback(async (signal?: AbortSignal) => {
     setError(null);
     try {
-      const response = await fetch("/api/rankings", { cache: "no-store" });
+      const response = await fetch(`/api/rankings?dataset=${dataset}`, { cache: "no-store", signal });
       const body: unknown = await response.json();
       if (!response.ok || typeof body !== "object" || body === null || !("submissions" in body)) {
         setError(toErrorBody(body, `Unable to load rankings (${response.status})`));
@@ -81,13 +83,24 @@ export function AppShell() {
       }
       setData(body as RankingsResponse);
     } catch (caught) {
+      if (caught instanceof DOMException && caught.name === "AbortError") return;
       setError({ error: caught instanceof Error ? caught.message : "Unable to load rankings", category: "unknown" });
     }
-  }, []);
+  }, [dataset]);
 
   useEffect(() => {
-    void loadRankings();
+    const controller = new AbortController();
+    void loadRankings(controller.signal);
+    return () => controller.abort();
   }, [loadRankings]);
+
+  function changeDataset(next: "baseline" | "extended") {
+    if (next === dataset) return;
+    setDataset(next);
+    setData(null);
+    setSelectedId(null);
+    setMatchedIds(null);
+  }
 
   // Loading / error / empty are rendered as a single crossfading group so state
   // changes read as a transition, not a flash.
@@ -137,7 +150,7 @@ export function AppShell() {
 
   return (
     <MotionConfig reducedMotion="user">
-      <SearchBar onResult={setMatchedIds} />
+      <SearchBar key={dataset} dataset={dataset} onResult={setMatchedIds} />
       <AnimatePresence mode="wait">
         {selected ? (
           <motion.div key="case" {...swap}>
@@ -146,6 +159,29 @@ export function AppShell() {
         ) : (
           <motion.div key="queue" {...swap}>
             <div className="queue-toolbar">
+              <div className="dataset-toggle" role="group" aria-label="Dataset">
+                <button
+                  type="button"
+                  className={dataset === "baseline" ? "active" : ""}
+                  aria-pressed={dataset === "baseline"}
+                  onClick={() => changeDataset("baseline")}
+                >
+                  Federato baseline
+                </button>
+                <button
+                  type="button"
+                  className={dataset === "extended" ? "active" : ""}
+                  aria-pressed={dataset === "extended"}
+                  onClick={() => changeDataset("extended")}
+                >
+                  Extended
+                </button>
+              </div>
+              {dataset === "extended" ? (
+                <p className="dataset-note">
+                  Extended adds ~24 synthetic property submissions and evaluates every line against its own appetite table.
+                </p>
+              ) : null}
               <button type="button" className="button ghost" onClick={() => setChaseOpen(true)}>
                 Chase list
               </button>
@@ -153,13 +189,14 @@ export function AppShell() {
                 Scoring methodology
               </button>
             </div>
+            <PortfolioStrip submissions={data.submissions} />
             <QueueWorkspace submissions={data.submissions} onOpen={setSelectedId} matchedIds={matchedIds} />
             <PipelineTrace trace={data.trace} queryTrace={data.queryTrace} />
           </motion.div>
         )}
       </AnimatePresence>
       <ChaseDialog open={chaseOpen} onClose={() => setChaseOpen(false)} submissions={data.submissions} />
-      <MethodologyDialog open={methodOpen} onClose={() => setMethodOpen(false)} />
+      <MethodologyDialog dataset={dataset} open={methodOpen} onClose={() => setMethodOpen(false)} />
     </MotionConfig>
   );
 }
