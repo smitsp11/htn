@@ -1,7 +1,6 @@
 import type { RankedSubmission } from "@/lib/domain/types";
 import { completenessOf } from "@/lib/rankings/completeness";
 import { Badge } from "@/components/ui/badge";
-import { FlagChips } from "@/components/ui/flag-chips";
 import { Icon } from "@/components/ui/icon";
 import { LaneBadge } from "@/components/ui/lane-badge";
 
@@ -17,18 +16,13 @@ function statusLabel(status: string): string {
 }
 
 /**
- * Case bar: back button, account identity, and on the right the lane badge,
- * an in-good-order badge derived from `completenessOf`, flag chips, and the
- * "factors established" score. That score is the completeness resolved/total
- * ratio (the fraction of the eight appetite factors the engine could
- * actually resolve) rather than `submission.score` -- it mirrors
- * federanorth's `evidenceCoverage%` "factors established" stat, which is a
- * data-completeness read, not the appetite score itself.
+ * Case bar: back button, account identity, and on the right the appetite verdict
+ * plus a single "how much is left to resolve" badge. The completeness-percentage,
+ * flag counts, and other meta stats were removed — an underwriter opening a case
+ * needs the verdict and the remaining effort, not five restatements of coverage.
  */
 export function CaseBar({ submission, onBack }: CaseBarProps) {
   const completeness = completenessOf(submission);
-  const establishedPct =
-    completeness.total > 0 ? Math.round((completeness.resolved / completeness.total) * 100) : 0;
 
   return (
     <header className="case-bar">
@@ -47,11 +41,6 @@ export function CaseBar({ submission, onBack }: CaseBarProps) {
         <Badge tone={completeness.inGoodOrder ? "mint" : "amber"}>
           {completeness.inGoodOrder ? "In good order" : `${completeness.effortToDecision} to resolve`}
         </Badge>
-        <FlagChips submission={submission} />
-        <div className="case-score">
-          <strong>{establishedPct}%</strong>
-          <span>factors established</span>
-        </div>
       </div>
     </header>
   );

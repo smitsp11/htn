@@ -73,13 +73,8 @@
   flex-shrink: 0;
 }
 
-.case-verdict .flag-chips {
-  margin-left: 4px;
-}
-
 /* Appetite outcome is the headline verdict: the lane badge leads the case bar,
-   sized up so the decision-relevant status reads first (the completeness score
-   below is demoted to a modest stat, not the biggest element on the page). */
+   sized up so the decision-relevant status reads first. */
 .case-verdict .badge.lane-work-now,
 .case-verdict .badge.lane-chase-evidence,
 .case-verdict .badge.lane-declined,
@@ -87,25 +82,6 @@
   font-size: 13px;
   padding: 8px 13px;
   border-radius: 7px;
-}
-
-.case-score {
-  display: flex;
-  align-items: baseline;
-}
-
-/* Completeness metric — a data-coverage read, not the appetite verdict — so it is
-   a neutral secondary stat rather than a large green number that reads as "good". */
-.case-score strong {
-  font-size: 18px;
-  font-weight: 600;
-  color: var(--ink);
-}
-
-.case-score span {
-  font-size: 11px;
-  color: var(--ink-faint);
-  margin-left: 4px;
 }
 
 .case-summary {
@@ -121,22 +97,6 @@
   color: var(--ink);
 }
 
-.case-summary-chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 8px;
-}
-
-.case-summary-chips .chip {
-  font-size: 11px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  color: var(--ink);
-  padding: 4px 8px;
-  border-radius: 6px;
-}
-
 /* Off-strategy bind callout: predicted out-of-appetite vs. actual bound. Read-only
    context; never changes the appetite score or status. */
 .case-summary-offstrategy {
@@ -150,16 +110,6 @@
 }
 .case-summary-offstrategy b {
   color: var(--orange-strong);
-}
-
-.case-summary-watch {
-  font-size: 11px;
-  color: var(--ink-soft);
-  margin-top: 8px;
-}
-
-.case-summary-watch b {
-  color: var(--ink);
 }
 
 /* .tabs/.tab base styling lives in components/ui/ui.css; the case view only
