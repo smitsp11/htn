@@ -1,0 +1,281 @@
+/* Site shell (header, hero, footer), ported from federanorth's federanorth.css.
+   The public-facing shell shares its token palette with the underwriting workspace,
+   except for the hero, which keeps federanorth's dark, non-token hero colors. */
+
+.skip-link {
+  position: fixed;
+  top: -70px;
+  left: 15px;
+  z-index: 100;
+  background: var(--mint);
+  color: #fff;
+  padding: 15px;
+  border-radius: 3px;
+}
+.skip-link:focus {
+  top: 12px;
+}
+
+.site-header {
+  height: 92px;
+  padding: 0 3.6%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 30px;
+  background: #fffdf8ee;
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  backdrop-filter: blur(16px);
+}
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 27px;
+  letter-spacing: -1.3px;
+  font-weight: 700;
+  color: var(--ink);
+}
+.brand-star {
+  display: inline-flex;
+  width: 23px;
+  height: 23px;
+  color: var(--orange);
+}
+.brand-star svg {
+  width: 100%;
+  height: 100%;
+}
+
+/* Generic pill-button primitive, ported from federanorth's `.button`/`.button.mint`.
+   Not yet ported by the earlier theme-token pass (which only carried the browser-reset
+   `button{}` rule) — added here since the hero/header CTAs are the first consumers.
+   Global once this file is @import-ed, so later queue/case buttons can reuse it. */
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  padding: 15px 22px;
+  font-size: 13px;
+  font-weight: 500;
+  border: 1px solid var(--border-strong);
+  border-radius: 6px;
+  white-space: nowrap;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+  color: var(--ink);
+}
+.button:hover {
+  border-color: var(--mint);
+  color: var(--mint-strong);
+}
+.button .icon {
+  width: 17px;
+  height: 17px;
+}
+.button.mint {
+  background: var(--mint);
+  border-color: var(--mint);
+  color: #fff;
+}
+.button.mint:hover {
+  background: var(--mint-strong);
+  border-color: var(--mint-strong);
+  color: #fff;
+}
+
+/* Hero: intentionally dark and off-token — federanorth's hero keeps its own bg/ink/coral
+   colors even though the rest of the shell uses the shared --bg/--ink token set. */
+.hero {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  min-height: 640px;
+  position: relative;
+  background: #2b1f19;
+}
+.hero-copy {
+  padding: 65px 9% 42px 12.5%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  position: relative;
+  background: transparent;
+}
+.hero-copy:before {
+  content: "";
+  position: absolute;
+  left: 7%;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: #4a392f;
+}
+.hero-copy:after {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 69%;
+  width: 7%;
+  height: 1px;
+  background: var(--orange);
+}
+.hero h1 {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(56px, 5.1vw, 89px);
+  line-height: 1.07;
+  font-weight: 400;
+  letter-spacing: -3.6px;
+  margin: 0 0 26px;
+  color: #f4ece0;
+}
+.hero-copy > p {
+  font-size: 14px;
+  line-height: 1.85;
+  color: #c9baa5;
+  letter-spacing: 0.1px;
+}
+.hero-cta {
+  align-self: flex-start;
+  margin-top: 28px;
+  gap: 38px;
+}
+.button.mint.hero-cta {
+  background: #8bead0;
+  border-color: #8bead0;
+  color: #17261f;
+}
+.button.mint.hero-cta:hover {
+  background: #a6f0dd;
+  border-color: #a6f0dd;
+  color: #17261f;
+}
+.status-dot {
+  display: inline-block;
+  flex-shrink: 0;
+  width: 5px;
+  height: 5px;
+  background: var(--mint);
+  border-radius: 50%;
+}
+
+.hero-visual {
+  position: relative;
+  overflow: hidden;
+  min-height: 640px;
+  border-left: 1px solid #4a392f;
+}
+.hero-photo {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  filter: saturate(1.02);
+}
+.image-shade {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(0deg, #1a140e8f, transparent 42%, #1a140e18);
+}
+.route-overlay {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  fill: none;
+  stroke: #ffb98c;
+  stroke-width: 5;
+  stroke-linecap: round;
+  stroke-dasharray: 0.1 12;
+  opacity: 0.95;
+}
+.map-grid {
+  position: absolute;
+  background: #ffb98c;
+  opacity: 0.75;
+}
+.map-grid.vertical {
+  width: 1px;
+  top: 0;
+  bottom: 0;
+}
+.map-grid.one {
+  left: 29%;
+}
+.map-grid.two {
+  left: 79%;
+}
+.map-grid.horizontal {
+  left: 0;
+  right: 0;
+  top: 70%;
+  height: 1px;
+}
+.map-star {
+  position: absolute;
+  top: 70%;
+  left: 79%;
+  width: 55px;
+  height: 55px;
+  color: #ffb98c;
+  transform: translate(-50%, -50%);
+}
+.map-star svg {
+  width: 100%;
+  height: 100%;
+}
+.image-coordinates {
+  position: absolute;
+  top: 24px;
+  left: 27px;
+  right: 27px;
+  display: flex;
+  justify-content: space-between;
+  font-size: 8px;
+  letter-spacing: 1.5px;
+  color: #fdf7edd0;
+}
+.image-label {
+  position: absolute;
+  bottom: 28px;
+  left: 27px;
+  font-size: 9px;
+  letter-spacing: 1.6px;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  color: #fdf7ed;
+}
+.image-label .status-dot {
+  background: #ffb98c;
+}
+
+.site-footer {
+  margin: 15px 3.6% 0;
+  padding: 36px 0;
+  border-top: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+.site-footer a {
+  font-size: 23px;
+  font-weight: 700;
+  letter-spacing: -1px;
+  color: var(--ink);
+}
+.site-footer a span {
+  color: var(--orange);
+  margin-left: 3px;
+}
+.site-footer p {
+  font-family: Georgia, serif;
+  font-size: 24px;
+  letter-spacing: -0.4px;
+  color: var(--ink-soft);
+}
