@@ -178,7 +178,7 @@ test("explanation: fully target submission names the target matches", () => {
   const result = evaluateAppetite(fullTarget);
   assert.equal(
     result.explanation,
-    "Target Account scores 100/100 and is in appetite. Target matches on primary risk state, total insured value, total premium, building year; the remaining factors are acceptable. Recommendation: Review for acceptance.",
+    "Target Account is a new-business commercial property submission in CA with $75M TIV; it scores 100/100 (4 target, 4 acceptable of 8 factors) and is in appetite. Target matches on primary risk state (CA is a target state), total insured value (TIV $75M is in the $50M–$100M target range), total premium (premium $90K is in the $75K–$100K target range), building year (built in 2020, newer than 2010); the remaining factors are acceptable. Recommendation: Review for acceptance.",
   );
 });
 
@@ -193,7 +193,7 @@ test("explanation: contradiction is named and targets do not offset the failure"
   assert.equal(result.status, "out_of_appetite");
   assert.equal(
     result.explanation,
-    "Contradictory Account scores 92/100 but is out of appetite. Not acceptable: submission type (renewal business is not acceptable); this contradicts target matches on primary risk state, total insured value, total premium, building year, which do not offset it. Recommendation: Review for likely decline.",
+    "Contradictory Account is a renewal commercial property submission in CA with $75M TIV; it scores 92/100 (4 target, 3 acceptable, 1 not acceptable of 8 factors) but is out of appetite. Not acceptable: submission type (renewal business is not acceptable); this contradicts target matches on primary risk state (CA is a target state), total insured value (TIV $75M is in the $50M–$100M target range), total premium (premium $90K is in the $75K–$100K target range), building year (built in 2020, newer than 2010), which do not offset it. Recommendation: Review for likely decline.",
   );
 });
 
@@ -211,7 +211,7 @@ test("explanation: unknown factors are listed as unresolved", () => {
   const result = evaluateAppetite(missingLosses);
   assert.equal(
     result.explanation,
-    "Missing Losses Account scores 92/100 and needs investigation. Unresolved: five-year losses; target matches on primary risk state, total insured value, total premium, building year. Recommendation: Investigate data.",
+    "Missing Losses Account is a new-business commercial property submission in CA with $75M TIV; it scores 92/100 (4 target, 3 acceptable, 1 unknown of 8 factors) and needs investigation. Unresolved: five-year losses; target matches on primary risk state (CA is a target state), total insured value (TIV $75M is in the $50M–$100M target range), total premium (premium $90K is in the $75K–$100K target range), building year (built in 2020, newer than 2010). Recommendation: Investigate data.",
   );
 });
 
@@ -219,6 +219,28 @@ test("explanation: empty submission is honest about having nothing to evaluate",
   const result = evaluateAppetite(empty);
   assert.equal(result.score, 0);
   assert.match(result.explanation, /Unresolved: submission type, line of business, primary risk state, total insured value, total premium, building year, construction type, five-year losses\./);
+});
+
+test("explanation: every result is exactly three sentences, as the guidelines ask", () => {
+  for (const fixture of [fullTarget, allAcceptable, contradictory, missingLosses, multipleFailures, empty]) {
+    const sentences = evaluateAppetite(fixture).explanation.split(/(?<=\.)\s+(?=[A-Z])/);
+    assert.equal(sentences.length, 3, `${fixture.id}: ${sentences.length} sentences`);
+  }
+});
+
+test("explanation: the opening sentence omits profile facts that are unknown", () => {
+  const result = evaluateAppetite(empty);
+  assert.match(result.explanation, /^Empty Account is a submission; it scores 0\/100 \(8 unknown of 8 factors\) and needs investigation\./);
+});
+
+test("explanation: a single target match is singular and reads with its value", () => {
+  const result = evaluateAppetite({ ...allAcceptable, primaryRiskState: "OH" });
+  assert.match(result.explanation, /A target match on primary risk state \(OH is a target state\); the remaining factors are acceptable\./);
+});
+
+test("explanation: out-of-scope lines get the right article and acronym casing", () => {
+  assert.match(evaluateAppetite({ ...fullTarget, lineOfBusiness: "auto" }).explanation, /is an auto submission/);
+  assert.match(evaluateAppetite({ ...fullTarget, lineOfBusiness: "cgl" }).explanation, /is a CGL submission/);
 });
 
 test("evaluateAppetite is deterministic for the same input", () => {

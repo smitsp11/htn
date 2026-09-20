@@ -125,7 +125,9 @@ export function defaultPipelineDeps(dataset: Dataset = "baseline"): RankingsPipe
 function rankingTrace(ranked: RankedSubmission[]): string[] {
   const summary = summarize(ranked);
   return [
-    `Ranked ${summary.total} submissions: ${summary.in_appetite} in appetite, ${summary.needs_investigation} needs investigation, ${summary.out_of_appetite} out of appetite.`,
+    `Ranked ${summary.total} submissions: ${summary.in_appetite} in appetite, ${summary.needs_investigation} needs investigation, ${summary.out_of_appetite} out of appetite${
+      summary.out_of_scope ? `, ${summary.out_of_scope} out of scope (non-property lines, not scored)` : ""
+    }.`,
     `${summary.unresolved} of ${summary.total} submissions have unresolved appetite fields; unknowns never count as acceptable.`,
   ];
 }

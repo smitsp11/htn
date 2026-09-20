@@ -1,4 +1,5 @@
 import type { AppetiteStatus, HazardRating, RankedSubmission } from "@/lib/domain/types";
+import { primaryReason } from "@/lib/rankings/presentation";
 
 export interface QueueFilter {
   lineOfBusiness?: string;
@@ -50,11 +51,38 @@ function matches(s: RankedSubmission, f: QueueFilter): boolean {
   return true;
 }
 
-export function filterQueue(subs: RankedSubmission[], criteria: QueueFilter): { matchedIds: string[]; counts: StatusCounts } {
+/** One matched row, as handed to the language model: identity, verdict, and the engine's own headline reason. */
+export interface FilterRow {
+  id: string;
+  accountName: string;
+  status: AppetiteStatus;
+  score: number;
+  state?: string;
+  lineOfBusiness?: string;
+  reason: string;
+}
+
+/** How many matched rows the model is shown by name; the UI still receives every matched id. */
+export const FILTER_ROW_LIMIT = 8;
+
+export function filterQueue(
+  subs: RankedSubmission[],
+  criteria: QueueFilter,
+): { matchedIds: string[]; counts: StatusCounts; rows: FilterRow[] } {
   const hits = subs.filter((s) => matches(s, criteria));
   const counts: StatusCounts = { total: hits.length, in_appetite: 0, needs_investigation: 0, out_of_appetite: 0, out_of_scope: 0 };
   for (const s of hits) counts[s.status] += 1;
-  return { matchedIds: hits.map((s) => s.id), counts };
+  // `subs` arrives in rank order, so the first rows are the highest-ranked matches.
+  const rows: FilterRow[] = hits.slice(0, FILTER_ROW_LIMIT).map((s) => ({
+    id: s.id,
+    accountName: s.accountName,
+    status: s.status,
+    score: s.score,
+    state: s.primaryRiskState,
+    lineOfBusiness: s.lineOfBusiness,
+    reason: primaryReason(s),
+  }));
+  return { matchedIds: hits.map((s) => s.id), counts, rows };
 }
 
 export function resolveSubmission(subs: RankedSubmission[], nameOrId: string): RankedSubmission | undefined {

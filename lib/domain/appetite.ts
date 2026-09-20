@@ -144,7 +144,17 @@ export function evaluateAppetite(
     score,
     factors,
     recommendation,
-    explanation: buildExplanation({ accountName: submission.accountName, status, score, factors, recommendation }),
+    explanation: buildExplanation({
+      accountName: submission.accountName,
+      status,
+      score,
+      factors,
+      recommendation,
+      lineOfBusiness: submission.lineOfBusiness,
+      submissionType: submission.submissionType,
+      primaryRiskState: submission.primaryRiskState,
+      tiv: submission.tiv,
+    }),
   };
 }
 

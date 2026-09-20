@@ -152,6 +152,11 @@ export function ReviewTab({ submission }: { submission: RankedSubmission }) {
 
   return (
     <div className="review-tab">
+      <section className="assessment-summary">
+        <h3>Why this score</h3>
+        <p>{submission.explanation}</p>
+      </section>
+
       <FlipAnalysis submission={submission} />
 
       <ResolutionPanel resolution={submission.resolution} />

@@ -466,6 +466,9 @@ function deriveFromLocations(
   let lowConfidence: string | undefined;
   let stateSource = stateChoice?.path ?? "";
   let buildingSource = buildingChoice?.path ?? "";
+  // Each factor cites the leaf it was actually read from, not the year path.
+  let tivSource = choiceFor(choices, "tiv")?.path ?? buildingSource;
+  let constructionSource = choiceFor(choices, "constructionType")?.path ?? buildingSource;
 
   if (locations.length === 0 && buildings.length === 0) {
     const stand = fallbackLocation(row, fallback);
@@ -475,6 +478,8 @@ function deriveFromLocations(
       lowConfidence = `Used the location at ${fallback!.locationPath} (the insured's own address); no risk schedule exists on this record.`;
       stateSource = fallback!.statePath;
       buildingSource = fallback!.buildingsPath ?? fallback!.locationPath;
+      tivSource = buildingSource;
+      constructionSource = buildingSource;
       notes.push({
         field: "*",
         method: lowConfidence,
@@ -497,7 +502,7 @@ function deriveFromLocations(
     notes.push({
       field: "tiv",
       method: `Summed ${values.length} building value(s) across ${locations.length} location(s).` + (lowConfidence ? ` ${lowConfidence}` : ""),
-      sourcePath: buildingSource,
+      sourcePath: tivSource,
       confidence: lowConfidence ? "low" : "high",
     });
   }
@@ -510,7 +515,7 @@ function deriveFromLocations(
 
   facts.buildingSchedule = scheduleOf(buildings, leaves);
   facts.buildingYear = deriveBuildingYear(buildings, leaves, buildingSource, notes, lowConfidence);
-  const construction = deriveConstruction(buildings, leaves, buildingSource, notes, lowConfidence);
+  const construction = deriveConstruction(buildings, leaves, constructionSource, notes, lowConfidence);
   facts.approvedConstructionPercentage = construction.share;
   facts.constructionDescription = construction.description;
   return facts;
