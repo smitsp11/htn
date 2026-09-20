@@ -332,6 +332,38 @@ select {
   color: var(--ink-soft);
 }
 
+/* Pipeline trace: plain, collapsible surfacing of the engine's query-reasoning
+   and decision-trace data (restores transparency the previous dashboard had). */
+.pipeline-trace {
+  margin-top: 24px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+.pipeline-trace details {
+  margin-bottom: 6px;
+}
+.pipeline-trace summary {
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink);
+  padding: 6px 0;
+}
+.pipeline-trace-body {
+  font-size: 11px;
+  color: var(--ink-soft);
+  line-height: 1.6;
+  padding: 4px 0 10px 18px;
+}
+.pipeline-trace-body code {
+  font-family: monospace;
+  font-size: 10px;
+  color: var(--ink);
+}
+.pipeline-trace-body li {
+  margin: 3px 0;
+}
+
 /* Queue workspace: heading, sticky lane/filter nav, and empty state. */
 .queue-heading {
   margin: 0 0 20px;

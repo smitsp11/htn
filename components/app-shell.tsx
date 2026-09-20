@@ -5,6 +5,7 @@ import type { RankingsResponse } from "@/lib/domain/types";
 import type { RankingsErrorBody, RankingsErrorCategory } from "@/lib/rankings/errors";
 import { SearchBar } from "@/components/queue/search-bar";
 import { QueueWorkspace } from "@/components/queue/queue-workspace";
+import { PipelineTrace } from "@/components/queue/pipeline-trace";
 import { CaseView } from "@/components/case/case-view";
 import { ChaseDialog } from "@/components/case/chase-dialog";
 import { MethodologyDialog } from "@/components/case/methodology-dialog";
@@ -142,6 +143,7 @@ export function AppShell() {
             </button>
           </div>
           <QueueWorkspace submissions={data.submissions} onOpen={setSelectedId} matchedIds={matchedIds} />
+          <PipelineTrace trace={data.trace} queryTrace={data.queryTrace} />
         </>
       )}
       <ChaseDialog open={chaseOpen} onClose={() => setChaseOpen(false)} submissions={data?.submissions ?? []} />
