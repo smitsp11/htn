@@ -15,26 +15,34 @@ export type ChainBuilder = (submission: RankedSubmission) => Source<ResolvedFiel
  *  runner is source-agnostic. A factor with no chain resolves to null. */
 export type ChainRegistry = Partial<Record<FactorKey, ChainBuilder>>;
 
-/** The MVP ships no sources: every gap is an honest broker chase. */
+/** The MVP ships no live inference chains: every remaining gap is a broker chase
+ *  once consolidation has been consulted. */
 export const DEFAULT_CHAINS: ChainRegistry = {};
 
 export type ResolutionMap = Partial<Record<FactorKey, ResolvedValue<ResolvedField> | null>>;
 
+export type ConsolidationIndex = Record<
+  string,
+  Partial<Record<FactorKey, ResolvedValue<ResolvedField>>>
+>;
+
 /**
  * Attempt to fill each *absent* required field from the registered sources.
- * Ambiguous fields (a value the broker supplied but the guidelines do not
- * classify) are deliberately skipped: they need an underwriter's call, not
- * another source. Results are context for the underwriter only — the engine's
- * verdicts are never rescored from a resolved value.
+ * Consolidation (scattered broker channels) is the highest-priority source —
+ * if a channel already held the value, we surface it with provenance and never
+ * invent. Pass the cache explicitly (client imports JSON; server may load via
+ * `loadConsolidationIndex`). Default `{}` keeps this module browser-safe.
  */
 export function resolveSubmissionFields(
   submission: RankedSubmission,
   chains: ChainRegistry = DEFAULT_CHAINS,
   threshold = CONFIDENCE_THRESHOLD,
+  consolidation: ConsolidationIndex = {},
 ): ResolutionMap {
   const map: ResolutionMap = {};
+  const cached = consolidation[submission.id] ?? {};
   for (const key of completenessOf(submission).absent) {
-    map[key] = runWaterfall(chains[key]?.(submission) ?? [], threshold);
+    map[key] = cached[key] ?? runWaterfall(chains[key]?.(submission) ?? [], threshold);
   }
   return map;
 }

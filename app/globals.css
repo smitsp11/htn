@@ -2,6 +2,8 @@
 @import "../components/shell/shell.css";
 @import "../components/queue/queue.css";
 @import "../components/case/case.css";
+@import "../components/context-signals/context-signals.css";
+@import "../components/consolidation/run-consolidation.css";
 
 :root {
   font-family: Arial, Helvetica, sans-serif;

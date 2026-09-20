@@ -3,11 +3,13 @@ import { rankSubmissions } from "@/lib/domain/appetite";
 import type {
   ActualOutcome,
   CanonicalSubmission,
+  ContextSignal,
   HazardProfile,
   QueryReasoning,
   RankedSubmission,
   RankingsResponse,
 } from "@/lib/domain/types";
+import { loadOfflineContext } from "@/lib/enrichment/context";
 import { runQueryAgent } from "@/lib/federato/adapter";
 import { FederatoClient } from "@/lib/federato/client";
 import { loadOfflineEnrichment, loadOfflineOutcomes } from "@/lib/federato/offline-data";
@@ -48,6 +50,11 @@ export interface RankingsPipelineDeps {
    * context only, mirroring `loadEnrichment`; never seen by the appetite engine.
    */
   loadOutcomes?: () => Promise<Map<string, ActualOutcome>>;
+  /**
+   * When present, attaches public-data context signals (`RankedSubmission.context`)
+   * after ranking. Context never enters appetite scoring.
+   */
+  loadContext?: () => Promise<Map<string, ContextSignal[]>>;
   rank: (submissions: CanonicalSubmission[]) => RankedSubmission[];
   now: () => Date;
 }
@@ -87,6 +94,7 @@ export function defaultPipelineDeps(): RankingsPipelineDeps {
     runAgent,
     loadEnrichment: useDemoData || explicitLive ? undefined : loadOfflineEnrichment,
     loadOutcomes: useDemoData || explicitLive ? undefined : loadOfflineOutcomes,
+    loadContext: useDemoData || explicitLive ? undefined : async () => loadOfflineContext(),
     rank: rankSubmissions,
     now: () => new Date(),
   };
@@ -139,6 +147,14 @@ export async function buildRankings(deps: RankingsPipelineDeps): Promise<Ranking
     for (const submission of ranked) {
       const outcome = outcomes.get(submission.id);
       if (outcome) submission.actualOutcome = outcome;
+    }
+  }
+
+  if (deps.loadContext) {
+    const context = await deps.loadContext();
+    for (const submission of ranked) {
+      const signals = context.get(submission.id);
+      if (signals && signals.length) submission.context = signals;
     }
   }
 

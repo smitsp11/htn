@@ -6,6 +6,12 @@ import { ResearchPanel } from "@/components/case/research-panel";
 import { EvidenceIntake } from "@/components/case/evidence-intake";
 import { EvidenceRequest } from "@/components/case/evidence-request";
 import { TaskCard, type TaskSeverity } from "@/components/case/task-card";
+import { RunConsolidation } from "@/components/consolidation/run-consolidation";
+import { scenarioSubmissionIds } from "@/lib/consolidation/scenario/pages";
+
+/** Submissions with a staged scattered-channel scenario (W8). Only these expose
+ *  the live "Consolidate" affordance; every other submission chases gaps normally. */
+const CONSOLIDATION_DEMO_IDS = new Set(scenarioSubmissionIds());
 
 /**
  * Factors that gate eligibility outright (a hard "no" flips the whole submission
@@ -163,6 +169,13 @@ export function ReviewTab({ submission }: { submission: RankedSubmission }) {
       <EvidenceIntake submission={submission} />
 
       <EvidenceRequest submission={submission} openGaps={openGaps} />
+
+      {CONSOLIDATION_DEMO_IDS.has(submission.id) ? (
+        <RunConsolidation
+          submissionId={submission.id}
+          labels={Object.fromEntries(submission.factors.map((factor) => [factor.key, factor.label]))}
+        />
+      ) : null}
 
       <div className="task-list">
         {gaps.length === 0 ? (

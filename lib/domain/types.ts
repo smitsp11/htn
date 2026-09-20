@@ -58,6 +58,8 @@ export interface RankedSubmission extends CanonicalSubmission {
   explanation: string;
   enrichment?: HazardProfile;
   actualOutcome?: ActualOutcome;
+  /** Public/government context signals — decision support only; never scored. */
+  context?: ContextSignal[];
 }
 
 /** One appetite requirement and the schema field the query agent chose for it. */
@@ -94,6 +96,15 @@ export interface QueryReasoning {
   unresolved: Array<{ field: string; reason: string }>;
   fallbacks: string[];
   steps: QueryReasoningStep[];
+}
+
+/** A single public-data signal attached beside (never inside) appetite. */
+export interface ContextSignal {
+  source: string;
+  label: string;
+  value: string;
+  url: string;
+  asOf: string;
 }
 
 export interface RankingsResponse {

@@ -1,0 +1,1424 @@
+{
+  "SUB-2025-00001": [
+    {
+      "source": "Census ACS",
+      "label": "Median household income (state)",
+      "value": "$67,917 · Florida",
+      "url": "https://api.census.gov/data/2022/acs/acs5?get=NAME,B19013_001E&for=state:12",
+      "asOf": "2026-09-20"
+    }
+  ],
+  "SUB-2026-00002": [
+    {
+      "source": "Census ACS",
+      "label": "Median household income (state)",
+      "value": "$67,917 · Florida",
+      "url": "https://api.census.gov/data/2022/acs/acs5?get=NAME,B19013_001E&for=state:12",
+      "asOf": "2026-09-20"
+    }
+  ],
+  "SUB-2026-00003": [
+    {
+      "source": "Census ACS",
+      "label": "Median household income (state)",
+      "value": "$67,917 · Florida",
+      "url": "https://api.census.gov/data/2022/acs/acs5?get=NAME,B19013_001E&for=state:12",
+      "asOf": "2026-09-20"
+    }
+  ],
+  "SUB-2025-00004": [
+    {
+      "source": "Census ACS",
+      "label": "Median household income (state)",
+      "value": "$96,505 · Massachusetts",
+      "url": "https://api.census.gov/data/2022/acs/acs5?get=NAME,B19013_001E&for=state:25",
+      "asOf": "2026-09-20"
+    }
+  ],
+  "SUB-2026-00005": [
+    {
+      "source": "Census ACS",
+      "label": "Median household income (state)",
+      "value": "$96,505 · Massachusetts",
+      "url": "https://api.census.gov/data/2022/acs/acs5?get=NAME,B19013_001E&for=state:25",
+      "asOf": "2026-09-20"
+    }
+  ],
+  "SUB-2026-00006": [
+    {
+      "source": "Census ACS",
+      "label": "Median household income (state)",
+      "value": "$67,917 · Florida",
+      "url": "https://api.census.gov/data/2022/acs/acs5?get=NAME,B19013_001E&for=state:12",
+      "asOf": "2026-09-20"
+    }
+  ],
+  "SUB-2026-00007": [
+    {
+      "source": "Census ACS",
+      "label": "Median household income (state)",
+      "value": "$67,917 · Florida",
+      "url": "https://api.census.gov/data/2022/acs/acs5?get=NAME,B19013_001E&for=state:12",
+      "asOf": "2026-09-20"
+    }
+  ],
+  "SUB-2024-00008": [
+    {
+      "source": "Census ACS",
+      "label": "Median household income (state)",
+      "value": "$67,917 · Florida",
+      "url": "https://api.census.gov/data/2022/acs/acs5?get=NAME,B19013_001E&for=state:12",
+      "asOf": "2026-09-20"
+    }
+  ],
+  "SUB-2025-00009": [
+    {
+      "source": "Census ACS",
+      "label": "Median household income (state)",
+      "value": "$67,917 · Florida",
+      "url": "https://api.census.gov/data/2022/acs/acs5?get=NAME,B19013_001E&for=state:12",
+      "asOf": "2026-09-20"
+    }
+  ],
+  "SUB-2026-00010": [
+    {
+      "source": "Census ACS",
+      "label": "Median household income (state)",
+      "value": "$67,917 · Florida",
+      "url": "https://api.census.gov/data/2022/acs/acs5?get=NAME,B19013_001E&for=state:12",
+      "asOf": "2026-09-20"
+    }
+  ],
+  "SUB-2025-00011": [
+    {
+      "source": "Census ACS",
+      "label": "Median household income (state)",
+      "value": "$67,917 · Florida",
+      "url": "https://api.census.gov/data/2022/acs/acs5?get=NAME,B19013_001E&for=state:12",
+      "asOf": "2026-09-20"
+    }
+  ],
+  "SUB-2026-00012": [
+    {
+      "source": "Census ACS",
+      "label": "Median household income (state)",
+      "value": "$67,917 · Florida",
+      "url": "https://api.census.gov/data/2022/acs/acs5?get=NAME,B19013_001E&for=state:12",
+      "asOf": "2026-09-20"
+    }
+  ],
+  "SUB-2026-00013": [
+    {
+      "source": "Census ACS",
+      "label": "Median household income (state)",
+      "value": "$67,917 · Florida",
+      "url": "https://api.census.gov/data/2022/acs/acs5?get=NAME,B19013_001E&for=state:12",
+      "asOf": "2026-09-20"
+    }
+  ],
+  "SUB-2026-00014": [
+    {
+      "source": "Census ACS",
+      "label": "Median household income (state)",
+      "value": "$91,905 · California",
+      "url": "https://api.census.gov/data/2022/acs/acs5?get=NAME,B19013_001E&for=state:06",
+      "asOf": "2026-09-20"
+    }
+  ],
+  "SUB-2025-00015": [
+    {
+      "source": "Census ACS",
+      "label": "Median household income (state)",
+      "value": "$91,905 · California",
+      "url": "https://api.census.gov/data/2022/acs/acs5?get=NAME,B19013_001E&for=state:06",
+      "asOf": "2026-09-20"
+    }
+  ],
+  "SUB-2025-00016": [
+    {
+      "source": "Census ACS",
+      "label": "Median household income (state)",
+      "value": "$91,905 · California",
+      "url": "https://api.census.gov/data/2022/acs/acs5?get=NAME,B19013_001E&for=state:06",
+      "asOf": "2026-09-20"
+    }
+  ],
+  "SUB-2026-00017": [
+    {
+      "source": "Census ACS",
+      "label": "Median household income (state)",
+      "value": "$91,905 · California",
+      "url": "https://api.census.gov/data/2022/acs/acs5?get=NAME,B19013_001E&for=state:06",
+      "asOf": "2026-09-20"
+    }
+  ],
+  "SUB-2026-00018": [
+    {
+      "source": "Census ACS",
+      "label": "Median household income (state)",
+      "value": "$87,598 · Colorado",
+      "url": "https://api.census.gov/data/2022/acs/acs5?get=NAME,B19013_001E&for=state:08",
+      "asOf": "2026-09-20"
+    }
+  ],
+  "SUB-2025-00019": [
+    {
+      "source": "Census ACS",
+      "label": "Median household income (state)",
+      "value": "$91,905 · California",
+      "url": "https://api.census.gov/data/2022/acs/acs5?get=NAME,B19013_001E&for=state:06",
+      "asOf": "2026-09-20"
+    }
+  ],
+  "SUB-2026-00020": [
+    {
+      "source": "Census ACS",
+      "label": "Median household income (state)",
+      "value": "$87,598 · Colorado",
+      "url": "https://api.census.gov/data/2022/acs/acs5?get=NAME,B19013_001E&for=state:08",
+      "asOf": "2026-09-20"
+    }
+  ],
+  "SUB-2026-00021": [
+    {
+      "source": "Census ACS",
+      "label": "Median household income (state)",
+      "value": "$67,917 · Florida",
+      "url": "https://api.census.gov/data/2022/acs/acs5?get=NAME,B19013_001E&for=state:12",
+      "asOf": "2026-09-20"
+    }
+  ],
+  "SUB-2026-00022": [
+    {
+      "source": "Census ACS",
+      "label": "Median household income (state)",
+      "value": "$90,325 · Washington",
+      "url": "https://api.census.gov/data/2022/acs/acs5?get=NAME,B19013_001E&for=state:53",
+      "asOf": "2026-09-20"
+    }
+  ],
+  "SUB-2025-00023": [
+    {
+      "source": "Census ACS",
+      "label": "Median household income (state)",
+      "value": "$90,325 · Washington",
+      "url": "https://api.census.gov/data/2022/acs/acs5?get=NAME,B19013_001E&for=state:53",
+      "asOf": "2026-09-20"
+    }
+  ],
+  "SUB-2026-00024": [
+    {
+      "source": "Census ACS",
+      "label": "Median household income (state)",
+      "value": "$90,325 · Washington",
+      "url": "https://api.census.gov/data/2022/acs/acs5?get=NAME,B19013_001E&for=state:53",
+      "asOf": "2026-09-20"
+    }
+  ],
+  "SUB-2026-00025": [
+    {
+      "source": "Census ACS",
+      "label": "Median household income (state)",
+      "value": "$78,433 · Illinois",
+      "url": "https://api.census.gov/data/2022/acs/acs5?get=NAME,B19013_001E&for=state:17",
+      "asOf": "2026-09-20"
+    }
+  ],
+  "SUB-2026-00026": [
+    {
+      "source": "Census ACS",
+      "label": "Median household income (state)",
+      "value": "$78,433 · Illinois",
+      "url": "https://api.census.gov/data/2022/acs/acs5?get=NAME,B19013_001E&for=state:17",
+      "asOf": "2026-09-20"
+    }
+  ],
+  "SUB-2026-00027": [
+    {
+      "source": "Census ACS",
+      "label": "Median household income (state)",
+      "value": "$72,581 · Arizona",
+      "url": "https://api.census.gov/data/2022/acs/acs5?get=NAME,B19013_001E&for=state:04",
+      "asOf": "2026-09-20"
+    }
+  ],
+  "SUB-2026-00028": [
+    {
+      "source": "Census ACS",
+      "label": "Median household income (state)",
+      "value": "$72,581 · Arizona",
+      "url": "https://api.census.gov/data/2022/acs/acs5?get=NAME,B19013_001E&for=state:04",
+      "asOf": "2026-09-20"
+    }
+  ],
+  "SUB-2025-00029": [
+    {
+      "source": "Census ACS",
+      "label": "Median household income (state)",
+      "value": "$72,581 · Arizona",
+      "url": "https://api.census.gov/data/2022/acs/acs5?get=NAME,B19013_001E&for=state:04",
+      "asOf": "2026-09-20"
+    }
+  ],
+  "SUB-2026-00030": [
+    {
+      "source": "Census ACS",
+      "label": "Median household income (state)",
+      "value": "$90,325 · Washington",
+      "url": "https://api.census.gov/data/2022/acs/acs5?get=NAME,B19013_001E&for=state:53",
+      "asOf": "2026-09-20"
+    }
+  ],
+  "SUB-2026-00031": [
+    {
+      "source": "Census ACS",
+      "label": "Median household income (state)",
+      "value": "$90,325 · Washington",
+      "url": "https://api.census.gov/data/2022/acs/acs5?get=NAME,B19013_001E&for=state:53",
+      "asOf": "2026-09-20"
+    }
+  ],
+  "SUB-2026-00032": [
+    {
+      "source": "Census ACS",
+      "label": "Median household income (state)",
+      "value": "$90,325 · Washington",
+      "url": "https://api.census.gov/data/2022/acs/acs5?get=NAME,B19013_001E&for=state:53",
+      "asOf": "2026-09-20"
+    }
+  ],
+  "SUB-2025-00033": [
+    {
+      "source": "Census ACS",
+      "label": "Median household income (state)",
+      "value": "$73,035 · Texas",
+      "url": "https://api.census.gov/data/2022/acs/acs5?get=NAME,B19013_001E&for=state:48",
+      "asOf": "2026-09-20"
+    }
+  ],
+  "SUB-2024-00034": [
+    {
+      "source": "Census ACS",
+      "label": "Median household income (state)",
+      "value": "$73,035 · Texas",
+      "url": "https://api.census.gov/data/2022/acs/acs5?get=NAME,B19013_001E&for=state:48",
+      "asOf": "2026-09-20"
+    }
+  ],
+  "SUB-2025-00035": [
+    {
+      "source": "Census ACS",
+      "label": "Median household income (state)",
+      "value": "$73,035 · Texas",
+      "url": "https://api.census.gov/data/2022/acs/acs5?get=NAME,B19013_001E&for=state:48",
+      "asOf": "2026-09-20"
+    }
+  ],
+  "SUB-2025-00036": [
+    {
+      "source": "Census ACS",
+      "label": "Median household income (state)",
+      "value": "$91,905 · California",
+      "url": "https://api.census.gov/data/2022/acs/acs5?get=NAME,B19013_001E&for=state:06",
+      "asOf": "2026-09-20"
+    }
+  ],
+  "SUB-2026-00037": [
+    {
+      "source": "Census ACS",
+      "label": "Median household income (state)",
+      "value": "$91,905 · California",
+      "url": "https://api.census.gov/data/2022/acs/acs5?get=NAME,B19013_001E&for=state:06",
+      "asOf": "2026-09-20"
+    }
+  ],
+  "SUB-2026-00038": [
+    {
+      "source": "Census ACS",
+      "label": "Median household income (state)",
+      "value": "$91,905 · California",
+      "url": "https://api.census.gov/data/2022/acs/acs5?get=NAME,B19013_001E&for=state:06",
+      "asOf": "2026-09-20"
+    }
+  ],
+  "SUB-2026-00039": [
+    {
+      "source": "Census ACS",
+      "label": "Median household income (state)",
+      "value": "$91,905 · California",
+      "url": "https://api.census.gov/data/2022/acs/acs5?get=NAME,B19013_001E&for=state:06",
+      "asOf": "2026-09-20"
+    }
+  ],
+  "SUB-2025-00040": [
+    {
+      "source": "Census ACS",
+      "label": "Median household income (state)",
+      "value": "$91,905 · California",
+      "url": "https://api.census.gov/data/2022/acs/acs5?get=NAME,B19013_001E&for=state:06",
+      "asOf": "2026-09-20"
+    }
+  ],
+  "SUB-2026-00041": [
+    {
+      "source": "Census ACS",
+      "label": "Median household income (state)",
+      "value": "$91,905 · California",
+      "url": "https://api.census.gov/data/2022/acs/acs5?get=NAME,B19013_001E&for=state:06",
+      "asOf": "2026-09-20"
+    }
+  ],
+  "SUB-2025-00042": [
+    {
+      "source": "Census ACS",
+      "label": "Median household income (state)",
+      "value": "$91,905 · California",
+      "url": "https://api.census.gov/data/2022/acs/acs5?get=NAME,B19013_001E&for=state:06",
+      "asOf": "2026-09-20"
+    }
+  ],
+  "SUB-2026-00043": [
+    {
+      "source": "Census ACS",
+      "label": "Median household income (state)",
+      "value": "$91,905 · California",
+      "url": "https://api.census.gov/data/2022/acs/acs5?get=NAME,B19013_001E&for=state:06",
+      "asOf": "2026-09-20"
+    }
+  ],
+  "SUB-2026-00044": [
+    {
+      "source": "Census ACS",
+      "label": "Median household income (state)",
+      "value": "$91,905 · California",
+      "url": "https://api.census.gov/data/2022/acs/acs5?get=NAME,B19013_001E&for=state:06",
+      "asOf": "2026-09-20"
+    }
+  ],
+  "SUB-2024-00045": [
+    {
+      "source": "Census ACS",
+      "label": "Median household income (state)",
+      "value": "$91,905 · California",
+      "url": "https://api.census.gov/data/2022/acs/acs5?get=NAME,B19013_001E&for=state:06",
+      "asOf": "2026-09-20"
+    }
+  ],
+  "SUB-2025-00046": [
+    {
+      "source": "Census ACS",
+      "label": "Median household income (state)",
+      "value": "$91,905 · California",
+      "url": "https://api.census.gov/data/2022/acs/acs5?get=NAME,B19013_001E&for=state:06",
+      "asOf": "2026-09-20"
+    }
+  ],
+  "SUB-2026-00047": [
+    {
+      "source": "Census ACS",
+      "label": "Median household income (state)",
+      "value": "$64,035 · Tennessee",
+      "url": "https://api.census.gov/data/2022/acs/acs5?get=NAME,B19013_001E&for=state:47",
+      "asOf": "2026-09-20"
+    }
+  ],
+  "SUB-2025-00048": [
+    {
+      "source": "Census ACS",
+      "label": "Median household income (state)",
+      "value": "$64,035 · Tennessee",
+      "url": "https://api.census.gov/data/2022/acs/acs5?get=NAME,B19013_001E&for=state:47",
+      "asOf": "2026-09-20"
+    }
+  ],
+  "SUB-2026-00049": [
+    {
+      "source": "Census ACS",
+      "label": "Median household income (state)",
+      "value": "$64,035 · Tennessee",
+      "url": "https://api.census.gov/data/2022/acs/acs5?get=NAME,B19013_001E&for=state:47",
+      "asOf": "2026-09-20"
+    }
+  ],
+  "SUB-2026-00050": [
+    {
+      "source": "Census ACS",
+      "label": "Median household income (state)",
+      "value": "$64,035 · Tennessee",
+      "url": "https://api.census.gov/data/2022/acs/acs5?get=NAME,B19013_001E&for=state:47",
+      "asOf": "2026-09-20"
+    }
+  ],
+  "SUB-2026-00051": [
+    {
+      "source": "Census ACS",
+      "label": "Median household income (state)",
+      "value": "$64,035 · Tennessee",
+      "url": "https://api.census.gov/data/2022/acs/acs5?get=NAME,B19013_001E&for=state:47",
+      "asOf": "2026-09-20"
+    }
+  ],
+  "SUB-2025-00052": [
+    {
+      "source": "Census ACS",
+      "label": "Median household income (state)",
+      "value": "$91,905 · California",
+      "url": "https://api.census.gov/data/2022/acs/acs5?get=NAME,B19013_001E&for=state:06",
+      "asOf": "2026-09-20"
+    }
+  ],
+  "SUB-2026-00053": [
+    {
+      "source": "Census ACS",
+      "label": "Median household income (state)",
+      "value": "$91,905 · California",
+      "url": "https://api.census.gov/data/2022/acs/acs5?get=NAME,B19013_001E&for=state:06",
+      "asOf": "2026-09-20"
+    }
+  ],
+  "SUB-2025-00054": [
+    {
+      "source": "Census ACS",
+      "label": "Median household income (state)",
+      "value": "$96,505 · Massachusetts",
+      "url": "https://api.census.gov/data/2022/acs/acs5?get=NAME,B19013_001E&for=state:25",
+      "asOf": "2026-09-20"
+    }
+  ],
+  "SUB-2025-00055": [
+    {
+      "source": "Census ACS",
+      "label": "Median household income (state)",
+      "value": "$96,505 · Massachusetts",
+      "url": "https://api.census.gov/data/2022/acs/acs5?get=NAME,B19013_001E&for=state:25",
+      "asOf": "2026-09-20"
+    }
+  ],
+  "SUB-2026-00056": [
+    {
+      "source": "Census ACS",
+      "label": "Median household income (state)",
+      "value": "$96,505 · Massachusetts",
+      "url": "https://api.census.gov/data/2022/acs/acs5?get=NAME,B19013_001E&for=state:25",
+      "asOf": "2026-09-20"
+    }
+  ],
+  "SUB-2024-00057": [
+    {
+      "source": "Census ACS",
+      "label": "Median household income (state)",
+      "value": "$91,905 · California",
+      "url": "https://api.census.gov/data/2022/acs/acs5?get=NAME,B19013_001E&for=state:06",
+      "asOf": "2026-09-20"
+    }
+  ],
+  "SUB-2025-00058": [
+    {
+      "source": "Census ACS",
+      "label": "Median household income (state)",
+      "value": "$91,905 · California",
+      "url": "https://api.census.gov/data/2022/acs/acs5?get=NAME,B19013_001E&for=state:06",
+      "asOf": "2026-09-20"
+    }
+  ],
+  "SUB-2025-00059": [
+    {
+      "source": "Census ACS",
+      "label": "Median household income (state)",
+      "value": "$91,905 · California",
+      "url": "https://api.census.gov/data/2022/acs/acs5?get=NAME,B19013_001E&for=state:06",
+      "asOf": "2026-09-20"
+    }
+  ],
+  "SUB-2026-00060": [
+    {
+      "source": "Census ACS",
+      "label": "Median household income (state)",
+      "value": "$91,905 · California",
+      "url": "https://api.census.gov/data/2022/acs/acs5?get=NAME,B19013_001E&for=state:06",
+      "asOf": "2026-09-20"
+    }
+  ],
+  "SUB-2025-00061": [
+    {
+      "source": "Census ACS",
+      "label": "Median household income (state)",
+      "value": "$91,905 · California",
+      "url": "https://api.census.gov/data/2022/acs/acs5?get=NAME,B19013_001E&for=state:06",
+      "asOf": "2026-09-20"
+    }
+  ],
+  "SUB-2025-00062": [
+    {
+      "source": "Census ACS",
+      "label": "Median household income (state)",
+      "value": "$65,920 · Missouri",
+      "url": "https://api.census.gov/data/2022/acs/acs5?get=NAME,B19013_001E&for=state:29",
+      "asOf": "2026-09-20"
+    }
+  ],
+  "SUB-2026-00063": [
+    {
+      "source": "Census ACS",
+      "label": "Median household income (state)",
+      "value": "$65,920 · Missouri",
+      "url": "https://api.census.gov/data/2022/acs/acs5?get=NAME,B19013_001E&for=state:29",
+      "asOf": "2026-09-20"
+    }
+  ],
+  "SUB-2026-00064": [
+    {
+      "source": "Census ACS",
+      "label": "Median household income (state)",
+      "value": "$73,035 · Texas",
+      "url": "https://api.census.gov/data/2022/acs/acs5?get=NAME,B19013_001E&for=state:48",
+      "asOf": "2026-09-20"
+    }
+  ],
+  "SUB-2024-00065": [
+    {
+      "source": "Census ACS",
+      "label": "Median household income (state)",
+      "value": "$73,035 · Texas",
+      "url": "https://api.census.gov/data/2022/acs/acs5?get=NAME,B19013_001E&for=state:48",
+      "asOf": "2026-09-20"
+    }
+  ],
+  "SUB-2025-00066": [
+    {
+      "source": "Census ACS",
+      "label": "Median household income (state)",
+      "value": "$73,035 · Texas",
+      "url": "https://api.census.gov/data/2022/acs/acs5?get=NAME,B19013_001E&for=state:48",
+      "asOf": "2026-09-20"
+    }
+  ],
+  "SUB-2025-00067": [
+    {
+      "source": "Census ACS",
+      "label": "Median household income (state)",
+      "value": "$87,598 · Colorado",
+      "url": "https://api.census.gov/data/2022/acs/acs5?get=NAME,B19013_001E&for=state:08",
+      "asOf": "2026-09-20"
+    }
+  ],
+  "SUB-2026-00068": [
+    {
+      "source": "Census ACS",
+      "label": "Median household income (state)",
+      "value": "$87,598 · Colorado",
+      "url": "https://api.census.gov/data/2022/acs/acs5?get=NAME,B19013_001E&for=state:08",
+      "asOf": "2026-09-20"
+    }
+  ],
+  "SUB-2025-00069": [
+    {
+      "source": "Census ACS",
+      "label": "Median household income (state)",
+      "value": "$91,905 · California",
+      "url": "https://api.census.gov/data/2022/acs/acs5?get=NAME,B19013_001E&for=state:06",
+      "asOf": "2026-09-20"
+    }
+  ],
+  "SUB-2025-00070": [
+    {
+      "source": "Census ACS",
+      "label": "Median household income (state)",
+      "value": "$91,905 · California",
+      "url": "https://api.census.gov/data/2022/acs/acs5?get=NAME,B19013_001E&for=state:06",
+      "asOf": "2026-09-20"
+    }
+  ],
+  "SUB-2025-00071": [
+    {
+      "source": "Census ACS",
+      "label": "Median household income (state)",
+      "value": "$91,905 · California",
+      "url": "https://api.census.gov/data/2022/acs/acs5?get=NAME,B19013_001E&for=state:06",
+      "asOf": "2026-09-20"
+    }
+  ],
+  "SUB-2026-00072": [
+    {
+      "source": "Census ACS",
+      "label": "Median household income (state)",
+      "value": "$97,126 · New Jersey",
+      "url": "https://api.census.gov/data/2022/acs/acs5?get=NAME,B19013_001E&for=state:34",
+      "asOf": "2026-09-20"
+    }
+  ],
+  "SUB-2025-00073": [
+    {
+      "source": "Census ACS",
+      "label": "Median household income (state)",
+      "value": "$64,035 · Tennessee",
+      "url": "https://api.census.gov/data/2022/acs/acs5?get=NAME,B19013_001E&for=state:47",
+      "asOf": "2026-09-20"
+    }
+  ],
+  "SUB-2025-00074": [
+    {
+      "source": "Census ACS",
+      "label": "Median household income (state)",
+      "value": "$97,126 · New Jersey",
+      "url": "https://api.census.gov/data/2022/acs/acs5?get=NAME,B19013_001E&for=state:34",
+      "asOf": "2026-09-20"
+    }
+  ],
+  "SUB-2026-00075": [
+    {
+      "source": "Census ACS",
+      "label": "Median household income (state)",
+      "value": "$97,126 · New Jersey",
+      "url": "https://api.census.gov/data/2022/acs/acs5?get=NAME,B19013_001E&for=state:34",
+      "asOf": "2026-09-20"
+    }
+  ],
+  "SUB-2024-00076": [
+    {
+      "source": "Census ACS",
+      "label": "Median household income (state)",
+      "value": "$64,035 · Tennessee",
+      "url": "https://api.census.gov/data/2022/acs/acs5?get=NAME,B19013_001E&for=state:47",
+      "asOf": "2026-09-20"
+    }
+  ],
+  "SUB-2025-00077": [
+    {
+      "source": "Census ACS",
+      "label": "Median household income (state)",
+      "value": "$64,035 · Tennessee",
+      "url": "https://api.census.gov/data/2022/acs/acs5?get=NAME,B19013_001E&for=state:47",
+      "asOf": "2026-09-20"
+    }
+  ],
+  "SUB-2026-00078": [
+    {
+      "source": "Census ACS",
+      "label": "Median household income (state)",
+      "value": "$64,035 · Tennessee",
+      "url": "https://api.census.gov/data/2022/acs/acs5?get=NAME,B19013_001E&for=state:47",
+      "asOf": "2026-09-20"
+    }
+  ],
+  "SUB-2025-00079": [
+    {
+      "source": "Census ACS",
+      "label": "Median household income (state)",
+      "value": "$64,035 · Tennessee",
+      "url": "https://api.census.gov/data/2022/acs/acs5?get=NAME,B19013_001E&for=state:47",
+      "asOf": "2026-09-20"
+    }
+  ],
+  "SUB-2026-00080": [
+    {
+      "source": "Census ACS",
+      "label": "Median household income (state)",
+      "value": "$91,905 · California",
+      "url": "https://api.census.gov/data/2022/acs/acs5?get=NAME,B19013_001E&for=state:06",
+      "asOf": "2026-09-20"
+    }
+  ],
+  "SUB-2026-00081": [
+    {
+      "source": "Census ACS",
+      "label": "Median household income (state)",
+      "value": "$91,905 · California",
+      "url": "https://api.census.gov/data/2022/acs/acs5?get=NAME,B19013_001E&for=state:06",
+      "asOf": "2026-09-20"
+    }
+  ],
+  "SUB-2026-00082": [
+    {
+      "source": "Census ACS",
+      "label": "Median household income (state)",
+      "value": "$91,905 · California",
+      "url": "https://api.census.gov/data/2022/acs/acs5?get=NAME,B19013_001E&for=state:06",
+      "asOf": "2026-09-20"
+    }
+  ],
+  "SUB-2025-00083": [
+    {
+      "source": "Census ACS",
+      "label": "Median household income (state)",
+      "value": "$91,905 · California",
+      "url": "https://api.census.gov/data/2022/acs/acs5?get=NAME,B19013_001E&for=state:06",
+      "asOf": "2026-09-20"
+    }
+  ],
+  "SUB-2025-00084": [
+    {
+      "source": "Census ACS",
+      "label": "Median household income (state)",
+      "value": "$91,905 · California",
+      "url": "https://api.census.gov/data/2022/acs/acs5?get=NAME,B19013_001E&for=state:06",
+      "asOf": "2026-09-20"
+    }
+  ],
+  "SUB-2026-00085": [
+    {
+      "source": "Census ACS",
+      "label": "Median household income (state)",
+      "value": "$91,905 · California",
+      "url": "https://api.census.gov/data/2022/acs/acs5?get=NAME,B19013_001E&for=state:06",
+      "asOf": "2026-09-20"
+    }
+  ],
+  "SUB-2026-00086": [
+    {
+      "source": "Census ACS",
+      "label": "Median household income (state)",
+      "value": "$91,905 · California",
+      "url": "https://api.census.gov/data/2022/acs/acs5?get=NAME,B19013_001E&for=state:06",
+      "asOf": "2026-09-20"
+    }
+  ],
+  "SUB-2025-00087": [
+    {
+      "source": "Census ACS",
+      "label": "Median household income (state)",
+      "value": "$67,917 · Florida",
+      "url": "https://api.census.gov/data/2022/acs/acs5?get=NAME,B19013_001E&for=state:12",
+      "asOf": "2026-09-20"
+    }
+  ],
+  "SUB-2024-00088": [
+    {
+      "source": "Census ACS",
+      "label": "Median household income (state)",
+      "value": "$67,917 · Florida",
+      "url": "https://api.census.gov/data/2022/acs/acs5?get=NAME,B19013_001E&for=state:12",
+      "asOf": "2026-09-20"
+    }
+  ],
+  "SUB-2025-00089": [
+    {
+      "source": "Census ACS",
+      "label": "Median household income (state)",
+      "value": "$67,917 · Florida",
+      "url": "https://api.census.gov/data/2022/acs/acs5?get=NAME,B19013_001E&for=state:12",
+      "asOf": "2026-09-20"
+    }
+  ],
+  "SUB-2024-00090": [
+    {
+      "source": "Census ACS",
+      "label": "Median household income (state)",
+      "value": "$67,917 · Florida",
+      "url": "https://api.census.gov/data/2022/acs/acs5?get=NAME,B19013_001E&for=state:12",
+      "asOf": "2026-09-20"
+    }
+  ],
+  "SUB-2025-00091": [
+    {
+      "source": "Census ACS",
+      "label": "Median household income (state)",
+      "value": "$67,917 · Florida",
+      "url": "https://api.census.gov/data/2022/acs/acs5?get=NAME,B19013_001E&for=state:12",
+      "asOf": "2026-09-20"
+    }
+  ],
+  "SUB-2025-00092": [
+    {
+      "source": "Census ACS",
+      "label": "Median household income (state)",
+      "value": "$97,126 · New Jersey",
+      "url": "https://api.census.gov/data/2022/acs/acs5?get=NAME,B19013_001E&for=state:34",
+      "asOf": "2026-09-20"
+    }
+  ],
+  "SUB-2026-00093": [
+    {
+      "source": "Census ACS",
+      "label": "Median household income (state)",
+      "value": "$97,126 · New Jersey",
+      "url": "https://api.census.gov/data/2022/acs/acs5?get=NAME,B19013_001E&for=state:34",
+      "asOf": "2026-09-20"
+    }
+  ],
+  "SUB-2026-00094": [
+    {
+      "source": "Census ACS",
+      "label": "Median household income (state)",
+      "value": "$97,126 · New Jersey",
+      "url": "https://api.census.gov/data/2022/acs/acs5?get=NAME,B19013_001E&for=state:34",
+      "asOf": "2026-09-20"
+    }
+  ],
+  "SUB-2025-00095": [
+    {
+      "source": "Census ACS",
+      "label": "Median household income (state)",
+      "value": "$72,581 · Arizona",
+      "url": "https://api.census.gov/data/2022/acs/acs5?get=NAME,B19013_001E&for=state:04",
+      "asOf": "2026-09-20"
+    }
+  ],
+  "SUB-2025-00096": [
+    {
+      "source": "Census ACS",
+      "label": "Median household income (state)",
+      "value": "$64,035 · Tennessee",
+      "url": "https://api.census.gov/data/2022/acs/acs5?get=NAME,B19013_001E&for=state:47",
+      "asOf": "2026-09-20"
+    }
+  ],
+  "SUB-2026-00097": [
+    {
+      "source": "Census ACS",
+      "label": "Median household income (state)",
+      "value": "$64,035 · Tennessee",
+      "url": "https://api.census.gov/data/2022/acs/acs5?get=NAME,B19013_001E&for=state:47",
+      "asOf": "2026-09-20"
+    }
+  ],
+  "SUB-2026-00098": [
+    {
+      "source": "Census ACS",
+      "label": "Median household income (state)",
+      "value": "$64,035 · Tennessee",
+      "url": "https://api.census.gov/data/2022/acs/acs5?get=NAME,B19013_001E&for=state:47",
+      "asOf": "2026-09-20"
+    }
+  ],
+  "SUB-2026-00099": [
+    {
+      "source": "Census ACS",
+      "label": "Median household income (state)",
+      "value": "$64,035 · Tennessee",
+      "url": "https://api.census.gov/data/2022/acs/acs5?get=NAME,B19013_001E&for=state:47",
+      "asOf": "2026-09-20"
+    }
+  ],
+  "SUB-2025-00100": [
+    {
+      "source": "Census ACS",
+      "label": "Median household income (state)",
+      "value": "$73,035 · Texas",
+      "url": "https://api.census.gov/data/2022/acs/acs5?get=NAME,B19013_001E&for=state:48",
+      "asOf": "2026-09-20"
+    }
+  ],
+  "SUB-2025-00101": [
+    {
+      "source": "Census ACS",
+      "label": "Median household income (state)",
+      "value": "$91,905 · California",
+      "url": "https://api.census.gov/data/2022/acs/acs5?get=NAME,B19013_001E&for=state:06",
+      "asOf": "2026-09-20"
+    }
+  ],
+  "SUB-2026-00102": [
+    {
+      "source": "Census ACS",
+      "label": "Median household income (state)",
+      "value": "$64,035 · Tennessee",
+      "url": "https://api.census.gov/data/2022/acs/acs5?get=NAME,B19013_001E&for=state:47",
+      "asOf": "2026-09-20"
+    }
+  ],
+  "SUB-2026-00103": [
+    {
+      "source": "Census ACS",
+      "label": "Median household income (state)",
+      "value": "$91,905 · California",
+      "url": "https://api.census.gov/data/2022/acs/acs5?get=NAME,B19013_001E&for=state:06",
+      "asOf": "2026-09-20"
+    }
+  ],
+  "SUB-2026-00104": [
+    {
+      "source": "Census ACS",
+      "label": "Median household income (state)",
+      "value": "$91,905 · California",
+      "url": "https://api.census.gov/data/2022/acs/acs5?get=NAME,B19013_001E&for=state:06",
+      "asOf": "2026-09-20"
+    }
+  ],
+  "SUB-2026-00105": [
+    {
+      "source": "Census ACS",
+      "label": "Median household income (state)",
+      "value": "$71,355 · Georgia",
+      "url": "https://api.census.gov/data/2022/acs/acs5?get=NAME,B19013_001E&for=state:13",
+      "asOf": "2026-09-20"
+    }
+  ],
+  "SUB-2025-00106": [
+    {
+      "source": "Census ACS",
+      "label": "Median household income (state)",
+      "value": "$78,433 · Illinois",
+      "url": "https://api.census.gov/data/2022/acs/acs5?get=NAME,B19013_001E&for=state:17",
+      "asOf": "2026-09-20"
+    }
+  ],
+  "SUB-2026-00107": [
+    {
+      "source": "Census ACS",
+      "label": "Median household income (state)",
+      "value": "$90,325 · Washington",
+      "url": "https://api.census.gov/data/2022/acs/acs5?get=NAME,B19013_001E&for=state:53",
+      "asOf": "2026-09-20"
+    }
+  ],
+  "SUB-2026-00108": [
+    {
+      "source": "Census ACS",
+      "label": "Median household income (state)",
+      "value": "$87,598 · Colorado",
+      "url": "https://api.census.gov/data/2022/acs/acs5?get=NAME,B19013_001E&for=state:08",
+      "asOf": "2026-09-20"
+    }
+  ],
+  "SUB-2026-00109": [
+    {
+      "source": "Census ACS",
+      "label": "Median household income (state)",
+      "value": "$73,035 · Texas",
+      "url": "https://api.census.gov/data/2022/acs/acs5?get=NAME,B19013_001E&for=state:48",
+      "asOf": "2026-09-20"
+    }
+  ],
+  "SUB-2026-00110": [
+    {
+      "source": "Census ACS",
+      "label": "Median household income (state)",
+      "value": "$67,917 · Florida",
+      "url": "https://api.census.gov/data/2022/acs/acs5?get=NAME,B19013_001E&for=state:12",
+      "asOf": "2026-09-20"
+    }
+  ],
+  "SUB-2026-00111": [
+    {
+      "source": "Census ACS",
+      "label": "Median household income (state)",
+      "value": "$67,917 · Florida",
+      "url": "https://api.census.gov/data/2022/acs/acs5?get=NAME,B19013_001E&for=state:12",
+      "asOf": "2026-09-20"
+    }
+  ],
+  "SUB-2026-00112": [
+    {
+      "source": "Census ACS",
+      "label": "Median household income (state)",
+      "value": "$78,433 · Illinois",
+      "url": "https://api.census.gov/data/2022/acs/acs5?get=NAME,B19013_001E&for=state:17",
+      "asOf": "2026-09-20"
+    }
+  ],
+  "SUB-2026-00113": [
+    {
+      "source": "Census ACS",
+      "label": "Median household income (state)",
+      "value": "$91,905 · California",
+      "url": "https://api.census.gov/data/2022/acs/acs5?get=NAME,B19013_001E&for=state:06",
+      "asOf": "2026-09-20"
+    }
+  ],
+  "SUB-2025-00114": [
+    {
+      "source": "Census ACS",
+      "label": "Median household income (state)",
+      "value": "$67,917 · Florida",
+      "url": "https://api.census.gov/data/2022/acs/acs5?get=NAME,B19013_001E&for=state:12",
+      "asOf": "2026-09-20"
+    }
+  ],
+  "SUB-2025-00115": [
+    {
+      "source": "Census ACS",
+      "label": "Median household income (state)",
+      "value": "$91,905 · California",
+      "url": "https://api.census.gov/data/2022/acs/acs5?get=NAME,B19013_001E&for=state:06",
+      "asOf": "2026-09-20"
+    }
+  ],
+  "SUB-2025-00116": [
+    {
+      "source": "Census ACS",
+      "label": "Median household income (state)",
+      "value": "$73,035 · Texas",
+      "url": "https://api.census.gov/data/2022/acs/acs5?get=NAME,B19013_001E&for=state:48",
+      "asOf": "2026-09-20"
+    }
+  ],
+  "SUB-2025-00117": [
+    {
+      "source": "Census ACS",
+      "label": "Median household income (state)",
+      "value": "$97,126 · New Jersey",
+      "url": "https://api.census.gov/data/2022/acs/acs5?get=NAME,B19013_001E&for=state:34",
+      "asOf": "2026-09-20"
+    }
+  ],
+  "SUB-2026-00118": [
+    {
+      "source": "Census ACS",
+      "label": "Median household income (state)",
+      "value": "$67,917 · Florida",
+      "url": "https://api.census.gov/data/2022/acs/acs5?get=NAME,B19013_001E&for=state:12",
+      "asOf": "2026-09-20"
+    }
+  ],
+  "SUB-2025-00119": [
+    {
+      "source": "Census ACS",
+      "label": "Median household income (state)",
+      "value": "$73,035 · Texas",
+      "url": "https://api.census.gov/data/2022/acs/acs5?get=NAME,B19013_001E&for=state:48",
+      "asOf": "2026-09-20"
+    }
+  ],
+  "SUB-2026-00120": [
+    {
+      "source": "Census ACS",
+      "label": "Median household income (state)",
+      "value": "$91,905 · California",
+      "url": "https://api.census.gov/data/2022/acs/acs5?get=NAME,B19013_001E&for=state:06",
+      "asOf": "2026-09-20"
+    }
+  ],
+  "SUB-2025-00121": [
+    {
+      "source": "Census ACS",
+      "label": "Median household income (state)",
+      "value": "$97,126 · New Jersey",
+      "url": "https://api.census.gov/data/2022/acs/acs5?get=NAME,B19013_001E&for=state:34",
+      "asOf": "2026-09-20"
+    }
+  ],
+  "SUB-2025-00122": [
+    {
+      "source": "Census ACS",
+      "label": "Median household income (state)",
+      "value": "$87,598 · Colorado",
+      "url": "https://api.census.gov/data/2022/acs/acs5?get=NAME,B19013_001E&for=state:08",
+      "asOf": "2026-09-20"
+    }
+  ],
+  "SUB-2026-00123": [
+    {
+      "source": "Census ACS",
+      "label": "Median household income (state)",
+      "value": "$91,905 · California",
+      "url": "https://api.census.gov/data/2022/acs/acs5?get=NAME,B19013_001E&for=state:06",
+      "asOf": "2026-09-20"
+    }
+  ],
+  "SUB-2026-00124": [
+    {
+      "source": "Census ACS",
+      "label": "Median household income (state)",
+      "value": "$67,917 · Florida",
+      "url": "https://api.census.gov/data/2022/acs/acs5?get=NAME,B19013_001E&for=state:12",
+      "asOf": "2026-09-20"
+    }
+  ],
+  "SUB-2026-00125": [
+    {
+      "source": "Census ACS",
+      "label": "Median household income (state)",
+      "value": "$91,905 · California",
+      "url": "https://api.census.gov/data/2022/acs/acs5?get=NAME,B19013_001E&for=state:06",
+      "asOf": "2026-09-20"
+    }
+  ],
+  "SUB-2025-00126": [
+    {
+      "source": "Census ACS",
+      "label": "Median household income (state)",
+      "value": "$73,035 · Texas",
+      "url": "https://api.census.gov/data/2022/acs/acs5?get=NAME,B19013_001E&for=state:48",
+      "asOf": "2026-09-20"
+    }
+  ],
+  "SUB-2026-00127": [
+    {
+      "source": "Census ACS",
+      "label": "Median household income (state)",
+      "value": "$64,035 · Tennessee",
+      "url": "https://api.census.gov/data/2022/acs/acs5?get=NAME,B19013_001E&for=state:47",
+      "asOf": "2026-09-20"
+    }
+  ],
+  "SUB-2025-00128": [
+    {
+      "source": "Census ACS",
+      "label": "Median household income (state)",
+      "value": "$73,035 · Texas",
+      "url": "https://api.census.gov/data/2022/acs/acs5?get=NAME,B19013_001E&for=state:48",
+      "asOf": "2026-09-20"
+    }
+  ],
+  "SUB-2025-00129": [
+    {
+      "source": "Census ACS",
+      "label": "Median household income (state)",
+      "value": "$87,598 · Colorado",
+      "url": "https://api.census.gov/data/2022/acs/acs5?get=NAME,B19013_001E&for=state:08",
+      "asOf": "2026-09-20"
+    }
+  ],
+  "SUB-2025-00130": [
+    {
+      "source": "Census ACS",
+      "label": "Median household income (state)",
+      "value": "$91,905 · California",
+      "url": "https://api.census.gov/data/2022/acs/acs5?get=NAME,B19013_001E&for=state:06",
+      "asOf": "2026-09-20"
+    }
+  ],
+  "SUB-2026-00131": [
+    {
+      "source": "Census ACS",
+      "label": "Median household income (state)",
+      "value": "$91,905 · California",
+      "url": "https://api.census.gov/data/2022/acs/acs5?get=NAME,B19013_001E&for=state:06",
+      "asOf": "2026-09-20"
+    }
+  ],
+  "SUB-2025-00132": [
+    {
+      "source": "Census ACS",
+      "label": "Median household income (state)",
+      "value": "$87,598 · Colorado",
+      "url": "https://api.census.gov/data/2022/acs/acs5?get=NAME,B19013_001E&for=state:08",
+      "asOf": "2026-09-20"
+    }
+  ],
+  "SUB-2026-00133": [
+    {
+      "source": "Census ACS",
+      "label": "Median household income (state)",
+      "value": "$78,433 · Illinois",
+      "url": "https://api.census.gov/data/2022/acs/acs5?get=NAME,B19013_001E&for=state:17",
+      "asOf": "2026-09-20"
+    }
+  ],
+  "SUB-2025-00134": [
+    {
+      "source": "Census ACS",
+      "label": "Median household income (state)",
+      "value": "$73,035 · Texas",
+      "url": "https://api.census.gov/data/2022/acs/acs5?get=NAME,B19013_001E&for=state:48",
+      "asOf": "2026-09-20"
+    }
+  ],
+  "SUB-2026-00135": [
+    {
+      "source": "Census ACS",
+      "label": "Median household income (state)",
+      "value": "$73,035 · Texas",
+      "url": "https://api.census.gov/data/2022/acs/acs5?get=NAME,B19013_001E&for=state:48",
+      "asOf": "2026-09-20"
+    }
+  ],
+  "SUB-2026-00136": [
+    {
+      "source": "Census ACS",
+      "label": "Median household income (state)",
+      "value": "$91,905 · California",
+      "url": "https://api.census.gov/data/2022/acs/acs5?get=NAME,B19013_001E&for=state:06",
+      "asOf": "2026-09-20"
+    }
+  ],
+  "SUB-2026-00137": [
+    {
+      "source": "Census ACS",
+      "label": "Median household income (state)",
+      "value": "$91,905 · California",
+      "url": "https://api.census.gov/data/2022/acs/acs5?get=NAME,B19013_001E&for=state:06",
+      "asOf": "2026-09-20"
+    }
+  ],
+  "SUB-2025-00138": [
+    {
+      "source": "Census ACS",
+      "label": "Median household income (state)",
+      "value": "$67,917 · Florida",
+      "url": "https://api.census.gov/data/2022/acs/acs5?get=NAME,B19013_001E&for=state:12",
+      "asOf": "2026-09-20"
+    }
+  ],
+  "SUB-2026-00139": [
+    {
+      "source": "Census ACS",
+      "label": "Median household income (state)",
+      "value": "$73,035 · Texas",
+      "url": "https://api.census.gov/data/2022/acs/acs5?get=NAME,B19013_001E&for=state:48",
+      "asOf": "2026-09-20"
+    }
+  ],
+  "SUB-2025-00140": [
+    {
+      "source": "Census ACS",
+      "label": "Median household income (state)",
+      "value": "$97,126 · New Jersey",
+      "url": "https://api.census.gov/data/2022/acs/acs5?get=NAME,B19013_001E&for=state:34",
+      "asOf": "2026-09-20"
+    }
+  ],
+  "SUB-2026-00141": [
+    {
+      "source": "Census ACS",
+      "label": "Median household income (state)",
+      "value": "$73,035 · Texas",
+      "url": "https://api.census.gov/data/2022/acs/acs5?get=NAME,B19013_001E&for=state:48",
+      "asOf": "2026-09-20"
+    }
+  ],
+  "SUB-2026-00142": [
+    {
+      "source": "Census ACS",
+      "label": "Median household income (state)",
+      "value": "$73,035 · Texas",
+      "url": "https://api.census.gov/data/2022/acs/acs5?get=NAME,B19013_001E&for=state:48",
+      "asOf": "2026-09-20"
+    }
+  ],
+  "SUB-2025-00143": [
+    {
+      "source": "Census ACS",
+      "label": "Median household income (state)",
+      "value": "$90,325 · Washington",
+      "url": "https://api.census.gov/data/2022/acs/acs5?get=NAME,B19013_001E&for=state:53",
+      "asOf": "2026-09-20"
+    }
+  ],
+  "SUB-2026-00144": [
+    {
+      "source": "Census ACS",
+      "label": "Median household income (state)",
+      "value": "$91,905 · California",
+      "url": "https://api.census.gov/data/2022/acs/acs5?get=NAME,B19013_001E&for=state:06",
+      "asOf": "2026-09-20"
+    }
+  ],
+  "SUB-2026-00145": [
+    {
+      "source": "Census ACS",
+      "label": "Median household income (state)",
+      "value": "$90,325 · Washington",
+      "url": "https://api.census.gov/data/2022/acs/acs5?get=NAME,B19013_001E&for=state:53",
+      "asOf": "2026-09-20"
+    }
+  ],
+  "SUB-2026-00146": [
+    {
+      "source": "Census ACS",
+      "label": "Median household income (state)",
+      "value": "$78,433 · Illinois",
+      "url": "https://api.census.gov/data/2022/acs/acs5?get=NAME,B19013_001E&for=state:17",
+      "asOf": "2026-09-20"
+    }
+  ],
+  "SUB-2026-00147": [
+    {
+      "source": "Census ACS",
+      "label": "Median household income (state)",
+      "value": "$64,035 · Tennessee",
+      "url": "https://api.census.gov/data/2022/acs/acs5?get=NAME,B19013_001E&for=state:47",
+      "asOf": "2026-09-20"
+    }
+  ],
+  "SUB-2025-00148": [
+    {
+      "source": "Census ACS",
+      "label": "Median household income (state)",
+      "value": "$67,917 · Florida",
+      "url": "https://api.census.gov/data/2022/acs/acs5?get=NAME,B19013_001E&for=state:12",
+      "asOf": "2026-09-20"
+    }
+  ],
+  "SUB-2026-00149": [
+    {
+      "source": "Census ACS",
+      "label": "Median household income (state)",
+      "value": "$91,905 · California",
+      "url": "https://api.census.gov/data/2022/acs/acs5?get=NAME,B19013_001E&for=state:06",
+      "asOf": "2026-09-20"
+    }
+  ],
+  "SUB-2025-00150": [
+    {
+      "source": "Census ACS",
+      "label": "Median household income (state)",
+      "value": "$91,905 · California",
+      "url": "https://api.census.gov/data/2022/acs/acs5?get=NAME,B19013_001E&for=state:06",
+      "asOf": "2026-09-20"
+    }
+  ],
+  "SUB-2025-00151": [
+    {
+      "source": "Census ACS",
+      "label": "Median household income (state)",
+      "value": "$91,905 · California",
+      "url": "https://api.census.gov/data/2022/acs/acs5?get=NAME,B19013_001E&for=state:06",
+      "asOf": "2026-09-20"
+    }
+  ],
+  "SUB-2025-00152": [
+    {
+      "source": "Census ACS",
+      "label": "Median household income (state)",
+      "value": "$91,905 · California",
+      "url": "https://api.census.gov/data/2022/acs/acs5?get=NAME,B19013_001E&for=state:06",
+      "asOf": "2026-09-20"
+    }
+  ],
+  "SUB-2026-00153": [
+    {
+      "source": "Census ACS",
+      "label": "Median household income (state)",
+      "value": "$73,035 · Texas",
+      "url": "https://api.census.gov/data/2022/acs/acs5?get=NAME,B19013_001E&for=state:48",
+      "asOf": "2026-09-20"
+    }
+  ],
+  "SUB-2025-00154": [
+    {
+      "source": "Census ACS",
+      "label": "Median household income (state)",
+      "value": "$67,917 · Florida",
+      "url": "https://api.census.gov/data/2022/acs/acs5?get=NAME,B19013_001E&for=state:12",
+      "asOf": "2026-09-20"
+    }
+  ],
+  "SUB-2025-00155": [
+    {
+      "source": "Census ACS",
+      "label": "Median household income (state)",
+      "value": "$91,905 · California",
+      "url": "https://api.census.gov/data/2022/acs/acs5?get=NAME,B19013_001E&for=state:06",
+      "asOf": "2026-09-20"
+    }
+  ],
+  "SUB-2026-00156": [
+    {
+      "source": "Census ACS",
+      "label": "Median household income (state)",
+      "value": "$91,905 · California",
+      "url": "https://api.census.gov/data/2022/acs/acs5?get=NAME,B19013_001E&for=state:06",
+      "asOf": "2026-09-20"
+    }
+  ],
+  "SUB-2025-00157": [
+    {
+      "source": "Census ACS",
+      "label": "Median household income (state)",
+      "value": "$91,905 · California",
+      "url": "https://api.census.gov/data/2022/acs/acs5?get=NAME,B19013_001E&for=state:06",
+      "asOf": "2026-09-20"
+    }
+  ],
+  "SUB-2026-00158": [
+    {
+      "source": "Census ACS",
+      "label": "Median household income (state)",
+      "value": "$64,035 · Tennessee",
+      "url": "https://api.census.gov/data/2022/acs/acs5?get=NAME,B19013_001E&for=state:47",
+      "asOf": "2026-09-20"
+    }
+  ]
+}
