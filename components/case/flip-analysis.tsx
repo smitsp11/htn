@@ -18,7 +18,13 @@ export function FlipAnalysis({ submission }: { submission: RankedSubmission }) {
     <details className="flip-analysis" open>
       <summary>
         <span>
-          <Icon name="info" /> Flip analysis
+          <span
+            className="flip-info"
+            title="Each factor blocking or missing on this submission, marked Actionable when you can fix it (re-quote, request a document) or Fixed when it is a fact of the risk you cannot change."
+          >
+            <Icon name="info" />
+          </span>{" "}
+          Flip analysis
         </span>
         <span className="flip-summary">
           {movableCount} of {flips.length} actionable
