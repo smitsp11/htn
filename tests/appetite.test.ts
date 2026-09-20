@@ -193,16 +193,13 @@ test("explanation: contradiction is named and targets do not offset the failure"
   assert.equal(result.status, "out_of_appetite");
   assert.equal(
     result.explanation,
-    "Contradictory Account scores 92/100 but is out of appetite. Not acceptable: submission type (renewal business is not acceptable); this contradicts target matches on primary risk state, total insured value, total premium, building year, which do not offset it. Recommendation: Review for likely decline.",
+    "Contradictory Account scores 92/100 but is out of appetite. Not acceptable: submission type; this contradicts target matches on primary risk state, total insured value, total premium, building year, which do not offset it. Recommendation: Review for likely decline.",
   );
 });
 
 test("explanation: multiple failures and an unknown are all listed", () => {
   const result = evaluateAppetite(multipleFailures);
-  assert.match(
-    result.explanation,
-    /Not acceptable: primary risk state \(TX is outside the listed states\), total insured value \(TIV \$200M exceeds the \$150M limit by \$50M\), five-year losses \(five-year losses of \$250K exceed the \$100K limit by \$150K\)/,
-  );
+  assert.match(result.explanation, /Not acceptable: primary risk state, total insured value, five-year losses/);
   assert.match(result.explanation, /unresolved: building year/);
   assert.match(result.explanation, /Recommendation: Review for likely decline\.$/);
 });

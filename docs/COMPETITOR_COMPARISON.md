@@ -15,7 +15,7 @@ Score key: **Ahead** (we are demonstrably better), **Parity**, **Behind**, **Unv
 **Overall: Parity, with opposite strengths.**
 
 - We are Ahead on scoring output, explanations, and ranking (criteria 8, 17, 19, 22, 28).
-- We are Behind on the judges' top-weighted area, agentic reasoning (criteria 3, 4, 7), and on evidence provenance (24). *Update 2026-09-20: criterion 3 is now Parity or better; see the row below and P4.1.*
+- We are Behind on the judges' top-weighted area, agentic reasoning (criteria 3, 4, 7), and on evidence provenance (24).
 - Three criteria decide it: **#3/#4** (they run an adaptive query loop with a visible per-query rationale; we issue one static query and show five generic trace lines), **#8/#28** (we have a graded score that orders the red majority; they have four flat buckets), and **#24** (every fact of theirs carries record IDs; none of ours do).
 
 ### Their scoring system, in short
@@ -46,7 +46,7 @@ Known weakness in **our** score: it counts how many factors are good, not how fa
 |---|---|---|---|---|
 | 1 | Runtime schema discovery validates queries | Full validator, repairable errors | Live mode discovers schema then resolves each candidate path against it, flagging unresolved fields (`lib/federato/schema-planner.ts:318-371`, `:473-489`). Default offline mode skips discovery and hardcodes `schemaDiscovered: true` (`lib/rankings/pipeline.ts:115`). | Parity |
 | 2 | Queries built dynamically | LLM-authored, cap 4 | Deterministic planner builds one nested `$expand` projection from the schema (`lib/federato/schema-planner.ts:459-470`); env override seam (`lib/federato/adapter.ts:69-79`). | Parity |
-| 3 | Agent adapts to results | Loop, 4 queries, no deep-dive policy | **Implemented 2026-09-20.** After the first ranking, rows with unknown factors or a single-factor near miss go back to the agent (`lib/rankings/follow-up-targets.ts`, `lib/rankings/pipeline.ts`). The agent plans a schema-resolved route to the insured's prior terms and their claims, batches one query per gap kind, merges, and the queue is re-ranked (`lib/federato/follow-up.ts`, `lib/federato/adapter.ts` `runFollowUp`). On the snapshot: 2 follow-up queries, 11 loss histories resolved across every line the insured holds, 1 status change (SUB-2025-00132), 1 borderline figure confirmed with reserves. Gaps with no data source (premium, type before a quote) are stated as such. Deterministic, capped at 5 queries, runs once per pass, same code offline and live. | **Parity** (deep-dive policy is explicit; theirs is not) |
+| 3 | Agent adapts to results | Loop, 4 queries, no deep-dive policy | None. One query, no follow-up (`lib/rankings/pipeline.ts:126-131`). | **Behind** |
 | 4 | Reasoning trace visible | Purpose, duration, summary per query | Four to five generic sentences (`lib/rankings/pipeline.ts:116-120`, `:127-135`). A per-field trace exists (`lib/federato/query-trace.ts:59-69`) and a view exists (`components/query-trace/query-trace.tsx:14`) but neither is wired into the response or dashboard. | **Behind** |
 | 5 | Works without LLM | No, run fails | Yes. OpenAI is used only by the ask bar (`lib/agent/ask.ts:50`, `app/api/ask/route.ts:17-24`). | **Ahead** |
 | 6 | `$elemMatch` and `$expand` handling | Validator enforces | `$expand` tree generated (`lib/federato/schema-planner.ts:429-448`); `$elemMatch` only as a developer template, never sent (`:382-390`, `:485`). Live response shape not exercised. | Unverified |
@@ -173,7 +173,7 @@ The judges' top criterion. This is where we are furthest behind and where the co
 
 | ID | Work item | Criteria moved | Owner | Files | Effort | Done when |
 |---|---|---|---|---|---|---|
-| P4.1 | **Adaptive second pass in live mode.** After the first ranking, select rows that are `needs_investigation`, or `out_of_appetite` with exactly one failing factor and score at or above 58. For each unresolved gap issue a focused follow-up query planned by the schema planner (for example `Submission.requested_limit` for no-policy rows; `Policy.claims` with `$elemMatch` on `date_of_loss` within the window). Merge the results, re-rank, and log each query as a trace entry with purpose, target rows, duration, and rows returned. Cap at 5 follow-ups. Offline mode simulates the same loop against the snapshot so the demo shows it without credentials. **Done 2026-09-20** (`lib/federato/follow-up.ts`, `lib/rankings/follow-up-targets.ts`, `tests/follow-up.test.ts`); the follow-up kinds are prior-term losses via the insured and a reserve-aware re-read for borderline losses, not `$elemMatch`, because `where` on ids validates against the schema and replays offline. Losses count every line the insured holds and the derivation note says so. | 2, 3, 4, 6 | Person 2 (planner: `planFollowUp`), Person 4 (pipeline loop, trace) | `lib/federato/schema-planner.ts`, `lib/rankings/pipeline.ts`, `lib/federato/query-trace.ts`, tests | 5 h | Trace shows "Query 2: claims for 11 no-policy rows (purpose: resolve five-year losses), 0.4 s, 11 rows" and at least one row changes status or score after the pass. |
+| P4.1 | **Adaptive second pass in live mode.** After the first ranking, select rows that are `needs_investigation`, or `out_of_appetite` with exactly one failing factor and score at or above 58. For each unresolved gap issue a focused follow-up query planned by the schema planner (for example `Submission.requested_limit` for no-policy rows; `Policy.claims` with `$elemMatch` on `date_of_loss` within the window). Merge the results, re-rank, and log each query as a trace entry with purpose, target rows, duration, and rows returned. Cap at 5 follow-ups. Offline mode simulates the same loop against the snapshot so the demo shows it without credentials. | 2, 3, 4, 6 | Person 2 (planner: `planFollowUp`), Person 4 (pipeline loop, trace) | `lib/federato/schema-planner.ts`, `lib/rankings/pipeline.ts`, `lib/federato/query-trace.ts`, tests | 5 h | Trace shows "Query 2: claims for 11 no-policy rows (purpose: resolve five-year losses), 0.4 s, 11 rows" and at least one row changes status or score after the pass. |
 | P4.2 | **LLM-proposed, planner-validated follow-ups (optional).** Let the OpenAI wrapper propose which follow-up to run from a fixed menu; the planner validates every path against the discovered schema and rejects anything unresolved. The LLM never sees or changes verdicts. Falls back to P4.1's deterministic policy when the key is absent. | 2, 3 | Person 4 | `lib/agent/`, `lib/rankings/pipeline.ts` | 3 h | Works identically with and without `OPENAI_API_KEY`; rejected proposals appear in the trace. |
 
 ### 3.5 Phase 5: engineering polish (about 8 h)
@@ -192,7 +192,7 @@ The judges' top criterion. This is where we are furthest behind and where the co
 |---|---|---|---|
 | 1 | Parity | Ahead | P1.1, P1.2 |
 | 2 | Parity | Parity/Ahead | P4.1, P4.2 |
-| 3 | ~~Behind~~ Parity (done) | Parity | P4.1 |
+| 3 | Behind | Parity | P4.1 |
 | 4 | Behind | Ahead | P1.1, P4.1 |
 | 6 | Unverified | Verified | P2.1, P2.3 |
 | 7 | Behind | Ahead | P2.2 |

@@ -34,8 +34,6 @@ const CANONICAL_KEYS: (keyof CanonicalSubmission)[] = [
   "approvedConstructionPercentage",
   "constructionDescription",
   "fiveYearLossValue",
-  "buildingSchedule",
-  "derivations",
 ];
 
 /* ---------------------------------------------------------------------- */
