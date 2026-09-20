@@ -516,3 +516,21 @@ select {
   line-height: 1.5;
   color: var(--ink-faint);
 }
+
+/* W6 — Appetite × Completeness quadrant board */
+.quadrant { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 16px 0; }
+.quadrant-cell { border: 1px solid var(--border); border-radius: 10px; padding: 12px; min-height: 130px; }
+.quadrant-cell header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px; }
+.quadrant-cell header strong { font-size: 14px; color: var(--ink); }
+.quadrant-cell header small { font-size: 12px; color: var(--ink-faint); }
+.quadrant-cell ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.quadrant-cell li button { width: 100%; display: flex; justify-content: space-between; gap: 8px; text-align: left; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 7px 9px; cursor: pointer; font-size: 13px; color: var(--ink); }
+.quadrant-cell li button:hover { background: var(--surface-hover); }
+.quadrant-cell li button small { color: var(--ink-faint); }
+.quadrant-cell li button[aria-pressed="true"] { border-color: var(--mint); outline: 1px solid var(--mint); }
+.quadrant-empty { margin: 0; font-size: 13px; color: var(--ink-faint); }
+.qc-work-now { background: var(--mint-tint); }
+.qc-worth-effort { background: var(--amber-tint); }
+.qc-selective { background: var(--surface-muted); }
+.qc-deprioritize { background: var(--danger-tint); }
+@media (max-width: 720px) { .quadrant { grid-template-columns: 1fr; } }
