@@ -1,21 +1,58 @@
+import { buildExplanation, recommendationFor } from "./explanation";
+import { formatMoney } from "./format";
 import type {
   AppetiteStatus,
+  AppetiteVerdict,
   CanonicalSubmission,
   FactorEvaluation,
+  FactorKey,
   RankedSubmission,
 } from "./types";
 
-const TARGET_STATES = new Set(["OH", "PA", "MD", "CO", "CA", "FL"]);
-const ACCEPTABLE_STATES = new Set([
-  ...TARGET_STATES,
-  "NC",
-  "SC",
-  "GA",
-  "VA",
-  "UT",
-]);
+export type LineScope = "property" | "out_of_scope" | "unknown_line";
 
-const labels = {
+/**
+ * Route a submission by its line of business. Property lines get the full
+ * eight-factor appetite evaluation; known non-property lines are out of scope
+ * (no property appetite is defined for them); a missing line stays in the
+ * property pipeline so its unknown line factor drives needs_investigation.
+ */
+export function classifyScope(lineOfBusiness?: string): LineScope {
+  const normalized = lineOfBusiness?.trim().toLowerCase();
+  if (!normalized) return "unknown_line";
+  if (normalized.includes("property")) return "property";
+  return "out_of_scope";
+}
+
+// 2025 commercial-property appetite table (documents/APPETITE_GUIDELINES.pdf).
+const TARGET_STATES = new Set(["OH", "PA", "MD", "CO", "CA", "FL"]);
+const ACCEPTABLE_STATES = new Set([...TARGET_STATES, "NC", "SC", "GA", "VA", "UT"]);
+const TIV_TARGET_MIN = 50_000_000;
+const TIV_TARGET_MAX = 100_000_000;
+const TIV_MAX = 150_000_000;
+const PREMIUM_MIN = 50_000;
+const PREMIUM_TARGET_MIN = 75_000;
+const PREMIUM_TARGET_MAX = 100_000;
+const PREMIUM_MAX = 175_000;
+const YEAR_ACCEPTABLE_AFTER = 1990;
+const YEAR_TARGET_AFTER = 2010;
+const LOSS_MAX = 100_000;
+
+/**
+ * Naive additive score. A target verdict earns 2 points, acceptable earns 1,
+ * unknown and not acceptable earn 0. Four factors have a target tier (state,
+ * TIV, premium, building year) and four do not, so the maximum is 4*2 + 4*1.
+ * The score is subordinate to status: it never overrides a hard-gate failure.
+ */
+export const SCORE_POINTS: Record<AppetiteVerdict, number> = {
+  target: 2,
+  acceptable: 1,
+  unknown: 0,
+  not_acceptable: 0,
+};
+export const MAX_SCORE_POINTS = 12;
+
+const labels: Record<FactorKey, string> = {
   submissionType: "Submission type",
   lineOfBusiness: "Line of business",
   primaryRiskState: "Primary risk state",
@@ -24,17 +61,17 @@ const labels = {
   buildingYear: "Building year",
   construction: "Construction type",
   fiveYearLossValue: "Five-year losses",
-} as const;
+};
 
 function text(value?: string) {
   return value?.trim().toLowerCase();
 }
 
-function factor(
-  key: FactorEvaluation["key"],
-  verdict: FactorEvaluation["verdict"],
-  reason: string,
-): FactorEvaluation {
+function isFiniteNumber(value: unknown): value is number {
+  return typeof value === "number" && Number.isFinite(value);
+}
+
+function factor(key: FactorKey, verdict: AppetiteVerdict, reason: string): FactorEvaluation {
   return { key, label: labels[key], verdict, reason };
 }
 
@@ -43,63 +80,79 @@ function evaluateSubmissionType(value?: string): FactorEvaluation {
   if (!normalized) return factor("submissionType", "unknown", "Submission type is missing.");
   if (normalized.includes("renew")) return factor("submissionType", "not_acceptable", "Renewal business is not acceptable.");
   if (normalized.includes("new")) return factor("submissionType", "acceptable", "New business is acceptable.");
-  return factor("submissionType", "unknown", `Unrecognized submission type: ${value}.`);
+  return factor("submissionType", "unknown", `Unrecognized submission type: ${value?.trim()}.`);
 }
 
 function evaluateLine(value?: string): FactorEvaluation {
   const normalized = text(value);
   if (!normalized) return factor("lineOfBusiness", "unknown", "Line of business is missing.");
   if (normalized.includes("property")) return factor("lineOfBusiness", "acceptable", "Property business is acceptable.");
-  return factor("lineOfBusiness", "not_acceptable", `${value} is outside the property appetite.`);
+  return factor("lineOfBusiness", "not_acceptable", `${value?.trim()} is outside the property appetite.`);
 }
 
 function evaluateState(value?: string): FactorEvaluation {
   const normalized = value?.trim().toUpperCase();
   if (!normalized) return factor("primaryRiskState", "unknown", "Primary risk state is missing.");
   if (TARGET_STATES.has(normalized)) return factor("primaryRiskState", "target", `${normalized} is a target state.`);
-  if (ACCEPTABLE_STATES.has(normalized)) return factor("primaryRiskState", "acceptable", `${normalized} is acceptable.`);
+  if (ACCEPTABLE_STATES.has(normalized)) return factor("primaryRiskState", "acceptable", `${normalized} is an acceptable state.`);
   return factor("primaryRiskState", "not_acceptable", `${normalized} is outside the listed states.`);
 }
 
 function evaluateTiv(value?: number): FactorEvaluation {
-  if (value === undefined || value < 0) return factor("tiv", "unknown", "TIV is missing or invalid.");
-  if (value > 150_000_000) return factor("tiv", "not_acceptable", "TIV exceeds $150M.");
-  if (value >= 50_000_000 && value <= 100_000_000) return factor("tiv", "target", "TIV is in the $50M–$100M target range.");
-  return factor("tiv", "acceptable", "TIV is within the $150M acceptable limit.");
+  if (!isFiniteNumber(value) || value <= 0) return factor("tiv", "unknown", "TIV is missing or invalid.");
+  const money = formatMoney(value);
+  if (value > TIV_MAX) return factor("tiv", "not_acceptable", `TIV ${money} exceeds the $150M limit.`);
+  if (value >= TIV_TARGET_MIN && value <= TIV_TARGET_MAX) {
+    return factor("tiv", "target", `TIV ${money} is in the $50M–$100M target range.`);
+  }
+  return factor("tiv", "acceptable", `TIV ${money} is within the $150M acceptable limit.`);
 }
 
 function evaluatePremium(value?: number): FactorEvaluation {
-  if (value === undefined || value < 0) return factor("totalPremium", "unknown", "Premium is missing or invalid.");
-  if (value < 50_000 || value > 175_000) return factor("totalPremium", "not_acceptable", "Premium is outside $50K–$175K.");
-  if (value >= 75_000 && value <= 100_000) return factor("totalPremium", "target", "Premium is in the $75K–$100K target range.");
-  return factor("totalPremium", "acceptable", "Premium is in the acceptable range.");
+  if (!isFiniteNumber(value) || value <= 0) return factor("totalPremium", "unknown", "Premium is missing or invalid.");
+  const money = formatMoney(value);
+  if (value < PREMIUM_MIN || value > PREMIUM_MAX) {
+    return factor("totalPremium", "not_acceptable", `Premium ${money} is outside the $50K–$175K acceptable range.`);
+  }
+  if (value >= PREMIUM_TARGET_MIN && value <= PREMIUM_TARGET_MAX) {
+    return factor("totalPremium", "target", `Premium ${money} is in the $75K–$100K target range.`);
+  }
+  return factor("totalPremium", "acceptable", `Premium ${money} is in the $50K–$175K acceptable range.`);
 }
 
 function evaluateBuildingYear(value?: number): FactorEvaluation {
-  if (value === undefined) return factor("buildingYear", "unknown", "Building year is missing.");
-  if (value > 2010) return factor("buildingYear", "target", "Building is newer than 2010.");
-  if (value > 1990) return factor("buildingYear", "acceptable", "Building is newer than 1990.");
-  if (value < 1990) return factor("buildingYear", "not_acceptable", "Building is older than 1990.");
+  if (!isFiniteNumber(value) || !Number.isInteger(value)) {
+    return factor("buildingYear", "unknown", "Building year is missing or invalid.");
+  }
+  if (value > YEAR_TARGET_AFTER) return factor("buildingYear", "target", `Built in ${value}, newer than 2010.`);
+  if (value > YEAR_ACCEPTABLE_AFTER) return factor("buildingYear", "acceptable", `Built in ${value}, newer than 1990.`);
+  if (value < YEAR_ACCEPTABLE_AFTER) return factor("buildingYear", "not_acceptable", `Built in ${value}, older than 1990.`);
   return factor("buildingYear", "unknown", "The guidelines do not classify a building from exactly 1990.");
 }
 
 function evaluateConstruction(value?: number): FactorEvaluation {
-  if (value === undefined) return factor("construction", "unknown", "Approved construction percentage is missing.");
-  const ratio = value > 1 && value <= 100 ? value / 100 : value;
-  if (ratio > 0.5) return factor("construction", "acceptable", "More than 50% uses an approved construction type.");
-  if (ratio < 0.5) return factor("construction", "not_acceptable", "More than 50% uses another construction type.");
+  if (!isFiniteNumber(value) || value < 0 || value > 100) {
+    return factor("construction", "unknown", "Approved construction percentage is missing or invalid.");
+  }
+  // Accept either a 0–1 ratio or a 0–100 percentage; exactly 1 is read as 100%.
+  const ratio = value > 1 ? value / 100 : value;
+  const percent = Math.round(ratio * 100);
+  if (ratio > 0.5) return factor("construction", "acceptable", `${percent}% uses an approved construction type (more than 50%).`);
+  if (ratio < 0.5) return factor("construction", "not_acceptable", `Only ${percent}% uses an approved construction type; more than 50% is another type.`);
   return factor("construction", "unknown", "The guidelines do not classify an exact 50/50 construction split.");
 }
 
 function evaluateLosses(value?: number): FactorEvaluation {
-  if (value === undefined || value < 0) return factor("fiveYearLossValue", "unknown", "Five-year loss value is missing or invalid.");
-  if (value < 100_000) return factor("fiveYearLossValue", "acceptable", "Five-year losses are below $100K.");
-  if (value > 100_000) return factor("fiveYearLossValue", "not_acceptable", "Five-year losses exceed $100K.");
+  if (!isFiniteNumber(value) || value < 0) return factor("fiveYearLossValue", "unknown", "Five-year loss value is missing or invalid.");
+  const money = formatMoney(value);
+  if (value < LOSS_MAX) return factor("fiveYearLossValue", "acceptable", `Five-year losses of ${money} are under $100K.`);
+  if (value > LOSS_MAX) return factor("fiveYearLossValue", "not_acceptable", `Five-year losses of ${money} exceed $100K.`);
   return factor("fiveYearLossValue", "unknown", "The guidelines do not classify losses of exactly $100K.");
 }
 
-export function evaluateAppetite(submission: CanonicalSubmission): RankedSubmission {
-  const factors = [
+/** All eight factor verdicts, always in the order of the published table. */
+export function evaluateFactors(submission: CanonicalSubmission): FactorEvaluation[] {
+  return [
     evaluateSubmissionType(submission.submissionType),
     evaluateLine(submission.lineOfBusiness),
     evaluateState(submission.primaryRiskState),
@@ -109,39 +162,54 @@ export function evaluateAppetite(submission: CanonicalSubmission): RankedSubmiss
     evaluateConstruction(submission.approvedConstructionPercentage),
     evaluateLosses(submission.fiveYearLossValue),
   ];
+}
 
-  const unacceptable = factors.filter((item) => item.verdict === "not_acceptable");
-  const unknown = factors.filter((item) => item.verdict === "unknown");
-  const targets = factors.filter((item) => item.verdict === "target");
-  const accepted = factors.filter((item) => item.verdict === "target" || item.verdict === "acceptable");
-  const score = Math.round(((accepted.length + targets.length) / 12) * 100);
+export function computeScore(factors: FactorEvaluation[]): number {
+  const points = factors.reduce((sum, item) => sum + SCORE_POINTS[item.verdict], 0);
+  return Math.round((points / MAX_SCORE_POINTS) * 100);
+}
 
-  let status: AppetiteStatus = "in_appetite";
-  if (unacceptable.length > 0) status = "out_of_appetite";
-  else if (unknown.length > 0) status = "needs_investigation";
+/**
+ * Status precedence: any not-acceptable factor is a hard gate to
+ * out_of_appetite; otherwise any unknown means needs_investigation.
+ */
+export function deriveStatus(factors: FactorEvaluation[]): AppetiteStatus {
+  if (factors.some((item) => item.verdict === "not_acceptable")) return "out_of_appetite";
+  if (factors.some((item) => item.verdict === "unknown")) return "needs_investigation";
+  return "in_appetite";
+}
 
-  const recommendation = status === "in_appetite"
-    ? "Review for acceptance"
-    : status === "needs_investigation"
-      ? "Investigate missing or ambiguous data"
-      : "Underwriter review; likely reject";
+export function evaluateAppetite(submission: CanonicalSubmission): RankedSubmission {
+  if (classifyScope(submission.lineOfBusiness) === "out_of_scope") {
+    const recommendation = recommendationFor("out_of_scope");
+    return {
+      ...submission,
+      status: "out_of_scope",
+      score: 0,
+      factors: [],
+      recommendation,
+      explanation: buildExplanation({
+        accountName: submission.accountName,
+        status: "out_of_scope",
+        score: 0,
+        factors: [],
+        recommendation,
+        lineOfBusiness: submission.lineOfBusiness,
+      }),
+    };
+  }
 
-  const positiveText = targets.length > 0
-    ? `Target matches include ${targets.map((item) => item.label.toLowerCase()).join(", ")}.`
-    : `${accepted.length} of 8 factors are acceptable.`;
-  const concernText = unacceptable.length > 0
-    ? `Outside appetite: ${unacceptable.map((item) => item.label.toLowerCase()).join(", ")}.`
-    : unknown.length > 0
-      ? `More information is needed for ${unknown.map((item) => item.label.toLowerCase()).join(", ")}.`
-      : "No out-of-appetite factors were found.";
-
+  const factors = evaluateFactors(submission);
+  const status = deriveStatus(factors);
+  const score = computeScore(factors);
+  const recommendation = recommendationFor(status);
   return {
     ...submission,
     status,
     score,
     factors,
     recommendation,
-    explanation: `${submission.accountName} scored ${score}/100 against the published appetite. ${positiveText} ${concernText} Recommendation: ${recommendation}.`,
+    explanation: buildExplanation({ accountName: submission.accountName, status, score, factors, recommendation }),
   };
 }
 
@@ -149,10 +217,16 @@ const statusOrder: Record<AppetiteStatus, number> = {
   in_appetite: 0,
   needs_investigation: 1,
   out_of_appetite: 2,
+  out_of_scope: 3,
 };
 
-export function rankSubmissions(submissions: CanonicalSubmission[]) {
-  return submissions
-    .map(evaluateAppetite)
-    .sort((left, right) => statusOrder[left.status] - statusOrder[right.status] || right.score - left.score || left.accountName.localeCompare(right.accountName));
+/** Stable ordering: status, then score descending, then account name, then id. */
+export function rankSubmissions(submissions: CanonicalSubmission[]): RankedSubmission[] {
+  return submissions.map(evaluateAppetite).sort(
+    (left, right) =>
+      statusOrder[left.status] - statusOrder[right.status] ||
+      right.score - left.score ||
+      left.accountName.localeCompare(right.accountName) ||
+      left.id.localeCompare(right.id),
+  );
 }

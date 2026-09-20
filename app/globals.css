@@ -1,3 +1,8 @@
+@import "../components/factor-breakdown/factor-breakdown.css";
+@import "../components/external-risk/external-risk.css";
+@import "../components/ask-queue/ask-bar.css";
+@import "../components/enrichment-resolution/resolution-chips.css";
+
 :root {
   color-scheme: light;
   --ink: #17231f;
@@ -200,8 +205,14 @@ h1 {
 
 table {
   border-collapse: collapse;
-  min-width: 1080px;
+  min-width: 1240px;
   width: 100%;
+}
+
+thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
 }
 
 th,
@@ -266,6 +277,35 @@ td small {
   max-width: 180px;
 }
 
+.reason-cell {
+  color: #3d4a46;
+  font-size: 0.8rem;
+  line-height: 1.4;
+  max-width: 260px;
+}
+
+.missing-callout {
+  background: var(--amber-soft);
+  border-left: 3px solid var(--amber);
+  border-radius: 0.4rem;
+  color: var(--amber);
+  font-size: 0.82rem;
+  padding: 0.6rem 0.8rem;
+}
+
+.empty-panel {
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.empty-panel span,
+.error-panel small {
+  color: var(--muted);
+  font-size: 0.85rem;
+  max-width: 520px;
+  text-align: center;
+}
+
 .detail-button {
   background: transparent;
   color: var(--green);
@@ -314,52 +354,6 @@ td small {
   margin: 0.25rem 0 0;
 }
 
-.factor-grid {
-  display: grid;
-  gap: 0.6rem;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-}
-
-.factor-card {
-  background: white;
-  border: 1px solid var(--line);
-  border-radius: 0.6rem;
-  display: flex;
-  flex-direction: column;
-  min-height: 115px;
-  padding: 0.75rem;
-}
-
-.factor-card > span {
-  color: var(--muted);
-  font-size: 0.7rem;
-  font-weight: 700;
-}
-
-.factor-card strong {
-  font-size: 0.78rem;
-  margin: 0.45rem 0;
-  text-transform: capitalize;
-}
-
-.factor-card strong.target,
-.factor-card strong.acceptable {
-  color: var(--green);
-}
-
-.factor-card strong.not_acceptable {
-  color: var(--red);
-}
-
-.factor-card strong.unknown {
-  color: var(--amber);
-}
-
-.factor-card small {
-  color: var(--muted);
-  font-size: 0.68rem;
-  line-height: 1.35;
-}
 
 .trace-panel {
   color: var(--muted);
@@ -422,10 +416,6 @@ td small {
   .detail-content {
     grid-template-columns: 1fr;
   }
-
-  .factor-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
 }
 
 @media (max-width: 620px) {
@@ -442,8 +432,44 @@ td small {
   .summary-grid {
     grid-template-columns: 1fr;
   }
+}
 
-  .factor-grid {
-    grid-template-columns: 1fr;
-  }
+.flag-chips { display: inline-flex; gap: 4px; }
+.flag-chip {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 20px; height: 20px; padding: 0 6px;
+  border-radius: 10px; font-size: 12px; font-weight: 600; cursor: default;
+}
+.flag-chip.flag-red { background: var(--red-soft); color: var(--red); }
+.flag-chip.flag-yellow { background: var(--amber-soft); color: var(--amber); }
+.flag-chip.flag-preferred { background: var(--green-soft); color: var(--green); }
+
+.in-good-order { margin: 8px 0; }
+.igo-header { display: flex; align-items: center; gap: 8px; margin: 0 0 4px; }
+.igo-badge { padding: 2px 8px; border-radius: 10px; font-size: 12px; font-weight: 600; white-space: nowrap; }
+.igo-badge.igo-ready { background: var(--green-soft); color: var(--green); }
+.igo-badge.igo-pending { background: var(--amber-soft); color: var(--amber); }
+.igo-count { font-size: 13px; color: var(--muted); }
+.igo-checklist { margin: 4px 0; padding-left: 18px; }
+.igo-checklist li { font-size: 13px; }
+.igo-reason { color: var(--muted); }
+.igo-note { font-size: 12px; color: var(--muted); margin: 4px 0 0; }
+
+.out-of-scope-panel {
+  margin-top: 1rem;
+  border: 1px solid var(--border, #e2e8f0);
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  background: var(--surface-muted, #f8fafc);
+  color: var(--text-muted, #475569);
+}
+
+.out-of-scope-panel > summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.out-of-scope-panel p {
+  margin: 0.5rem 0;
+  font-size: 0.875rem;
 }

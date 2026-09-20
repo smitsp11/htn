@@ -2,6 +2,12 @@
 
 A restrained MVP for ranking commercial-property submissions against Federato's supplied 2025 appetite guidelines. The application is read-only: it recommends what an underwriter should review and never makes or writes back a binding decision.
 
+It does three things: **ingests** submissions (schema discovery + query, or the captured `raw/` snapshot offline), **enriches** each with external risk data (FEMA National Risk Index hazard ratings per location, shown as separate context that never changes the appetite score), and **produces insights** — a ranked, explained queue you can interrogate in plain English ("ask the queue").
+
+## Ask the queue
+
+An underwriter can type natural-language questions ("why is Harbor Point out of appetite?", "show me new-business property in CA under $100M") and the app answers grounded in the deterministic factors — filtering the live queue or explaining a submission. The LLM only interprets the question and phrases the answer; every fact and row comes from the scoring engine. Set `OPENAI_API_KEY` in `.env.local` to enable it.
+
 ## Run locally
 
 ```bash
@@ -10,7 +16,7 @@ cp .env.example .env.local
 npm run dev
 ```
 
-Demo mode is on by default, so the complete scoring and UI flow runs without credentials. Open `http://localhost:3000`.
+By default (no `FEDERATO_USE_DEMO_DATA` set) the app serves the real 158-submission snapshot captured in `raw/`, scored through the same schema-planner + adapter path as live — no credentials needed. Set `FEDERATO_USE_DEMO_DATA=true` for the synthetic fixtures. Open `http://localhost:3000`.
 
 ## Connect Federato
 

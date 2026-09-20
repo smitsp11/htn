@@ -6,3 +6,7 @@ coverage/
 node_modules/
 npm-debug.log*
 *.tsbuildinfo
+
+# Dev/verification artifacts
+.playwright-mcp/
+htn-*.png

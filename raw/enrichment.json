@@ -1,0 +1,358 @@
+{
+  "FL|Hillsborough": {
+    "compositeRating": "relatively high",
+    "compositeScore": 98.82315521628499,
+    "topHazards": [
+      {
+        "type": "Cold Wave",
+        "rating": "very high"
+      },
+      {
+        "type": "Hurricane",
+        "rating": "very high"
+      },
+      {
+        "type": "Lightning",
+        "rating": "very high"
+      },
+      {
+        "type": "Tornado",
+        "rating": "very high"
+      }
+    ],
+    "source": "FEMA NRI",
+    "asOf": "2026-09-19"
+  },
+  "AZ|Maricopa": {
+    "compositeRating": "very high",
+    "compositeScore": 99.87277353689568,
+    "topHazards": [
+      {
+        "type": "Hail",
+        "rating": "very high"
+      },
+      {
+        "type": "Heat Wave",
+        "rating": "very high"
+      },
+      {
+        "type": "Inland Flooding",
+        "rating": "very high"
+      },
+      {
+        "type": "Strong Wind",
+        "rating": "very high"
+      }
+    ],
+    "source": "FEMA NRI",
+    "asOf": "2026-09-19"
+  },
+  "WA|King": {
+    "compositeRating": "very high",
+    "compositeScore": 99.68193384223919,
+    "topHazards": [
+      {
+        "type": "Avalanche",
+        "rating": "very high"
+      },
+      {
+        "type": "Earthquake",
+        "rating": "very high"
+      },
+      {
+        "type": "Inland Flooding",
+        "rating": "very high"
+      },
+      {
+        "type": "Heat Wave",
+        "rating": "relatively high"
+      }
+    ],
+    "source": "FEMA NRI",
+    "asOf": "2026-09-19"
+  },
+  "CA|Alameda": {
+    "compositeRating": "very high",
+    "compositeScore": 99.77735368956743,
+    "topHazards": [
+      {
+        "type": "Earthquake",
+        "rating": "very high"
+      },
+      {
+        "type": "Inland Flooding",
+        "rating": "very high"
+      },
+      {
+        "type": "Coastal Flooding",
+        "rating": "relatively high"
+      },
+      {
+        "type": "Heat Wave",
+        "rating": "relatively high"
+      }
+    ],
+    "source": "FEMA NRI",
+    "asOf": "2026-09-19"
+  },
+  "CA|Sacramento": {
+    "compositeRating": "relatively high",
+    "compositeScore": 98.1234096692112,
+    "topHazards": [
+      {
+        "type": "Drought",
+        "rating": "relatively high"
+      },
+      {
+        "type": "Earthquake",
+        "rating": "relatively high"
+      },
+      {
+        "type": "Inland Flooding",
+        "rating": "relatively high"
+      }
+    ],
+    "source": "FEMA NRI",
+    "asOf": "2026-09-19"
+  },
+  "MO|Jackson": {
+    "compositeRating": "relatively high",
+    "compositeScore": 96.50127226463104,
+    "topHazards": [
+      {
+        "type": "Hail",
+        "rating": "very high"
+      },
+      {
+        "type": "Tornado",
+        "rating": "very high"
+      },
+      {
+        "type": "Cold Wave",
+        "rating": "relatively high"
+      },
+      {
+        "type": "Heat Wave",
+        "rating": "relatively high"
+      }
+    ],
+    "source": "FEMA NRI",
+    "asOf": "2026-09-19"
+  },
+  "MA|Suffolk": {
+    "compositeRating": "relatively moderate",
+    "compositeScore": 93.51145038167938,
+    "topHazards": [
+      {
+        "type": "Lightning",
+        "rating": "very high"
+      },
+      {
+        "type": "Coastal Flooding",
+        "rating": "relatively high"
+      },
+      {
+        "type": "Cold Wave",
+        "rating": "relatively high"
+      },
+      {
+        "type": "Heat Wave",
+        "rating": "relatively high"
+      }
+    ],
+    "source": "FEMA NRI",
+    "asOf": "2026-09-19"
+  },
+  "IL|Cook": {
+    "compositeRating": "very high",
+    "compositeScore": 99.96819338422391,
+    "topHazards": [
+      {
+        "type": "Cold Wave",
+        "rating": "very high"
+      },
+      {
+        "type": "Heat Wave",
+        "rating": "very high"
+      },
+      {
+        "type": "Ice Storm",
+        "rating": "very high"
+      },
+      {
+        "type": "Lightning",
+        "rating": "very high"
+      }
+    ],
+    "source": "FEMA NRI",
+    "asOf": "2026-09-19"
+  },
+  "FL|Miami-Dade": {
+    "compositeRating": "very high",
+    "compositeScore": 99.61832061068702,
+    "topHazards": [
+      {
+        "type": "Coastal Flooding",
+        "rating": "very high"
+      },
+      {
+        "type": "Cold Wave",
+        "rating": "very high"
+      },
+      {
+        "type": "Hurricane",
+        "rating": "very high"
+      },
+      {
+        "type": "Lightning",
+        "rating": "very high"
+      }
+    ],
+    "source": "FEMA NRI",
+    "asOf": "2026-09-19"
+  },
+  "CO|Denver": {
+    "compositeRating": "relatively high",
+    "compositeScore": 95.22900763358778,
+    "topHazards": [
+      {
+        "type": "Hail",
+        "rating": "very high"
+      },
+      {
+        "type": "Lightning",
+        "rating": "very high"
+      },
+      {
+        "type": "Cold Wave",
+        "rating": "relatively high"
+      },
+      {
+        "type": "Inland Flooding",
+        "rating": "relatively high"
+      }
+    ],
+    "source": "FEMA NRI",
+    "asOf": "2026-09-19"
+  },
+  "TX|Harris": {
+    "compositeRating": "very high",
+    "compositeScore": 99.93638676844783,
+    "topHazards": [
+      {
+        "type": "Cold Wave",
+        "rating": "very high"
+      },
+      {
+        "type": "Heat Wave",
+        "rating": "very high"
+      },
+      {
+        "type": "Hurricane",
+        "rating": "very high"
+      },
+      {
+        "type": "Ice Storm",
+        "rating": "very high"
+      }
+    ],
+    "source": "FEMA NRI",
+    "asOf": "2026-09-19"
+  },
+  "TX|Travis": {
+    "compositeRating": "relatively high",
+    "compositeScore": 97.74173027989822,
+    "topHazards": [
+      {
+        "type": "Hail",
+        "rating": "very high"
+      },
+      {
+        "type": "Tornado",
+        "rating": "very high"
+      },
+      {
+        "type": "Heat Wave",
+        "rating": "relatively high"
+      },
+      {
+        "type": "Ice Storm",
+        "rating": "relatively high"
+      }
+    ],
+    "source": "FEMA NRI",
+    "asOf": "2026-09-19"
+  },
+  "TN|Davidson": {
+    "compositeRating": "relatively high",
+    "compositeScore": 97.16921119592875,
+    "topHazards": [
+      {
+        "type": "Cold Wave",
+        "rating": "relatively high"
+      },
+      {
+        "type": "Earthquake",
+        "rating": "relatively high"
+      },
+      {
+        "type": "Inland Flooding",
+        "rating": "relatively high"
+      },
+      {
+        "type": "Strong Wind",
+        "rating": "relatively high"
+      }
+    ],
+    "source": "FEMA NRI",
+    "asOf": "2026-09-19"
+  },
+  "NJ|Essex": {
+    "compositeRating": "relatively high",
+    "compositeScore": 97.70992366412213,
+    "topHazards": [
+      {
+        "type": "Strong Wind",
+        "rating": "very high"
+      },
+      {
+        "type": "Winter Weather",
+        "rating": "very high"
+      },
+      {
+        "type": "Cold Wave",
+        "rating": "relatively high"
+      },
+      {
+        "type": "Heat Wave",
+        "rating": "relatively high"
+      }
+    ],
+    "source": "FEMA NRI",
+    "asOf": "2026-09-19"
+  },
+  "GA|Fulton": {
+    "compositeRating": "relatively high",
+    "compositeScore": 95.80152671755725,
+    "topHazards": [
+      {
+        "type": "Lightning",
+        "rating": "very high"
+      },
+      {
+        "type": "Cold Wave",
+        "rating": "relatively high"
+      },
+      {
+        "type": "Hail",
+        "rating": "relatively high"
+      },
+      {
+        "type": "Ice Storm",
+        "rating": "relatively high"
+      }
+    ],
+    "source": "FEMA NRI",
+    "asOf": "2026-09-19"
+  }
+}
