@@ -2,6 +2,7 @@
 @import "../components/external-risk/external-risk.css";
 @import "../components/ask-queue/ask-bar.css";
 @import "../components/enrichment-resolution/resolution-chips.css";
+@import "../components/rfi-draft/rfi-draft.css";
 
 :root {
   color-scheme: light;
