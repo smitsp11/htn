@@ -20,7 +20,6 @@ export interface DecisionInput {
 
 export function validateDecision(input: DecisionInput): { ok: boolean; errors: string[] } {
   const errors: string[] = [];
-  if (!input.author || input.author.trim().length === 0) errors.push("Decided-by author is required.");
   const needsRationale = input.kind === "decline" || input.kind === "request_info";
   if (needsRationale && (input.rationale ?? "").trim().length < 10) {
     errors.push("A rationale of at least 10 characters is required.");

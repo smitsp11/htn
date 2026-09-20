@@ -48,7 +48,6 @@ export function DecisionSidebar({ submission, onDecided }: DecisionSidebarProps)
   const [premium, setPremium] = useState("");
   const [terms, setTerms] = useState("");
   const [rationale, setRationale] = useState("");
-  const [author, setAuthor] = useState("");
   const [errors, setErrors] = useState<string[]>([]);
   const [decided, setDecided] = useState<DemoDecision | null>(null);
   const [toast, setToast] = useState<string | null>(null);
@@ -64,7 +63,7 @@ export function DecisionSidebar({ submission, onDecided }: DecisionSidebarProps)
   function record() {
     const input = {
       kind: choice as DemoDecisionKind,
-      author,
+      author: "",
       rationale,
       premium: choice === "approve" ? Number(premium) : undefined,
     };
@@ -96,7 +95,7 @@ export function DecisionSidebar({ submission, onDecided }: DecisionSidebarProps)
     setErrors([]);
   }
 
-  const canRecord = choice != null && author.trim().length > 0;
+  const canRecord = choice != null;
 
   return (
     <aside className="decision-sidebar">
@@ -131,9 +130,7 @@ export function DecisionSidebar({ submission, onDecided }: DecisionSidebarProps)
             <div>
               <span className="decided-label">{statusLabel(decided.kind)}</span>
               {decided.rationale && <p>{decided.rationale}</p>}
-              <small>
-                {decided.author} · {new Date(decided.decidedAt).toLocaleString()}
-              </small>
+              <small>{new Date(decided.decidedAt).toLocaleString()}</small>
             </div>
             <button type="button" className="button" onClick={reopen}>
               Reopen
@@ -216,16 +213,6 @@ export function DecisionSidebar({ submission, onDecided }: DecisionSidebarProps)
             value={rationale}
             onChange={(event) => setRationale(event.target.value)}
             placeholder="Why this decision, on this evidence"
-          />
-        </label>
-        <label className="field">
-          <span>Decided by</span>
-          <input
-            type="text"
-            maxLength={120}
-            value={author}
-            onChange={(event) => setAuthor(event.target.value)}
-            placeholder="Your name"
           />
         </label>
 

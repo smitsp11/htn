@@ -20,8 +20,7 @@ test("empty result set shows the empty state naming the active scope", () => {
     createElement(QueueWorkspace, { submissions: [], onOpen: () => {}, matchedIds: null }),
   );
   assert.match(html, /empty-state/);
-  // The empty-state copy names which filters produced zero rows, so a stacked
-  // filter reads as recoverable rather than as a broken table.
+  // The empty-state copy names which scope produced zero rows. (The "Show all
+  // lanes" reset only appears when a specific lane is selected, not at "all".)
   assert.match(html, /No commercial property submissions in view/);
-  assert.match(html, /Reset filters/);
 });

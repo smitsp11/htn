@@ -8,10 +8,10 @@ test("approve with author and non-negative premium is valid", () => {
   assert.deepEqual(r.errors, []);
 });
 
-test("missing author fails", () => {
+test("author is no longer required (the 'Decided by' field was removed)", () => {
   const r = validateDecision({ kind: "approve", author: "", premium: 100 });
-  assert.equal(r.ok, false);
-  assert.match(r.errors.join(" "), /author/i);
+  assert.equal(r.ok, true);
+  assert.deepEqual(r.errors, []);
 });
 
 test("decline requires rationale of at least 10 chars", () => {
