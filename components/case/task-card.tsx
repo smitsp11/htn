@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { setRequestState } from "@/lib/demo/decision-store";
+import { useEffect, useState } from "react";
+import { getRequestState, setRequestState } from "@/lib/demo/decision-store";
 import type { RequestState } from "@/lib/demo/types";
 
 export type TaskSeverity = "blocking" | "material" | "minor";
@@ -22,6 +22,14 @@ export interface TaskCardProps {
  */
 export function TaskCard({ submissionId, requestKey, severity, label, question, needs }: TaskCardProps) {
   const [state, setState] = useState<RequestState>("open");
+
+  // Restore any previously-recorded status for this request on mount, so
+  // marking a card sent/received/waived survives a page reload. Read in an
+  // effect (not initial state) to avoid a server/client hydration mismatch.
+  useEffect(() => {
+    const persisted = getRequestState(submissionId, requestKey);
+    if (persisted) setState(persisted);
+  }, [submissionId, requestKey]);
 
   function mark(next: RequestState) {
     setRequestState(submissionId, requestKey, next);

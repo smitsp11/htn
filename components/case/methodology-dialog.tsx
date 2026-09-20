@@ -108,27 +108,33 @@ export function MethodologyDialog({ open, onClose }: MethodologyDialogProps) {
           decisions.
         </p>
 
-        <h3>Factor interpretations &amp; assumptions</h3>
-        <ul>
+        <h3>Factor interpretations</h3>
+        <p className="method-hint">Open a factor to see how its verdict is decided.</p>
+        <div className="method-accordion">
           {INTERPRETATIONS.map((item) => (
-            <li key={item.factor}>
-              <b>{item.factor}.</b> {item.detail}
-            </li>
+            <details className="method-item" key={item.factor}>
+              <summary>{item.factor}</summary>
+              <p>{item.detail}</p>
+            </details>
           ))}
-          {ASSUMPTIONS.map((assumption) => (
-            <li key={assumption}>{assumption}</li>
-          ))}
-        </ul>
-      </section>
-
-      <section>
-        <h3>Data &amp; sources</h3>
-        <p>Guideline source: documents/APPETITE_GUIDELINES.pdf (2025 commercial-property appetite table).</p>
-        <p>
-          Submission data comes from Federato's supplied API through the Auth0-authenticated flow. Enrichment
-          (FEMA National Risk Index hazard data) is decision support only -- it never changes a score or status,
-          it only adds location context.
-        </p>
+          <details className="method-item">
+            <summary>Assumptions &amp; edge cases</summary>
+            <ul>
+              {ASSUMPTIONS.map((assumption) => (
+                <li key={assumption}>{assumption}</li>
+              ))}
+            </ul>
+          </details>
+          <details className="method-item">
+            <summary>Data &amp; sources</summary>
+            <p>Guideline source: documents/APPETITE_GUIDELINES.pdf (2025 commercial-property appetite table).</p>
+            <p>
+              Submission data comes from Federato&rsquo;s supplied API through the Auth0-authenticated flow.
+              Enrichment (FEMA National Risk Index hazard data) is decision support only &mdash; it never changes a
+              score or status, it only adds location context.
+            </p>
+          </details>
+        </div>
       </section>
     </Dialog>
   );

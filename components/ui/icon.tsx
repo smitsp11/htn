@@ -1,18 +1,11 @@
 export type IconName =
-  | "grid"
   | "inbox"
-  | "check"
   | "shield"
   | "search"
   | "arrow"
   | "chevron"
-  | "download"
-  | "clock"
-  | "building"
   | "info"
   | "x"
-  | "filter"
-  | "menu"
   | "ask"
   | "globe"
   | "copy"
@@ -27,20 +20,13 @@ export type IconName =
  * placeholders.
  */
 const PATHS: Record<IconName, string> = {
-  grid: '<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/>',
   inbox: '<path d="m4 4-2 11v5h20v-5L20 4H4Z"/><path d="M2 15h6l2 3h4l2-3h6"/>',
-  check: '<path d="m5 12 4 4L19 6"/>',
   shield: '<path d="m12 3 8 3v6c0 5-8 9-8 9s-8-4-8-9V6l8-3Z"/><path d="m8 12 3 3 5-6"/>',
   search: '<circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/>',
   arrow: '<path d="M4 12h16m-6-6 6 6-6 6"/>',
   chevron: '<path d="m9 5 7 7-7 7"/>',
-  download: '<path d="M12 3v12m-5-5 5 5 5-5M4 16v5h16v-5"/>',
-  clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
-  building: '<path d="M4 21V7l8-4v18m0-13h8v13M2 21h20M7 9v2m0 3v2m9-4v2m0 3v2"/>',
   info: '<circle cx="12" cy="12" r="9"/><path d="M12 11v6m0-11v1"/>',
   x: '<path d="m6 6 12 12M6 18 18 6"/>',
-  filter: '<path d="M4 7h16M7 12h10m-7 5h4"/>',
-  menu: '<path d="M4 6h16M4 12h16M4 18h16"/>',
   ask: '<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2Z"/><path d="M12 13v.01M12 7v3"/>',
   globe: '<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a15 15 0 0 1 0 18 15 15 0 0 1 0-18Z"/>',
   copy: '<rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/>',

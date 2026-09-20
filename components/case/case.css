@@ -444,6 +444,33 @@
   border-radius: 10px;
   background: var(--surface-muted);
 }
+/* Collapsed by default: local risk research is context, opened on demand. */
+.research-panel > summary {
+  cursor: pointer;
+  list-style: none;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+.research-panel > summary::-webkit-details-marker {
+  display: none;
+}
+.research-panel > summary::after {
+  content: "+";
+  color: var(--ink-faint);
+  font-size: 18px;
+  line-height: 1;
+  align-self: center;
+}
+.research-panel[open] > summary::after {
+  content: "\2013";
+}
+.research-hint {
+  font-size: 11px;
+  color: var(--ink-faint);
+  white-space: nowrap;
+}
 
 .research-heading h3 {
   font-size: 20px;
@@ -1432,6 +1459,57 @@
   border: 0;
   padding: 0;
   margin: 0;
+}
+
+.dialog .method-hint {
+  font-size: 12px;
+  color: var(--ink-faint);
+  margin: 0 0 4px;
+}
+
+/* Methodology factor accordion: one collapsible row per factor so an underwriter
+   can jump to a single rule instead of reading the whole modal top to bottom. */
+.method-accordion {
+  margin: 12px 0 8px;
+  border-top: 1px solid var(--border);
+}
+.method-item {
+  border-bottom: 1px solid var(--border);
+}
+.method-item > summary {
+  cursor: pointer;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+}
+.method-item > summary::-webkit-details-marker {
+  display: none;
+}
+.method-item > summary::after {
+  content: "+";
+  color: var(--ink-faint);
+  font-size: 16px;
+  line-height: 1;
+}
+.method-item[open] > summary::after {
+  content: "\2013";
+}
+.method-item > summary:hover {
+  color: var(--mint-strong);
+}
+.method-item > p,
+.method-item > ul {
+  margin: 0;
+  padding: 0 0 14px;
+}
+.method-item > ul {
+  padding-left: 19px;
 }
 
 .weight-grid {

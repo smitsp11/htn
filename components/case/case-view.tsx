@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { AnimatePresence, motion } from "motion/react";
 import type { RankedSubmission } from "@/lib/domain/types";
 import { Tabs } from "@/components/ui/tabs";
 import { CaseBar } from "@/components/case/case-bar";
@@ -27,9 +28,9 @@ export interface CaseViewProps {
  * Full-screen case view shell: case bar, summary strip, tabbed main panel,
  * and pinned decision sidebar. Ported from federanorth's `caseTemplate`
  * (`src/decision/dashboard.js`) as a client-routed view rather than a
- * `<dialog>`/`<template>` pair. The tab bodies and sidebar are stubs today
- * (Task 4.1); later tasks flesh out their contents without touching this
- * shell.
+ * `<dialog>`/`<template>` pair. The tab bodies (review/property/account) and
+ * the decision sidebar are all implemented; this shell just composes them and
+ * owns the active-tab state.
  */
 export function CaseView({ submission, onBack }: CaseViewProps) {
   const [activeTab, setActiveTab] = useState<CaseTab>("review");
@@ -41,9 +42,19 @@ export function CaseView({ submission, onBack }: CaseViewProps) {
       <Tabs tabs={CASE_TABS} active={activeTab} onChange={(id) => setActiveTab(id as CaseTab)} />
       <div className="case-body">
         <main className="case-main">
-          {activeTab === "review" && <ReviewTab submission={submission} />}
-          {activeTab === "property" && <PropertyTab submission={submission} />}
-          {activeTab === "account" && <AccountTab submission={submission} />}
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={activeTab}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
+            >
+              {activeTab === "review" && <ReviewTab submission={submission} />}
+              {activeTab === "property" && <PropertyTab submission={submission} />}
+              {activeTab === "account" && <AccountTab submission={submission} />}
+            </motion.div>
+          </AnimatePresence>
         </main>
         <DecisionSidebar submission={submission} />
       </div>

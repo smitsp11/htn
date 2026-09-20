@@ -61,13 +61,14 @@ export function SearchBar({ onResult }: SearchBarProps) {
           onChange={(event) => setQ(event.target.value)}
           onKeyDown={(event) => event.key === "Enter" && void ask()}
         />
-        <kbd>/</kbd>
         <button type="button" className="button mint" onClick={() => void ask()} disabled={busy}>
           {busy ? "Asking…" : "Ask"}
         </button>
-        <button type="button" className="search-clear" onClick={clear}>
-          Clear
-        </button>
+        {q || answer ? (
+          <button type="button" className="search-clear" onClick={clear}>
+            Clear
+          </button>
+        ) : null}
       </div>
       {answer ? <p className="search-answer">{answer}</p> : null}
     </div>

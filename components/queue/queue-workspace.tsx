@@ -6,7 +6,7 @@ import { LANE_LABELS, laneForStatus, type Lane } from "@/lib/rankings/lanes";
 import { Icon } from "@/components/ui/icon";
 import { LaneTabs } from "@/components/queue/lane-tabs";
 import { Pagination } from "@/components/queue/pagination";
-import { QueueFilters, type SortKey, type SourceStatus } from "@/components/queue/queue-filters";
+import { QueueFilters, type SortKey } from "@/components/queue/queue-filters";
 import { QueueTable } from "@/components/queue/queue-table";
 import { ScopeSwitch, type Scope } from "@/components/queue/scope-switch";
 
@@ -93,14 +93,12 @@ function comparatorFor(sort: SortKey): ((a: RankedSubmission, b: RankedSubmissio
 export function QueueWorkspace({ submissions, onOpen, matchedIds }: QueueWorkspaceProps) {
   const [scope, setScope] = useState<Scope>("property");
   const [lane, setLane] = useState<LaneFilter>("all");
-  const [sourceStatus, setSourceStatus] = useState<SourceStatus>("active");
   const [sort, setSort] = useState<SortKey>("priority");
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(15);
 
   function clearFilters() {
     setLane("all");
-    setSourceStatus("active");
     setSort("priority");
     setPage(1);
   }
@@ -122,30 +120,18 @@ export function QueueWorkspace({ submissions, onOpen, matchedIds }: QueueWorkspa
     [matched, scope],
   );
 
-  // 3. Source status. The frozen `RankedSubmission` contract carries no
-  // bound/closed lifecycle flag: every submission the deterministic engine
-  // ranked is, by definition, an open submission awaiting an underwriting
-  // decision -- there is no separate "closed" record set in this data.
-  // "Active" therefore means the full scoped set; "history"/"all" are meant to
-  // widen that set to include bound/closed records, but since no such records
-  // exist on the contract there is nothing to add, so all three values
-  // currently resolve to the same set. The control stays wired (and visible in
-  // the UI) so a real lifecycle field can slot in later without reshaping this
-  // component.
-  const sourceFiltered = scoped;
+  // Lane counts reflect the scope+search-filtered set, i.e. before the lane
+  // filter itself narrows the rows -- otherwise every non-active tab would
+  // always show its own current count.
+  const counts = useMemo(() => laneCounts(scoped), [scoped]);
 
-  // Lane counts reflect the scope+search+source-filtered set, i.e. before the
-  // lane filter itself narrows the rows -- otherwise every non-active tab
-  // would always show its own current count.
-  const counts = useMemo(() => laneCounts(sourceFiltered), [sourceFiltered]);
-
-  // 4. Lane.
+  // 3. Lane.
   const laned = useMemo(
     () =>
       lane === "all"
-        ? sourceFiltered
-        : sourceFiltered.filter((submission) => laneForStatus(submission.status) === lane),
-    [sourceFiltered, lane],
+        ? scoped
+        : scoped.filter((submission) => laneForStatus(submission.status) === lane),
+    [scoped, lane],
   );
 
   // 5. Sort.
@@ -180,20 +166,10 @@ export function QueueWorkspace({ submissions, onOpen, matchedIds }: QueueWorkspa
       />
       <div className="queue-nav">
         <div className="lane-row">
-          <button
-            type="button"
-            className="lane-all"
-            aria-pressed={lane === "all"}
-            onClick={() => {
-              setLane("all");
-              setPage(1);
-            }}
-          >
-            All lanes in view
-          </button>
           <LaneTabs
             counts={counts}
-            active={lane === "all" ? LANES[0] : lane}
+            total={scoped.length}
+            active={lane}
             onChange={(next) => {
               setLane(next);
               setPage(1);
@@ -201,12 +177,7 @@ export function QueueWorkspace({ submissions, onOpen, matchedIds }: QueueWorkspa
           />
         </div>
         <QueueFilters
-          sourceStatus={sourceStatus}
           sort={sort}
-          onSourceStatus={(next) => {
-            setSourceStatus(next);
-            setPage(1);
-          }}
           onSort={(next) => {
             setSort(next);
             setPage(1);

@@ -1,14 +1,24 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, type ReactNode } from "react";
+import { AnimatePresence, MotionConfig, motion } from "motion/react";
 import type { RankingsResponse } from "@/lib/domain/types";
 import type { RankingsErrorBody, RankingsErrorCategory } from "@/lib/rankings/errors";
 import { SearchBar } from "@/components/queue/search-bar";
 import { QueueWorkspace } from "@/components/queue/queue-workspace";
+import { QueueSkeleton } from "@/components/queue/queue-skeleton";
 import { PipelineTrace } from "@/components/queue/pipeline-trace";
 import { CaseView } from "@/components/case/case-view";
 import { ChaseDialog } from "@/components/case/chase-dialog";
 import { MethodologyDialog } from "@/components/case/methodology-dialog";
+
+/** Shared fade-rise used for the queue <-> case view swap. */
+const swap = {
+  initial: { opacity: 0, y: 10 },
+  animate: { opacity: 1, y: 0 },
+  exit: { opacity: 0, y: -10 },
+  transition: { duration: 0.28, ease: [0.22, 1, 0.36, 1] as const },
+};
 
 function toErrorBody(body: unknown, fallback: string): RankingsErrorBody {
   if (typeof body === "object" && body !== null && "error" in body && typeof body.error === "string") {
@@ -55,14 +65,12 @@ const ERROR_HEADINGS: Record<RankingsErrorCategory, { title: string; hint: strin
 export function AppShell() {
   const [data, setData] = useState<RankingsResponse | null>(null);
   const [error, setError] = useState<RankingsErrorBody | null>(null);
-  const [loading, setLoading] = useState(true);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [matchedIds, setMatchedIds] = useState<string[] | null>(null);
   const [chaseOpen, setChaseOpen] = useState(false);
   const [methodOpen, setMethodOpen] = useState(false);
 
   const loadRankings = useCallback(async () => {
-    setLoading(true);
     setError(null);
     try {
       const response = await fetch("/api/rankings", { cache: "no-store" });
@@ -74,8 +82,6 @@ export function AppShell() {
       setData(body as RankingsResponse);
     } catch (caught) {
       setError({ error: caught instanceof Error ? caught.message : "Unable to load rankings", category: "unknown" });
-    } finally {
-      setLoading(false);
     }
   }, []);
 
@@ -83,71 +89,77 @@ export function AppShell() {
     void loadRankings();
   }, [loadRankings]);
 
-  if (loading && !data) {
-    return (
-      <section className="state-panel" role="status">
-        Evaluating the submission queue…
-      </section>
-    );
-  }
-
-  if (error && !data) {
-    const copy = ERROR_HEADINGS[error.category];
-    return (
-      <section className="state-panel error-panel" role="alert">
-        <strong>{copy.title}</strong>
-        <span>{error.error}</span>
-        <small>{copy.hint}</small>
-        <button type="button" onClick={() => void loadRankings()}>
-          Try again
-        </button>
-      </section>
-    );
-  }
-
+  // Loading / error / empty are rendered as a single crossfading group so state
+  // changes read as a transition, not a flash.
   if (!data) {
+    let stateKey = "loading";
+    let panel: ReactNode = <QueueSkeleton />;
+    if (error) {
+      stateKey = "error";
+      const copy = ERROR_HEADINGS[error.category];
+      panel = (
+        <section className="state-panel error-panel" role="alert">
+          <strong>{copy.title}</strong>
+          <span>{error.error}</span>
+          <small>{copy.hint}</small>
+          <button type="button" onClick={() => void loadRankings()}>
+            Try again
+          </button>
+        </section>
+      );
+    }
     return (
-      <section className="state-panel" role="status">
-        Evaluating the submission queue…
-      </section>
+      <MotionConfig reducedMotion="user">
+        <AnimatePresence mode="wait">
+          <motion.div key={stateKey} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
+            {panel}
+          </motion.div>
+        </AnimatePresence>
+      </MotionConfig>
     );
   }
 
   if (data.submissions.length === 0) {
     return (
-      <section className="state-panel empty-panel">
-        <strong>No submissions were returned.</strong>
-        <span>The queue is empty for the current query. Refresh to try again.</span>
-        <button type="button" onClick={() => void loadRankings()}>
-          Refresh queue
-        </button>
-      </section>
+      <MotionConfig reducedMotion="user">
+        <section className="state-panel empty-panel">
+          <strong>No submissions were returned.</strong>
+          <span>The queue is empty for the current query. Refresh to try again.</span>
+          <button type="button" onClick={() => void loadRankings()}>
+            Refresh queue
+          </button>
+        </section>
+      </MotionConfig>
     );
   }
 
   const selected = selectedId ? data.submissions.find((submission) => submission.id === selectedId) : undefined;
 
   return (
-    <>
+    <MotionConfig reducedMotion="user">
       <SearchBar onResult={setMatchedIds} />
-      {selected ? (
-        <CaseView submission={selected} onBack={() => setSelectedId(null)} />
-      ) : (
-        <>
-          <div className="queue-toolbar">
-            <button type="button" className="button ghost" onClick={() => setChaseOpen(true)}>
-              Chase list
-            </button>
-            <button type="button" className="button ghost" onClick={() => setMethodOpen(true)}>
-              Scoring methodology
-            </button>
-          </div>
-          <QueueWorkspace submissions={data.submissions} onOpen={setSelectedId} matchedIds={matchedIds} />
-          <PipelineTrace trace={data.trace} queryTrace={data.queryTrace} />
-        </>
-      )}
-      <ChaseDialog open={chaseOpen} onClose={() => setChaseOpen(false)} submissions={data?.submissions ?? []} />
+      <AnimatePresence mode="wait">
+        {selected ? (
+          <motion.div key="case" {...swap}>
+            <CaseView submission={selected} onBack={() => setSelectedId(null)} />
+          </motion.div>
+        ) : (
+          <motion.div key="queue" {...swap}>
+            <div className="queue-toolbar">
+              <button type="button" className="button ghost" onClick={() => setChaseOpen(true)}>
+                Chase list
+              </button>
+              <button type="button" className="button ghost" onClick={() => setMethodOpen(true)}>
+                Scoring methodology
+              </button>
+            </div>
+            <QueueWorkspace submissions={data.submissions} onOpen={setSelectedId} matchedIds={matchedIds} />
+            <PipelineTrace trace={data.trace} queryTrace={data.queryTrace} />
+          </motion.div>
+        )}
+      </AnimatePresence>
+      <ChaseDialog open={chaseOpen} onClose={() => setChaseOpen(false)} submissions={data.submissions} />
       <MethodologyDialog open={methodOpen} onClose={() => setMethodOpen(false)} />
-    </>
+    </MotionConfig>
   );
 }

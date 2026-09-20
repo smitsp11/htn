@@ -3,11 +3,8 @@
 import type { CSSProperties, KeyboardEvent } from "react";
 import type { RankedSubmission } from "@/lib/domain/types";
 import { primaryReason } from "@/lib/rankings/presentation";
-import { isOffStrategyBind, outcomeChipText } from "@/lib/rankings/outcome";
 import { laneForStatus } from "@/lib/rankings/lanes";
 import { LaneBadge } from "@/components/ui/lane-badge";
-import { Badge } from "@/components/ui/badge";
-import { Track } from "@/components/ui/track";
 import { Icon } from "@/components/ui/icon";
 
 export interface QueueTableProps {
@@ -29,10 +26,12 @@ function formatMoney(value?: number): string {
 }
 
 /**
- * Federanorth's `.queue-table`, ported to read from `RankedSubmission` directly
- * (no adapter row shape). Columns match `dashboard.js`'s `queueRow`: account/submission,
- * coverage, effective date, premium, property appetite (lane + score), next step,
- * open chevron.
+ * Decision-first queue: each row answers the three questions an underwriter asks
+ * while triaging — is it in appetite (the lane badge), what's the catch / next
+ * step (the reason line), and how big is it (premium). Account and primary risk
+ * state identify and place it; the score is a small tie-breaker. Depth (the full
+ * factor breakdown, historical outcome, enrichment) lives in the case view, not
+ * on the triage row.
  */
 export function QueueTable({ submissions, onOpen }: QueueTableProps) {
   function handleRowKeyDown(event: KeyboardEvent<HTMLTableRowElement>, id: string) {
@@ -48,12 +47,12 @@ export function QueueTable({ submissions, onOpen }: QueueTableProps) {
         <thead>
           <tr>
             <th scope="col">Account / submission</th>
-            <th scope="col">Coverage</th>
+            <th scope="col">State</th>
             <th scope="col">Effective</th>
             <th scope="col" className="number">
               Premium
             </th>
-            <th scope="col">Property appetite</th>
+            <th scope="col">Appetite</th>
             <th scope="col">Next step</th>
             <th scope="col">
               <span className="sr-only">Open record</span>
@@ -80,23 +79,16 @@ export function QueueTable({ submissions, onOpen }: QueueTableProps) {
                 </span>
               </td>
               <td>
-                <span className="line-label">{submission.lineOfBusiness ?? "Not stated"}</span>
+                <span className="line-label">{submission.primaryRiskState ?? "—"}</span>
               </td>
               <td>{formatDate(submission.effectiveDate)}</td>
               <td className="number">{formatMoney(submission.totalPremium)}</td>
               <td>
                 <span className="score-cell">
                   <LaneBadge status={submission.status} />
-                  <Track value={submission.score} tone={laneForStatus(submission.status)} />
-                  <b className="score-value">{submission.score}</b>
-                  {submission.actualOutcome ? (
-                    <span className="outcome-line">
-                      {isOffStrategyBind(submission) ? <Badge tone="orange">Off-strategy bind</Badge> : null}
-                      <span className="outcome-chip" title={outcomeChipText(submission.actualOutcome)}>
-                        {outcomeChipText(submission.actualOutcome)}
-                      </span>
-                    </span>
-                  ) : null}
+                  <b className="score-value" title="Appetite score (orders ties)">
+                    {submission.score}
+                  </b>
                 </span>
               </td>
               <td className="next-action">
