@@ -7,6 +7,7 @@ import { applyAction, loadStore, saveStore, validateCaseAction } from '../src/de
 import { loadEnvFile } from 'node:process';
 import { createResearchService } from '../src/decision/research.js';
 import { researchPanel } from '../src/decision/research-panel.js';
+import { investigateSubmission } from '../src/decision/investigate.js';
 import { openResearchView } from '../src/browserbase.js';
 import { demoLocationFor, demoScenarioFor } from '../src/decision/demo-locations.js';
 import { isHistoricalCase } from '../src/decision/review.js';
@@ -106,6 +107,66 @@ const server = createServer(async (request, response) => {
     }
   }
 
+  if (pathname === '/api/investigate') {
+    if (request.method !== 'POST') return send(response, 405, { error: 'Use POST.' });
+    try {
+      const parameters = await readBody(request);
+      const report = JSON.parse(await readFile(new URL('../artifacts/dashboard-report.json', import.meta.url), 'utf8'));
+      if (parameters.reportVersion !== report.generatedAt) return send(response, 409, { error: 'The submission data changed. Refresh the dashboard before investigating.' });
+      const sourceRow = report.rows.find(r => String(r.id) === String(parameters.submissionId));
+      const store = await loadStore(STATE_PATH);
+      const source = sourceRow ? reviewedRow(sourceRow, report.rules, store.records[String(sourceRow.id)], report.generatedAt) : null;
+      if (!source) return send(response, 404, { error: 'Submission not found in this report.' });
+      const row = !isHistoricalCase(source) && source.lineOfBusiness === 'property' && !source.sites?.some(site => site.address)
+        ? demoScenarioFor(source, report.rules)
+        : source;
+      const key = `investigate:${report.generatedAt}:${row.id}:${row.evidenceHistory?.at(-1)?.id ?? 'source'}`;
+      if (!researchJobs.has(key)) {
+        const job = researchQueue.then(async () => {
+          const investigate = await investigateSubmission(row, { queue: report.rows });
+          if (investigate.handle) {
+            releaseLiveResearch(String(row.id));
+            liveResearchSessions.set(String(row.id), investigate.handle);
+            setTimeout(() => releaseLiveResearch(String(row.id)), 10 * 60_000).unref();
+          } else if (investigate.liveViewRecommended) {
+            // Fallback if the investigate browser path returned a URL without a handle.
+            const site = row.sites?.find(s => s.address);
+            const target = site ?? (row.demoScenario || row.demoLocation ? demoLocationFor(row) : null);
+            if (target?.address) {
+              releaseLiveResearch(String(row.id));
+              const handle = await openResearchView(target);
+              liveResearchSessions.set(String(row.id), handle);
+              setTimeout(() => releaseLiveResearch(String(row.id)), 10 * 60_000).unref();
+              investigate.liveViewUrl = handle.liveViewUrl;
+            }
+          }
+          // Never leak the live CDP handle into the browser JSON payload.
+          const { handle: _handle, ...safeInvestigate } = investigate;
+          const panelResult = safeInvestigate.research
+            ? { ...safeInvestigate.research, investigate: safeInvestigate }
+            : {
+              generatedAt: safeInvestigate.generatedAt,
+              browserStatus: safeInvestigate.browserDecision === 'refused' ? 'not-needed' : 'unavailable',
+              aiStatus: 'not-needed',
+              briefs: [],
+              sites: [],
+              investigate: safeInvestigate,
+            };
+          return { investigate: safeInvestigate, result: panelResult, html: researchPanel(row, report.generatedAt, panelResult) };
+        });
+        researchQueue = job.then(() => {}, () => {});
+        researchJobs.set(key, job);
+        void job.finally(() => researchJobs.delete(key)).catch(() => {});
+      }
+      const payload = await researchJobs.get(key);
+      return send(response, 200, payload);
+    } catch (error) {
+      const message = String(error.message);
+      const safe = /^(Refresh|Evidence|This submission|Set BROWSERBASE|A linked property|connect|Navigation)/.test(message);
+      return send(response, safe ? 400 : 500, { error: safe ? message : 'Investigate could not complete. Check Federato/Browserbase configuration and retry.' });
+    }
+  }
+
   if (pathname === '/api/live-research') {
     if (request.method !== 'POST') return send(response, 405, { error: 'Use POST.' });
     try {
@@ -115,6 +176,12 @@ const server = createServer(async (request, response) => {
       assertEvidenceCase(report, input.submissionId, input.reportVersion);
       const sourceRow = report.rows.find(r => String(r.id) === String(input.submissionId));
       const row = reviewedRow(sourceRow, report.rules, store.records[String(sourceRow.id)], report.generatedAt);
+      if (row.verdict === 'not-property' || row.lineOfBusiness !== 'property') {
+        return send(response, 400, { error: 'Not a commercial-property file. Investigate / live Browserbase is skipped for other lines.' });
+      }
+      if (row.verdict === 'declined' || row.factors.some(f => f.status === 'fail')) {
+        return send(response, 400, { error: 'Hard appetite fail already. Investigate refuses a live browser on declined files.' });
+      }
       const site = row.sites?.find(s => s.address);
       const demo = input.mode === 'demo';
       if (!site && !demo) return send(response, 400, { error: 'This submission has no linked property address. Add a property schedule before opening live research, or use the clearly marked demo walkthrough.' });

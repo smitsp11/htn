@@ -34,6 +34,34 @@ export function resolveResearch(row) {
   return result;
 }
 
+function investigateTheater(investigate) {
+  if (!investigate?.steps?.length) return '';
+  const refused = investigate.browserDecision === 'refused';
+  const book = investigate.concentration;
+  const bookChip = book && book.level !== 'skip'
+    ? `<span class="investigate-chip book-${esc(book.level)}">Book: ${esc(book.level)}</span>`
+    : '';
+  const peerList = book?.peers?.length
+    ? `<ul class="investigate-peers">${book.peers.slice(0, 5).map(peer => `<li><b>${esc(peer.accountName ?? peer.submissionNumber ?? peer.id)}</b> · ${esc(peer.verdict)} · ${peer.tiv != null ? esc(new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(peer.tiv)) : 'TIV unknown'}</li>`).join('')}</ul>`
+    : '';
+  const searchHits = investigate.search?.results?.length
+    ? `<ul class="investigate-search">${investigate.search.results.slice(0, 3).map(hit => `<li><a href="${esc(hit.url)}" target="_blank" rel="noopener noreferrer">${esc(hit.title)}</a></li>`).join('')}</ul>`
+    : '';
+  return `<section class="investigate-theater" data-investigate-result aria-label="Investigate replay">
+    <div class="investigate-heading"><div><span class="eyebrow">WATCH IT THINK</span><h4>Investigate</h4></div>
+      <div class="investigate-chips"><span class="investigate-chip ${refused ? 'refused' : 'opened'}">${refused ? 'Browser refused' : 'Browserbase live'}</span>${bookChip}</div></div>
+    ${investigate.impact?.summary ? `<p class="investigate-impact">${esc(investigate.impact.summary)}</p>` : ''}
+    ${book && (book.level === 'caution' || book.level === 'heavy') ? `<div class="investigate-book"><strong>If we bind this</strong><p>${esc(book.summary)}</p>${peerList}</div>` : ''}
+    ${searchHits ? `<div class="investigate-book"><strong>Browserbase Search</strong>${searchHits}</div>` : ''}
+    <div class="investigate-grid">
+      <ol class="investigate-log">${investigate.steps.map(step => `<li class="investigate-step ${esc(step.tone ?? 'neutral')}">${esc(step.message)}</li>`).join('')}</ol>
+      <div class="investigate-browser">${investigate.liveViewUrl
+        ? `<iframe title="Browserbase live view" src="${esc(investigate.liveViewUrl)}"></iframe>`
+        : `<div class="investigate-browser-empty"><span>Browserbase</span><strong>${refused ? 'No live tab' : 'Live view opens when Investigate runs'}</strong><p>${esc(investigate.refuseReason ?? 'Federato first. Browser only if the file is still worth time.')}</p></div>`}</div>
+    </div>
+  </section>`;
+}
+
 export function researchPanel(row, reportVersion, result = resolveResearch(row)) {
   const locationCount = row.sites?.length ?? 0;
   const demoScenario = Boolean(row.demoScenario);
@@ -43,11 +71,14 @@ export function researchPanel(row, reportVersion, result = resolveResearch(row))
   const briefs = [...(result?.briefs ?? [])].sort((a,b) => (weight[row.factors.find(f => f.key === a.factorKey)?.status] ?? 3) - (weight[row.factors.find(f => f.key === b.factorKey)?.status] ?? 3));
   const liveMode = demoScenario ? 'demo' : locationCount ? 'linked' : 'none';
   const autoResearch = demoScenario || (row.verdict !== 'not-property' && uncertain.length > 0);
-  return `<section class="research-panel" data-research data-live-research data-live-mode="${liveMode}" data-demo-scenario="${demoScenario}" data-submission="${esc(row.id)}" data-report-version="${esc(reportVersion)}" data-needs-context="${row.verdict !== 'not-property' && uncertain.length > 0}" data-auto-research="${autoResearch}" data-has-research="${Boolean(result)}" data-has-locations="${locationCount > 0}" aria-label="Submission research">
-    <div class="research-heading"><div><span class="eyebrow">BROWSERBASE + WEATHER + AI</span><h3>${demoScenario ? 'Live risk research for the generated location' : 'Context for this submission'}</h3></div><div class="research-actions"><button class="button ghost" data-open-live-research ${locationCount ? '' : 'disabled'}>Open Browserbase</button><button class="button mint" data-run-research ${locationCount ? '' : 'disabled'}>${result ? 'Refresh research' : 'Run research'}</button></div></div>
+  const canInvestigate = row.verdict !== 'not-property' || demoScenario;
+  return `<section class="research-panel" data-research data-live-research data-investigate data-live-mode="${liveMode}" data-demo-scenario="${demoScenario}" data-submission="${esc(row.id)}" data-report-version="${esc(reportVersion)}" data-needs-context="${row.verdict !== 'not-property' && uncertain.length > 0}" data-auto-research="${autoResearch}" data-has-research="${Boolean(result)}" data-has-locations="${locationCount > 0}" aria-label="Submission research">
+    <div class="research-heading"><div><span class="eyebrow">BROWSERBASE + WEATHER + AI</span><h3>${demoScenario ? 'Live risk research for the generated location' : 'Context for this submission'}</h3></div><div class="research-actions"><button class="button ghost" data-open-live-research ${locationCount ? '' : 'disabled'}>Open Browserbase</button><button class="button ghost" data-investigate-run ${canInvestigate ? '' : 'disabled'}>Investigate</button><button class="button mint" data-run-research ${locationCount ? '' : 'disabled'}>${result ? 'Refresh research' : 'Run research'}</button></div></div>
     <p class="research-confidence">${demoScenario ? `<strong>Demo location:</strong> ${esc(row.demoLocation.address)}, ${esc(row.demoLocation.city)}, ${esc(row.demoLocation.state)} ${esc(row.demoLocation.zip)}. This location powers the visible walkthrough score and research.` : uncertain.length ? `<strong>${uncertain.length} factor${uncertain.length === 1 ? '' : 's'} need stronger evidence.</strong> ${esc(uncertain.map(f => f.label).join(', '))}.` : '<strong>No low-confidence factors identified.</strong> Research can still surface local conditions.'}</p>
     <p class="research-status" data-research-status role="status" aria-live="polite">${result ? `Retrieved ${esc(date(result.generatedAt))}${Date.now() - Date.parse(result.generatedAt) > 15 * 60_000 ? ' · Weather may be stale; refresh before relying on it' : ''}${failureCount ? ` · ${failureCount} lookup(s) unavailable or unmatched` : ''}.` : demoScenario ? 'Searching the generated location through Browserbase, FEMA, weather sources, and AI context.' : 'Opening an uncertain property case starts research. Results are saved with this submission.'}</p>
     <p class="research-status live-status" data-live-research-status role="status" aria-live="polite"></p>
+    <p class="research-status investigate-status" data-investigate-status role="status" aria-live="polite"></p>
+    ${investigateTheater(result?.investigate)}
     ${result?.browserStatus === 'unavailable' ? '<p class="research-notice">Browserbase could not connect. Weather and other available sources are still shown; flood evidence is unavailable.</p>' : ''}
     <div class="research-results">
     ${!locationCount ? researchDigest(row, { sites: [] }) : result ? researchDigest(row, result) : ''}

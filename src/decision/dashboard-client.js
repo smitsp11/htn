@@ -233,6 +233,54 @@
     }).catch(() => { status.textContent = 'Saved evidence could not load. Retry when connected.'; });
   }
 
+  function wireInvestigate(panel) {
+    if (!panel) return;
+    const button = panel.querySelector('[data-investigate-run]');
+    const status = panel.querySelector('[data-investigate-status]');
+    if (!button) return;
+    if (!served) {
+      button.disabled = true;
+      if (status) status.textContent = 'Open localhost:3000 to Investigate with Federato + Browserbase.';
+      return;
+    }
+    if (button.disabled) return;
+    button.addEventListener('click', async () => {
+      button.disabled = true;
+      if (status) status.textContent = 'Investigating: Federato reasoning first, then Browserbase only if the file is still worth time…';
+      panel.setAttribute('aria-busy', 'true');
+      try {
+        const response = await fetch('/api/investigate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ submissionId: panel.dataset.submission, reportVersion: panel.dataset.reportVersion }),
+        });
+        const payload = await response.json();
+        if (!response.ok) throw new Error(payload.error || 'Investigate is unavailable.');
+        if (payload.html && panel.isConnected) {
+          const template = document.createElement('template');
+          template.innerHTML = payload.html;
+          const replacement = template.content.firstElementChild;
+          panel.replaceWith(replacement);
+          wireLiveResearch(replacement);
+          wireInvestigate(replacement);
+          wireResearch(replacement, false);
+          const note = replacement.querySelector('[data-investigate-status]');
+          if (note) {
+            note.textContent = payload.investigate?.browserDecision === 'refused'
+              ? payload.investigate.refuseReason
+              : (payload.investigate?.impact?.summary || 'Investigate finished. Review the log and live view.');
+          }
+          return;
+        }
+      } catch (error) {
+        if (status) status.textContent = error.message || 'Investigate is unavailable. Retry when connected.';
+        button.disabled = false;
+      } finally {
+        panel.removeAttribute('aria-busy');
+      }
+    });
+  }
+
   function wireLiveResearch(root) {
     const panel = root.querySelector('[data-live-research]');
     if (!panel) return;
@@ -281,6 +329,7 @@
         wireCase(content);
         wireDemoApply(content);
         wireLiveResearch(content);
+        wireInvestigate(content.querySelector('[data-investigate]'));
         wireResearch(content.querySelector('[data-research]'));
       } catch (error) {
         if (status) status.textContent = error.message || 'Demo walkthrough is unavailable.';
@@ -342,6 +391,7 @@
           const replacement = template.content.firstElementChild;
           panel.replaceWith(replacement);
           wireLiveResearch(replacement);
+          wireInvestigate(replacement);
           wireResearch(replacement, false);
           return true;
         }
@@ -523,6 +573,7 @@
     wireCase(content);
     wireDemoApply(content);
     wireLiveResearch(content);
+    wireInvestigate(content.querySelector('[data-investigate]'));
     wireResearch(content.querySelector('[data-research]'));
     recordDialog.showModal(); recordDialog.scrollTop = 0;
   }));
