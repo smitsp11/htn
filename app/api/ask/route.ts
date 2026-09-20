@@ -3,6 +3,9 @@ import { askQueue } from "@/lib/agent/ask";
 import { buildRankings, defaultPipelineDeps } from "@/lib/rankings/pipeline";
 
 export const dynamic = "force-dynamic";
+// The ask layer builds rankings then makes a grounded OpenAI call; allow room
+// for a slow model response.
+export const maxDuration = 60;
 
 export async function POST(request: Request) {
   let question = "";
