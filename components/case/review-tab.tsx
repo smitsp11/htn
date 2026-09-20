@@ -3,6 +3,7 @@ import { completenessOf } from "@/lib/rankings/completeness";
 import { fixturesFor } from "@/lib/demo/fixtures";
 import { Icon } from "@/components/ui/icon";
 import { ResearchPanel } from "@/components/case/research-panel";
+import { ResolutionPanel } from "@/components/case/resolution-panel";
 import { EvidenceIntake } from "@/components/case/evidence-intake";
 import { EvidenceRequest } from "@/components/case/evidence-request";
 import { TaskCard, type TaskSeverity } from "@/components/case/task-card";
@@ -134,6 +135,8 @@ export function ReviewTab({ submission }: { submission: RankedSubmission }) {
         <h3>Assessment</h3>
         <p>{submission.explanation}</p>
       </section>
+
+      <ResolutionPanel resolution={submission.resolution} />
 
       {bundle.leads.length > 0 ? (
         <details className="leads">
