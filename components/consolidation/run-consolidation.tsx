@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import type { FactorKey } from "@/lib/domain/types";
 import type { ResolvedValue } from "@/lib/enrichment/provenance";
 import { formatFieldValue } from "@/lib/consolidation/steps";
@@ -60,7 +60,9 @@ export function RunConsolidation({
         if (cancelled) return;
         setVisibleCount(i);
         const justShown = result.steps[i - 1];
-        const pauseMs = justShown?.message.startsWith("Reading") ? 3000 : 550;
+        // Brief stagger so the trace still reads as a live sweep, but the recovered
+        // fields land within ~1s rather than making the underwriter wait.
+        const pauseMs = justShown?.message.startsWith("Reading") ? 320 : 110;
         await sleep(pauseMs);
       }
       if (!cancelled) setShowDetails(true);
@@ -70,7 +72,10 @@ export function RunConsolidation({
     };
   }, [result]);
 
-  async function run() {
+  // Stable key: `fields` is a fresh array each render, so depend on its contents,
+  // not its identity — otherwise the auto-run effect below would refetch forever.
+  const fieldsKey = fields.join(",");
+  const run = useCallback(async () => {
     setBusy(true);
     setError(null);
     setResult(null);
@@ -90,7 +95,15 @@ export function RunConsolidation({
     } finally {
       setBusy(false);
     }
-  }
+    // fields is read via fieldsKey; contents, not identity, drive re-runs.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [submissionId, fieldsKey]);
+
+  // Show up right away: recover the fields as soon as the panel appears (and again
+  // if the submission or its open fields change), rather than waiting for a click.
+  useEffect(() => {
+    void run();
+  }, [run]);
 
   const resolvedEntries = result
     ? (Object.entries(result.resolved) as [FactorKey, ResolvedValue<number | string>][])
