@@ -4,7 +4,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Federanorth — Underwriting workspace",
-  description: "A clearer view of commercial-property risk.",
+  description: "A clearer view of commercial underwriting risk.",
 };
 
 export default function RootLayout({ children }: Readonly<{ children: ReactNode }>) {

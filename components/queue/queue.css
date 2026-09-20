@@ -210,56 +210,6 @@
   background: transparent;
 }
 
-/* Queue filters: ported from federanorth's `.queue-filters`. */
-.queue-filters {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 18px;
-  padding: 16px 22px;
-  border-bottom: 1px solid var(--border);
-}
-.queue-filters label {
-  font-size: 11px;
-  color: var(--ink-soft);
-  display: flex;
-  gap: 7px;
-  align-items: center;
-}
-.record-status-label {
-  font-size: 12px;
-  color: var(--ink-soft);
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.record-status-label select {
-  max-width: 190px;
-  font-size: 12px;
-}
-.sort-label {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 10px;
-  color: var(--ink-soft);
-  margin-left: auto;
-  white-space: nowrap;
-}
-.sort-label select {
-  border: 0;
-  background: transparent;
-  color: var(--ink);
-  padding-right: 3px;
-}
-.clear-filters {
-  color: var(--mint-strong);
-  font-size: 10px;
-  padding: 5px;
-  white-space: nowrap;
-  border: 0;
-  background: transparent;
-}
 select {
   background: var(--surface);
   border: 1px solid var(--border-strong);

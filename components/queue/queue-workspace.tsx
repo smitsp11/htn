@@ -6,7 +6,6 @@ import { LANE_LABELS, laneForStatus, type Lane } from "@/lib/rankings/lanes";
 import { Icon } from "@/components/ui/icon";
 import { LaneTabs } from "@/components/queue/lane-tabs";
 import { Pagination } from "@/components/queue/pagination";
-import { QueueFilters, type SortKey } from "@/components/queue/queue-filters";
 import { QueueTable } from "@/components/queue/queue-table";
 import { ScopeSwitch, type Scope } from "@/components/queue/scope-switch";
 
@@ -65,23 +64,22 @@ function isPropertyScope(submission: RankedSubmission): boolean {
   return submission.status !== "out_of_scope";
 }
 
-/** Comparator for a given sort key, or `null` for "priority" (keep the engine's own rank order). */
-function comparatorFor(sort: SortKey): ((a: RankedSubmission, b: RankedSubmission) => number) | null {
-  switch (sort) {
-    case "appetite":
-      return (a, b) => b.score - a.score;
-    case "premium":
-      return (a, b) => {
-        if (a.totalPremium == null && b.totalPremium == null) return 0;
-        if (a.totalPremium == null) return 1; // undefined premium sorts last
-        if (b.totalPremium == null) return -1;
-        return b.totalPremium - a.totalPremium;
-      };
-    case "account":
-      return (a, b) => a.accountName.localeCompare(b.accountName);
-    default:
-      return null;
-  }
+/** A submission that fails appetite (declined or out of scope) drops to the bottom. */
+function isFailing(submission: RankedSubmission): boolean {
+  return submission.status === "out_of_appetite" || submission.status === "out_of_scope";
+}
+
+/**
+ * The queue's only ordering: submissions that meet appetite sit above those that
+ * fail it, and within each group the highest appetite score comes first. No sort
+ * control — an underwriter always wants the best opportunities on top and the
+ * declines out of the way.
+ */
+function byPriority(a: RankedSubmission, b: RankedSubmission): number {
+  const fa = isFailing(a) ? 1 : 0;
+  const fb = isFailing(b) ? 1 : 0;
+  if (fa !== fb) return fa - fb;
+  return b.score - a.score;
 }
 
 /**
@@ -93,13 +91,11 @@ function comparatorFor(sort: SortKey): ((a: RankedSubmission, b: RankedSubmissio
 export function QueueWorkspace({ submissions, onOpen, matchedIds }: QueueWorkspaceProps) {
   const [scope, setScope] = useState<Scope>("property");
   const [lane, setLane] = useState<LaneFilter>("all");
-  const [sort, setSort] = useState<SortKey>("priority");
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(15);
 
-  function clearFilters() {
+  function showAllLanes() {
     setLane("all");
-    setSort("priority");
     setPage(1);
   }
 
@@ -134,13 +130,10 @@ export function QueueWorkspace({ submissions, onOpen, matchedIds }: QueueWorkspa
     [scoped, lane],
   );
 
-  // 5. Sort.
-  const sorted = useMemo(() => {
-    const comparator = comparatorFor(sort);
-    return comparator ? laned.slice().sort(comparator) : laned;
-  }, [laned, sort]);
+  // 4. Order: meets-appetite first, then by appetite score, failures last.
+  const sorted = useMemo(() => laned.slice().sort(byPriority), [laned]);
 
-  // 6. Paginate, clamping the page in case a filter change shrank the set.
+  // 5. Paginate, clamping the page in case a filter change shrank the set.
   const pageCount = Math.max(1, Math.ceil(sorted.length / pageSize));
   const clampedPage = Math.min(Math.max(page, 1), pageCount);
   const start = (clampedPage - 1) * pageSize;
@@ -150,7 +143,7 @@ export function QueueWorkspace({ submissions, onOpen, matchedIds }: QueueWorkspa
     <section id="queue">
       <header className="queue-heading">
         <p className="eyebrow">Opportunity, in focus.</p>
-        <h2>Commercial property queue</h2>
+        <h2>Commercial underwriting queue</h2>
       </header>
       <ScopeSwitch
         value={scope}
@@ -176,14 +169,6 @@ export function QueueWorkspace({ submissions, onOpen, matchedIds }: QueueWorkspa
             }}
           />
         </div>
-        <QueueFilters
-          sort={sort}
-          onSort={(next) => {
-            setSort(next);
-            setPage(1);
-          }}
-          onClear={clearFilters}
-        />
       </div>
       {visible.length > 0 ? (
         <QueueTable submissions={visible} onOpen={onOpen} />
@@ -191,9 +176,11 @@ export function QueueWorkspace({ submissions, onOpen, matchedIds }: QueueWorkspa
         <div className="empty-state">
           <Icon name="inbox" />
           <p>{emptyStateMessage(scope, lane)}</p>
-          <button type="button" onClick={clearFilters}>
-            Reset filters
-          </button>
+          {lane !== "all" ? (
+            <button type="button" onClick={showAllLanes}>
+              Show all lanes
+            </button>
+          ) : null}
         </div>
       )}
       <Pagination

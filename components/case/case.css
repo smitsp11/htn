@@ -364,9 +364,9 @@
 
 .lead {
   border: 1px solid var(--border);
-  border-radius: 6px;
-  padding: 11px 13px;
-  background: var(--surface-muted);
+  border-radius: 8px;
+  padding: 14px 16px;
+  background: var(--surface);
 }
 
 .lead header {
@@ -374,17 +374,18 @@
   align-items: baseline;
   gap: 8px;
   flex-wrap: wrap;
-  margin-bottom: 5px;
+  margin-bottom: 8px;
 }
 
 .lead-kind {
   font-size: 9px;
   text-transform: uppercase;
   letter-spacing: 0.9px;
+  font-weight: 600;
   color: var(--orange-strong);
-  border: 1px solid var(--border-strong);
+  background: var(--orange-tint);
   border-radius: 99px;
-  padding: 2px 7px;
+  padding: 3px 8px;
 }
 
 .lead header strong {
@@ -395,8 +396,12 @@
 
 .lead-value {
   display: block;
-  font-size: 15px;
-  margin-bottom: 5px;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 22px;
+  font-weight: 400;
+  letter-spacing: -0.5px;
+  line-height: 1.1;
+  margin-bottom: 7px;
   color: var(--ink);
 }
 
@@ -1108,14 +1113,18 @@
 
 .context-card {
   border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 18px 20px 6px;
+  border-radius: 10px;
+  padding: 18px 20px 20px;
   margin-bottom: 16px;
-  background: var(--surface);
+  background: var(--surface-muted);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
 .context-card .section-title {
   margin-top: 0;
+  margin-bottom: 2px;
 }
 
 .context-card-caution {

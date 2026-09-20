@@ -1,6 +1,7 @@
-import type { FactorEvaluation, FactorKey, RankedSubmission } from "@/lib/domain/types";
+import type { AppetiteVerdict, FactorEvaluation, FactorKey, RankedSubmission } from "@/lib/domain/types";
 import { completenessOf } from "@/lib/rankings/completeness";
 import { fixturesFor } from "@/lib/demo/fixtures";
+import { Badge, type BadgeTone } from "@/components/ui/badge";
 import { Icon } from "@/components/ui/icon";
 import { ResearchPanel } from "@/components/case/research-panel";
 import { EvidenceIntake } from "@/components/case/evidence-intake";
@@ -63,6 +64,20 @@ const AMBIGUOUS_NEEDS: Partial<Record<FactorKey, string>> = {
   buildingYear: "Confirm the exact construction-completion date, or note any renovation after 1990.",
   construction: "Confirm the precise approved-construction percentage across the schedule.",
   fiveYearLossValue: "Confirm whether the reported five-year loss figure includes recoveries or salvage.",
+};
+
+const verdictTone: Record<AppetiteVerdict, BadgeTone> = {
+  target: "mint",
+  acceptable: "mint",
+  not_acceptable: "danger",
+  unknown: "amber",
+};
+
+const verdictLabel: Record<AppetiteVerdict, string> = {
+  target: "Target",
+  acceptable: "Acceptable",
+  not_acceptable: "Not acceptable",
+  unknown: "Unknown",
 };
 
 interface Gap {
@@ -134,6 +149,19 @@ export function ReviewTab({ submission }: { submission: RankedSubmission }) {
         <h3>Assessment</h3>
         <p>{submission.explanation}</p>
       </section>
+
+      <details className="detail-section" open>
+        <summary>Appetite breakdown · {submission.factors.length} factors</summary>
+        <div className="factor-list">
+          {submission.factors.map((factor) => (
+            <div className="appetite-check" key={factor.key}>
+              <span className="appetite-check-label">{factor.label}</span>
+              <Badge tone={verdictTone[factor.verdict]}>{verdictLabel[factor.verdict]}</Badge>
+              <p>{factor.reason}</p>
+            </div>
+          ))}
+        </div>
+      </details>
 
       {bundle.leads.length > 0 ? (
         <details className="leads">

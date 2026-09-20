@@ -14,6 +14,8 @@ test("case view renders identity, lane badge, score, and tabs", () => {
   assert.match(html, /Back to queue/);
   assert.match(html, new RegExp(submission.accountName));
   assert.match(html, /Review . next steps|Review/);
-  assert.match(html, /Property details/);
   assert.match(html, /Account context/);
+  // Property exposure now lives in the Review tab's appetite breakdown, not a
+  // separate (redundant) tab.
+  assert.doesNotMatch(html, /Property details/);
 });
