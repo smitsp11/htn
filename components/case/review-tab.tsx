@@ -2,6 +2,7 @@ import type { FactorEvaluation, FactorKey, RankedSubmission } from "@/lib/domain
 import { completenessOf } from "@/lib/rankings/completeness";
 import { fixturesFor } from "@/lib/demo/fixtures";
 import { Icon } from "@/components/ui/icon";
+import { FlipAnalysis } from "@/components/case/flip-analysis";
 import { ResearchPanel } from "@/components/case/research-panel";
 import { EvidenceIntake } from "@/components/case/evidence-intake";
 import { EvidenceRequest } from "@/components/case/evidence-request";
@@ -122,6 +123,8 @@ export function ReviewTab({ submission }: { submission: RankedSubmission }) {
 
   return (
     <div className="review-tab">
+      <FlipAnalysis submission={submission} />
+
       {bundle.leads.length > 0 ? (
         <details className="leads">
           <summary>

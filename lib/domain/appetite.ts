@@ -29,14 +29,14 @@ const TARGET_STATES = new Set(["OH", "PA", "MD", "CO", "CA", "FL"]);
 const ACCEPTABLE_STATES = new Set([...TARGET_STATES, "NC", "SC", "GA", "VA", "UT"]);
 const TIV_TARGET_MIN = 50_000_000;
 const TIV_TARGET_MAX = 100_000_000;
-const TIV_MAX = 150_000_000;
+export const TIV_MAX = 150_000_000;
 export const PREMIUM_MIN = 50_000;
 export const PREMIUM_TARGET_MIN = 75_000;
 export const PREMIUM_TARGET_MAX = 100_000;
 export const PREMIUM_MAX = 175_000;
-const YEAR_ACCEPTABLE_AFTER = 1990;
+export const YEAR_ACCEPTABLE_AFTER = 1990;
 const YEAR_TARGET_AFTER = 2010;
-const LOSS_MAX = 100_000;
+export const LOSS_MAX = 100_000;
 
 /**
  * Naive additive score. A target verdict earns 2 points, acceptable earns 1,
