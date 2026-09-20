@@ -1,0 +1,128 @@
+/* Live consolidation demo panel (Browserbase). Prefixed `consol-`. */
+
+.consol {
+  background: var(--paper, #f4f7f5);
+  border: 1px dashed var(--line, #dce5e0);
+  border-radius: 0.6rem;
+  display: grid;
+  gap: 0.75rem;
+  grid-column: 1 / -1;
+  padding: 0.9rem 1rem;
+}
+
+.consol-head {
+  align-items: flex-start;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1rem;
+  justify-content: space-between;
+}
+
+.consol-eyebrow {
+  color: var(--muted, #66736e);
+  display: block;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.consol-title {
+  font-size: 1rem;
+  margin: 0.15rem 0;
+}
+
+.consol-copy {
+  color: var(--muted, #66736e);
+  font-size: 0.82rem;
+  margin: 0;
+  max-width: 36rem;
+}
+
+.consol-btn {
+  background: var(--green, #126447);
+  border: none;
+  border-radius: 0.4rem;
+  color: #fff;
+  cursor: pointer;
+  font-size: 0.82rem;
+  font-weight: 700;
+  padding: 0.55rem 0.9rem;
+}
+
+.consol-btn:disabled {
+  cursor: wait;
+  opacity: 0.7;
+}
+
+.consol-error {
+  color: var(--red, #a63a32);
+  font-size: 0.82rem;
+  margin: 0;
+}
+
+.consol-mode {
+  font-size: 0.82rem;
+  margin: 0 0 0.5rem;
+}
+
+.consol-steps {
+  display: grid;
+  gap: 0.35rem;
+  list-style: none;
+  margin: 0 0 0.75rem;
+  padding: 0;
+}
+
+.consol-steps li {
+  border-left: 3px solid var(--green, #126447);
+  font-size: 0.8rem;
+  padding: 0.25rem 0.55rem;
+}
+
+.consol-steps li.fail {
+  border-left-color: var(--red, #a63a32);
+}
+
+.consol-impact {
+  color: var(--green, #126447);
+  font-size: 0.84rem;
+  font-weight: 600;
+  margin: 0 0 0.65rem;
+}
+
+.consol-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  list-style: none;
+  margin: 0 0 0.75rem;
+  padding: 0;
+}
+
+.consol-chips li {
+  background: var(--surface, #ffffff);
+  border: 1px solid var(--line, #dce5e0);
+  border-radius: 0.4rem;
+  display: grid;
+  gap: 0.1rem;
+  font-size: 0.78rem;
+  padding: 0.45rem 0.6rem;
+}
+
+.consol-chips small {
+  color: var(--muted, #66736e);
+}
+
+.consol-live {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.consol-live iframe {
+  background: #111;
+  border: 1px solid var(--line, #dce5e0);
+  border-radius: 0.4rem;
+  min-height: 280px;
+  width: 100%;
+}

@@ -1,0 +1,38 @@
+{
+  "SUB-2025-00138": {
+    "totalPremium": {
+      "value": 92000,
+      "provenance": {
+        "source": "broker email",
+        "confidence": 0.9,
+        "asOf": "2026-09-20"
+      }
+    },
+    "fiveYearLossValue": {
+      "value": 0,
+      "provenance": {
+        "source": "broker sov",
+        "confidence": 0.85,
+        "asOf": "2026-09-20"
+      }
+    }
+  },
+  "SUB-2025-00132": {
+    "totalPremium": {
+      "value": 64500,
+      "provenance": {
+        "source": "broker portal",
+        "confidence": 0.8,
+        "asOf": "2026-09-20"
+      }
+    },
+    "fiveYearLossValue": {
+      "value": 12500,
+      "provenance": {
+        "source": "broker email",
+        "confidence": 0.75,
+        "asOf": "2026-09-20"
+      }
+    }
+  }
+}

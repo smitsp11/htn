@@ -43,3 +43,21 @@ test("a low-confidence source does not clear the threshold", () => {
   const map = resolveSubmissionFields(evaluateAppetite({ ...fullTarget, id: "fx-lowconf", totalPremium: undefined }), chains);
   assert.equal(map.totalPremium, null);
 });
+
+test("consolidation cache beats the waterfall for the same absent field", () => {
+  const ranked = evaluateAppetite({ ...fullTarget, id: "fx-consolidated", totalPremium: undefined });
+  const chains: ChainRegistry = {
+    totalPremium: () => [{ name: "inference", asOf: "2026-09-19", lookup: () => ({ value: 1, confidence: 0.99 }) }],
+  };
+  const consolidation = {
+    "fx-consolidated": {
+      totalPremium: {
+        value: 92_000,
+        provenance: { source: "broker email", confidence: 0.9, asOf: "2026-09-20" },
+      },
+    },
+  };
+  const map = resolveSubmissionFields(ranked, chains, 0.6, consolidation);
+  assert.equal(map.totalPremium?.value, 92_000);
+  assert.equal(map.totalPremium?.provenance.source, "broker email");
+});

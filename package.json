@@ -7,12 +7,16 @@
     "build": "next build",
     "start": "next start",
     "typecheck": "tsc --noEmit",
-    "test": "tsx --test tests/*.test.ts"
+    "test": "tsx --test tests/*.test.ts",
+    "consolidate": "tsx scripts/consolidate.ts",
+    "fetch:context": "tsx scripts/fetch-context.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.127.0",
+    "@browserbasehq/sdk": "^2.20.0",
     "next": "16.3.5",
     "openai": "^7.20.0",
+    "playwright-core": "^1.63.0",
     "react": "19.3.0",
     "react-dom": "19.3.0"
   },
