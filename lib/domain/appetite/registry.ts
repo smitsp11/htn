@@ -11,6 +11,7 @@ const PROPERTY_TABLE: AppetiteTable = {
   line: "property",
   displayName: "Commercial Property",
   provenance: "provided-pdf",
+  maxScorePoints: 12,
   evaluate: evaluatePropertyFactors,
 };
 

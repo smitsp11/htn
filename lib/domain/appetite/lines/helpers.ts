@@ -24,6 +24,8 @@ export interface AppetiteTable {
   line: LineOfBusiness;
   displayName: string;
   provenance: AppetiteProvenance;
+  /** Maximum points available from this line's applicable factors. */
+  maxScorePoints: number;
   evaluate(submission: CanonicalSubmission): FactorEvaluation[];
 }
 
@@ -145,6 +147,7 @@ export function buildTable(cfg: LineConfig): AppetiteTable {
     line: cfg.line,
     displayName: cfg.displayName,
     provenance: "synthesized-for-demo",
+    maxScorePoints: 1 + 2 + 2 + (cfg.exposureMax === undefined ? 0 : 1) + 1,
     evaluate(s: CanonicalSubmission): FactorEvaluation[] {
       const factors: FactorEvaluation[] = [
         submissionTypeFactor(s.submissionType, cfg.renewalAcceptable),

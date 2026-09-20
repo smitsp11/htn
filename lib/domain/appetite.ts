@@ -50,9 +50,12 @@ export function evaluateFactors(
   return (table ?? APPETITE_TABLES.property).evaluate(submission);
 }
 
-export function computeScore(factors: FactorEvaluation[]): number {
+export function computeScore(
+  factors: FactorEvaluation[],
+  maxScorePoints = MAX_SCORE_POINTS,
+): number {
   const points = factors.reduce((sum, item) => sum + SCORE_POINTS[item.verdict], 0);
-  return Math.round((points / MAX_SCORE_POINTS) * 100);
+  return Math.round((points / maxScorePoints) * 100);
 }
 
 /**
@@ -88,9 +91,11 @@ export function evaluateAppetite(
     };
   }
 
-  const factors = evaluateFactors(submission, extended);
+  const table = extended ? tableFor(submission.lineOfBusiness) : APPETITE_TABLES.property;
+  const selectedTable = table ?? APPETITE_TABLES.property;
+  const factors = selectedTable.evaluate(submission);
   const status = deriveStatus(factors);
-  const score = computeScore(factors);
+  const score = computeScore(factors, selectedTable.maxScorePoints);
   const recommendation = recommendationFor(status);
   return {
     ...submission,
