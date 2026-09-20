@@ -7,7 +7,7 @@
  * re-resolved against the live schema before it is used. Without an API key the
  * pipeline runs on the schema-matched plan alone.
  *
- * OpenAI and Anthropic are both supported; whichever key is present is used.
+ * OpenAI and Anthropic are both supported; `FEDERATO_PLANNER_PROVIDER` picks one.
  */
 
 import type { SchemaIndex } from "./schema-index";
@@ -34,12 +34,16 @@ Rules:
 - Reply with JSON only, no prose and no code fences:
   {"selections":[{"key":"<requirement key>","path":"<dot path or null>","reason":"<one sentence>"}]}`;
 
+/**
+ * Opt-in only: the model pass runs when `FEDERATO_PLANNER_PROVIDER` names a
+ * provider whose key is present. A key alone never enables it, so live field
+ * mapping stays deterministic unless the engineer asks for the model.
+ */
 function plannerProvider(): Provider | undefined {
   if (process.env.FEDERATO_DISABLE_LLM_PLANNER === "true") return undefined;
   const configured = process.env.FEDERATO_PLANNER_PROVIDER as Provider | undefined;
-  if (configured === "openai" || configured === "anthropic") return configured;
-  if (process.env.OPENAI_API_KEY) return "openai";
-  if (process.env.ANTHROPIC_API_KEY) return "anthropic";
+  if (configured === "openai" && process.env.OPENAI_API_KEY) return "openai";
+  if (configured === "anthropic" && process.env.ANTHROPIC_API_KEY) return "anthropic";
   return undefined;
 }
 
@@ -111,7 +115,7 @@ export async function selectFieldsWithModel(
     trace.add(
       "plan",
       "Planned without a model",
-      "No planner API key is set, so field mapping used schema name-matching only. Every chosen path still comes from the discovered schema.",
+      "FEDERATO_PLANNER_PROVIDER is not set, so field mapping used schema name-matching only. Every chosen path comes from the discovered schema.",
     );
     return undefined;
   }

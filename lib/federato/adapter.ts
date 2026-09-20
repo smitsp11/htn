@@ -9,31 +9,26 @@
  * Person 3 decides what it means.
  */
 
-import type { CanonicalSubmission } from "@/lib/domain/types";
+import type { CanonicalSubmission, QueryReasoning } from "@/lib/domain/types";
 import { assembleSubmissions, type AssembledSubmission } from "./assemble";
 import { selectFieldsWithModel } from "./llm-planner";
-import {
-  buildQueueQuery,
-  buildRootQuery,
-  buildTivCheckQuery,
-  queueChoicesFor,
-  type QueryPayload,
-} from "./query-compiler";
+import { buildQueueQuery, buildRootQuery, buildTivCheckQuery } from "./query-compiler";
 import { runPaged, runQuery, type QueryExecutor } from "./query-executor";
-import { createTrace, type QueryTrace, type TraceStep } from "./query-trace";
-import { asNumber, asString, extractRows, type UnknownRecord } from "./response";
-import { buildSchemaIndex, type SchemaIndex } from "./schema-index";
+import { buildQueryReasoning, createTrace, type QueryTrace, type TraceStep } from "./query-trace";
+import { asNumber, asString, type UnknownRecord } from "./response";
+import { buildSchemaIndex } from "./schema-index";
 import {
   applyLlmSelections,
   planFromSchema,
+  planQueueResource,
   type DataPlan,
-  type FieldChoice,
+  type QueuePlan,
 } from "./schema-planner";
 
 export interface QueryAgentDependencies {
   discoverSchema: () => Promise<unknown>;
   execute: QueryExecutor;
-  /** Set false to skip the model pass even when an API key is present. */
+  /** Set false to skip the model pass even when a planner provider is configured. */
   useModel?: boolean;
 }
 
@@ -41,8 +36,11 @@ export interface QueryAgentResult {
   submissions: CanonicalSubmission[];
   assembled: AssembledSubmission[];
   plan: DataPlan;
+  queuePlan?: QueuePlan;
   trace: TraceStep[];
   traceSummary: string[];
+  /** Serializable, credential-free view of the plan and steps for the UI. */
+  reasoning: QueryReasoning;
   /** Records the API reported for the root resource, before assembly. */
   totals: { root?: number; queue?: number; assembled: number };
 }
@@ -72,18 +70,16 @@ export async function runQueryAgent({
 
   const root = await runPaged(execute, (offset) => buildRootQuery(plan, offset), trace);
 
-  const queueChoices = plan.queueResource ? queueChoicesFor(index, plan.queueResource) : [];
-  if (plan.queueResource) addQueueStateFallback(index, plan.queueResource, queueChoices, trace);
-
-  const queue = plan.queueResource
-    ? await runPaged(execute, (offset) => buildQueueQuery(plan, queueChoices, offset)!, trace)
+  const queuePlan = planQueueResource(index, plan, trace);
+  const queue = queuePlan
+    ? await runPaged(execute, (offset) => buildQueueQuery(queuePlan, offset), trace)
     : undefined;
 
   const assembled = assembleSubmissions({
     plan,
     rootRows: root.rows,
+    queuePlan,
     queueRows: queue?.rows,
-    queueChoices,
   });
 
   if (queue) {
@@ -91,20 +87,24 @@ export async function runQueryAgent({
     trace.add(
       "derive",
       "Kept submissions that have no policy yet",
-      `${unbound} submission(s) in the queue have no bound policy, so premium, building detail and loss history are unavailable. They stay in the queue with those factors unknown.`,
+      `${Math.max(unbound, 0)} submission(s) in the queue have no bound policy, so premium and loss history are unavailable. They stay in the queue with those factors unknown${
+        queuePlan?.fallback ? ` and their location read from ${queuePlan.resource}.${queuePlan.fallback.locationPath} at low confidence` : ""
+      }.`,
       { unbound: Math.max(unbound, 0) },
     );
   }
 
-  await crossCheckTiv(execute, plan, index, assembled, trace);
+  await crossCheckTiv(execute, plan, assembled, trace);
   reportUnresolved(plan, trace);
 
   return {
     submissions: assembled.map((entry) => entry.submission),
     assembled,
     plan,
+    queuePlan,
     trace: trace.steps,
     traceSummary: trace.summarize(),
+    reasoning: buildQueryReasoning(plan, queuePlan, trace.steps),
     totals: { root: root.total, queue: queue?.total, assembled: assembled.length },
   };
 }
@@ -114,6 +114,7 @@ function describePlan(plan: DataPlan, trace: QueryTrace): void {
     const needs: string[] = [];
     if (choice.expandChain.length) needs.push(`expand ${choice.expandChain.join(" → ")}`);
     if (choice.manyAt.length) needs.push(`fans out at ${choice.manyAt.join(", ")}`);
+    if (choice.supporting.length) needs.push(`also projects ${choice.supporting.map((path) => path.slice(path.lastIndexOf(".") + 1)).join(", ")}`);
     trace.add(
       "plan",
       `${choice.label} ← ${plan.rootResource}.${choice.path}`,
@@ -121,44 +122,6 @@ function describePlan(plan: DataPlan, trace: QueryTrace): void {
       { chosenBy: choice.chosenBy },
     );
   }
-}
-
-/**
- * An unbound submission has no risk schedule, so the strict risk-state rule
- * finds nothing. The insured's headquarters state is the only locatable state
- * on the record; it is used as an explicitly low-confidence stand-in rather
- * than leaving the whole queue stateless.
- */
-function addQueueStateFallback(
-  index: SchemaIndex,
-  queueResource: string,
-  choices: FieldChoice[],
-  trace: QueryTrace,
-): void {
-  if (choices.some((choice) => choice.key === "riskState")) return;
-  const candidate = index
-    .leaves(queueResource)
-    .filter((leaf) => leaf.leaf === "state" && leaf.terminalType === "string")
-    .sort((left, right) => left.path.length - right.path.length)[0];
-  if (!candidate) return;
-
-  choices.push({
-    key: "riskState",
-    label: "Risk state",
-    appetiteReason: "Target states are OH, PA, MD, CO, CA and FL; six more are acceptable.",
-    path: candidate.path,
-    terminalType: candidate.terminalType,
-    expandChain: candidate.expandChain,
-    manyAt: candidate.manyAt,
-    reason: `No risk schedule exists on ${queueResource}, so ${candidate.path} stands in.`,
-    chosenBy: "heuristic",
-    alternatives: [],
-  });
-  trace.add(
-    "plan",
-    "Fell back to a proxy risk state for unbound submissions",
-    `${queueResource}.${candidate.path} is the only state on a submission with no risk schedule. It is used as a low-confidence stand-in and flagged on every submission that relies on it.`,
-  );
 }
 
 function reportUnresolved(plan: DataPlan, trace: QueryTrace): void {
@@ -174,16 +137,16 @@ function reportUnresolved(plan: DataPlan, trace: QueryTrace): void {
 /**
  * Asks the API to aggregate TIV server-side and compares it with the value we
  * derived client-side. A mismatch means our array traversal is wrong — the
- * documented failure mode of dot-paths through arrays.
+ * documented failure mode of dot-paths through arrays. The server sums every
+ * traversal, so the comparison uses the client's pre-deduplication total.
  */
 async function crossCheckTiv(
   execute: QueryExecutor,
   plan: DataPlan,
-  index: SchemaIndex,
   assembled: AssembledSubmission[],
   trace: QueryTrace,
 ): Promise<void> {
-  const compiled = buildTivCheckQuery(plan, index);
+  const compiled = buildTivCheckQuery(plan);
   if (!compiled) return;
 
   try {
@@ -203,9 +166,9 @@ async function crossCheckTiv(
     let worst = 0;
     for (const entry of assembled) {
       const serverTotal = entry.sourceRecordId ? serverTotals.get(entry.sourceRecordId) : undefined;
-      if (!serverTotal || entry.submission.tiv === undefined) continue;
+      if (!serverTotal || entry.undedupedTiv === undefined) continue;
       compared += 1;
-      const drift = Math.abs(entry.submission.tiv - serverTotal) / serverTotal;
+      const drift = Math.abs(entry.undedupedTiv - serverTotal) / serverTotal;
       worst = Math.max(worst, drift);
       if (drift > 0.01) disagreed += 1;
     }
@@ -222,31 +185,4 @@ async function crossCheckTiv(
   } catch {
     // The cross-check is diagnostic; runQuery has already recorded the failure.
   }
-}
-
-/* ------------------------------------------------------------------------ */
-/* Compatibility shims for the current rankings route.                        */
-/* `runQueryAgent` is the real entry point; these keep the existing two-call  */
-/* route working until Person 4 switches it over.                             */
-/* ------------------------------------------------------------------------ */
-
-let lastPlan: { index: SchemaIndex; plan: DataPlan; queueChoices: FieldChoice[] } | undefined;
-
-/** Builds the production query from the discovered schema, with no env-var seam. */
-export function buildQueryPayload(schema: unknown): QueryPayload {
-  const index = buildSchemaIndex(schema);
-  const trace = createTrace();
-  const plan = planFromSchema(index, trace);
-  lastPlan = { index, plan, queueChoices: [] };
-  return buildRootQuery(plan, 0, 500).payload;
-}
-
-/** Normalizes a response produced by the payload `buildQueryPayload` returned. */
-export function normalizeQueryResponse(raw: unknown): CanonicalSubmission[] {
-  if (!lastPlan) {
-    throw new Error("Call buildQueryPayload(schema) before normalizeQueryResponse, or use runQueryAgent.");
-  }
-  return assembleSubmissions({ plan: lastPlan.plan, rootRows: extractRows(raw) }).map(
-    (entry) => entry.submission,
-  );
 }

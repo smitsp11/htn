@@ -118,3 +118,42 @@
     grid-template-columns: 1fr;
   }
 }
+
+.qt-steps {
+  display: grid;
+  gap: 0.5rem;
+  margin: 0.5rem 0 0;
+  padding-left: 1.2rem;
+}
+
+.qt-step {
+  display: grid;
+  gap: 0.15rem;
+}
+
+.qt-stage {
+  color: var(--muted, #66736e);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.qt-step-warning .qt-stage {
+  color: var(--amber, #9a5c08);
+}
+
+.qt-step-repair .qt-stage {
+  color: var(--amber, #9a5c08);
+}
+
+.qt-step-title {
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.qt-step-detail {
+  color: var(--muted, #66736e);
+  font-size: 0.8rem;
+  margin: 0;
+}

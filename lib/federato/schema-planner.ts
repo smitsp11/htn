@@ -1,14 +1,20 @@
 /**
  * Turns a discovered schema into a data plan: which resource holds the queue,
- * which path answers each appetite requirement, and what fetching it costs
- * (expansion, array traversal).
+ * which path answers each appetite requirement, what fetching it costs
+ * (expansion, array traversal), and where to look when the risk schedule is
+ * empty.
  *
  * The plan is produced from the schema every run. Nothing here hardcodes
  * Federato field names; `requirements.ts` supplies name fragments to search
  * for, and every chosen path is validated back against the live schema.
  */
 
-import { REQUIREMENTS, type RequirementKey, type RequirementSpec } from "./requirements";
+import {
+  REQUIREMENTS,
+  REQUIREMENTS_BY_KEY,
+  type RequirementKey,
+  type RequirementSpec,
+} from "./requirements";
 import { objectFields, referenceTarget, type LeafPath, type SchemaIndex } from "./schema-index";
 import type { QueryTrace } from "./query-trace";
 
@@ -28,9 +34,28 @@ export interface FieldChoice {
   terminalType?: string;
   expandChain: string[];
   manyAt: string[];
+  /** Sibling paths the derivation reads; already confirmed to exist. */
+  supporting: string[];
   reason: string;
   chosenBy: "heuristic" | "llm";
   alternatives: string[];
+}
+
+/**
+ * Where to look for a location when the risk schedule is empty: a single
+ * (non-array) reference from the root to the same resource that holds the
+ * risk state — in practice the insured's headquarters.
+ */
+export interface FallbackLocation {
+  /** Path to the location record itself, e.g. `insured.hq`. */
+  locationPath: string;
+  statePath: string;
+  /** Path to the buildings under it, when the schema has any. */
+  buildingsPath?: string;
+  /** Every leaf the query must project so the fallback can be derived. */
+  projectPaths: string[];
+  expandChain: string[];
+  reason: string;
 }
 
 export interface DataPlan {
@@ -41,7 +66,15 @@ export interface DataPlan {
   queueLinkPath?: string;
   choices: FieldChoice[];
   unresolved: Array<{ key: RequirementKey; label: string; reason: string }>;
+  fallback?: FallbackLocation;
   plannedBy: "heuristic" | "llm";
+}
+
+/** The plan for the queue resource itself, used for submissions with no policy. */
+export interface QueuePlan {
+  resource: string;
+  choices: FieldChoice[];
+  fallback?: FallbackLocation;
 }
 
 const MIN_SCORE = 30;
@@ -94,7 +127,7 @@ function scoreCandidate(spec: RequirementSpec, leaf: LeafPath): number {
     if (path.includes(token.toLowerCase())) score -= 70;
   }
 
-  score -= 6 * (leaf.path.split(".").length - 1);
+  score -= 4 * (leaf.path.split(".").length - 1);
   return score;
 }
 
@@ -118,13 +151,21 @@ export function candidatesFor(
     .slice(0, limit);
 }
 
-/** Picks the resource that can answer the most appetite requirements. */
+/**
+ * Picks the resource that answers the most appetite requirements with the
+ * fewest reference hops. Depth matters more here than when choosing a field:
+ * a claim can reach every policy fact through `claim.policy`, but the policy
+ * is the record the queue is made of, not the claim.
+ */
 export function chooseRootResource(index: SchemaIndex): string {
-  let best = { resource: index.resources[0] ?? "", coverage: -1 };
+  const ROOT_DEPTH_PENALTY = 15;
+  let best = { resource: index.resources[0] ?? "", coverage: -Infinity };
   for (const resource of index.resources) {
     const coverage = REQUIREMENTS.filter((spec) => spec.required).reduce((total, spec) => {
       const [top] = candidatesFor(index, resource, spec, 1);
-      return total + (top ? Math.min(top.score, 120) : 0);
+      if (!top) return total;
+      const depth = top.path.split(".").length - 1;
+      return total + Math.min(top.score, 120) - ROOT_DEPTH_PENALTY * depth;
     }, 0);
     if (coverage > best.coverage) best = { resource, coverage };
   }
@@ -156,6 +197,29 @@ export function findQueueLink(
   return undefined;
 }
 
+function parentOf(path: string): string {
+  const cut = path.lastIndexOf(".");
+  return cut === -1 ? "" : path.slice(0, cut);
+}
+
+function leafOf(path: string): string {
+  return path.slice(path.lastIndexOf(".") + 1);
+}
+
+/** Sibling paths named by the spec that actually exist next to the chosen path. */
+export function supportingPaths(
+  index: SchemaIndex,
+  resource: string,
+  path: string,
+  spec: RequirementSpec | undefined,
+): string[] {
+  if (!spec?.supporting) return [];
+  const parent = parentOf(path);
+  return spec.supporting
+    .map((name) => (parent ? `${parent}.${name}` : name))
+    .filter((candidate) => candidate !== path && index.resolve(resource, candidate));
+}
+
 /** Matches a set of requirements against one resource and its references. */
 export function choicesForResource(
   index: SchemaIndex,
@@ -168,11 +232,13 @@ export function choicesForResource(
   for (const spec of specs) {
     const [top, ...rest] = candidatesFor(index, resource, spec);
     if (!top) {
-      unresolved.push({
-        key: spec.key,
-        label: spec.label,
-        reason: `No field in ${resource} or its references matched ${spec.synonyms.join(", ")}.`,
-      });
+      if (spec.required) {
+        unresolved.push({
+          key: spec.key,
+          label: spec.label,
+          reason: `No field in ${resource} or its references matched ${spec.synonyms.join(", ")}.`,
+        });
+      }
       continue;
     }
     choices.push({
@@ -183,6 +249,7 @@ export function choicesForResource(
       terminalType: top.terminalType,
       expandChain: top.expandChain,
       manyAt: top.manyAt,
+      supporting: supportingPaths(index, resource, top.path, spec),
       reason: `Matched ${resource}.${top.path} (${top.terminalType}).`,
       chosenBy: "heuristic",
       alternatives: rest.map((candidate) => candidate.path),
@@ -190,6 +257,92 @@ export function choicesForResource(
   }
 
   return { choices, unresolved };
+}
+
+/**
+ * Looks for a location reachable from the resource without crossing an array:
+ * the place to read a state and buildings from when the risk schedule is
+ * empty. The building leaf names come from the plan (or the requirement
+ * synonyms), so nothing here assumes a field name either.
+ */
+export function findFallbackLocation(
+  index: SchemaIndex,
+  resource: string,
+  riskChoices: FieldChoice[],
+): FallbackLocation | undefined {
+  const riskStatePath = riskChoices.find((choice) => choice.key === "riskState")?.path;
+  const stateSpec = REQUIREMENTS_BY_KEY.get("riskState")!;
+  const stateLeaf = riskStatePath ? leafOf(riskStatePath) : stateSpec.synonyms[0];
+
+  const candidate = index
+    .leaves(resource)
+    .filter(
+      (leaf) =>
+        leaf.leaf === stateLeaf &&
+        leaf.terminalType === "string" &&
+        leaf.manyAt.length === 0 &&
+        leaf.path !== riskStatePath &&
+        !(stateSpec.avoid ?? [])
+          .filter((token) => token !== "hq")
+          .some((token) => leaf.path.includes(token)),
+    )
+    .sort((left, right) => left.path.split(".").length - right.path.split(".").length)[0];
+  if (!candidate) return undefined;
+
+  const locationPath = parentOf(candidate.path);
+  if (!locationPath) return undefined;
+
+  const projectPaths = [candidate.path];
+  const supportingState = supportingPaths(index, resource, candidate.path, stateSpec);
+  projectPaths.push(...supportingState);
+
+  // Buildings under the fallback location: the collection that carries the
+  // same leaf the plan uses for building year (or the requirement's synonyms).
+  const yearChoice = riskChoices.find((choice) => choice.key === "buildingYear");
+  const yearSpec = REQUIREMENTS_BY_KEY.get("buildingYear")!;
+  const yearLeaves = yearChoice?.path ? [leafOf(yearChoice.path)] : yearSpec.synonyms;
+  const yearLeaf = index
+    .leaves(resource)
+    .find(
+      (leaf) =>
+        leaf.path.startsWith(`${locationPath}.`) &&
+        yearLeaves.includes(leaf.leaf) &&
+        leaf.terminalType === "number",
+    );
+
+  let buildingsPath: string | undefined;
+  const expandChain = new Set<string>(candidate.expandChain);
+  if (yearLeaf) {
+    buildingsPath = [...yearLeaf.manyAt].sort((left, right) => right.length - left.length)[0];
+    projectPaths.push(yearLeaf.path, ...supportingPaths(index, resource, yearLeaf.path, yearSpec));
+    yearLeaf.expandChain.forEach((hop) => expandChain.add(hop));
+
+    const constructionChoice = riskChoices.find((choice) => choice.key === "constructionType");
+    const constructionSpec = REQUIREMENTS_BY_KEY.get("constructionType")!;
+    const constructionLeaves = constructionChoice?.path
+      ? [leafOf(constructionChoice.path)]
+      : constructionSpec.synonyms;
+    const construction = index
+      .leaves(resource)
+      .find(
+        (leaf) =>
+          buildingsPath !== undefined &&
+          leaf.path.startsWith(`${buildingsPath}.`) &&
+          constructionLeaves.includes(leaf.leaf),
+      );
+    if (construction) projectPaths.push(construction.path);
+  }
+
+  return {
+    locationPath,
+    statePath: candidate.path,
+    buildingsPath,
+    projectPaths: [...new Set(projectPaths)],
+    expandChain: [...expandChain],
+    reason: `${resource}.${locationPath} is the only location reachable without a risk schedule${
+      buildingsPath ? ` and carries buildings at ${buildingsPath}` : ""
+    }; it stands in, at low confidence, when a submission has no risk locations.`,
+  };
 }
 
 export function planFromSchema(index: SchemaIndex, trace: QueryTrace): DataPlan {
@@ -210,9 +363,49 @@ export function planFromSchema(index: SchemaIndex, trace: QueryTrace): DataPlan 
     );
   }
 
-  const { choices, unresolved } = choicesForResource(index, rootResource, REQUIREMENTS);
+  const { choices, unresolved } = choicesForResource(
+    index,
+    rootResource,
+    REQUIREMENTS.filter((spec) => spec.scope !== "queue"),
+  );
+  const fallback = findFallbackLocation(index, rootResource, choices);
+  if (fallback) {
+    trace.add("plan", "Planned a fallback location", fallback.reason);
+  }
 
-  return { rootResource, ...queueLink, choices, unresolved, plannedBy: "heuristic" };
+  return { rootResource, ...queueLink, choices, unresolved, fallback, plannedBy: "heuristic" };
+}
+
+/** Requirements a submission can answer before it becomes a policy. */
+const QUEUE_KEYS: RequirementKey[] = [
+  "submissionIdentifier",
+  "accountName",
+  "lineOfBusiness",
+  "effectiveDate",
+  "requestedLimit",
+];
+
+/**
+ * Plans the queue resource on its own terms: the few fields a submission
+ * carries before it is bound, plus the same kind of fallback location so an
+ * unbound submission is not stateless.
+ */
+export function planQueueResource(index: SchemaIndex, plan: DataPlan, trace: QueryTrace): QueuePlan | undefined {
+  if (!plan.queueResource) return undefined;
+  const { choices } = choicesForResource(
+    index,
+    plan.queueResource,
+    REQUIREMENTS.filter((spec) => QUEUE_KEYS.includes(spec.key)),
+  );
+  const fallback = findFallbackLocation(index, plan.queueResource, plan.choices);
+  if (fallback) {
+    trace.add(
+      "plan",
+      "Planned a fallback location for unbound submissions",
+      `${plan.queueResource}.${fallback.locationPath} is the only location on a submission with no policy. It is used at low confidence and flagged on every submission that relies on it.`,
+    );
+  }
+  return { resource: plan.queueResource, choices, fallback };
 }
 
 export interface LlmSelection {
@@ -258,6 +451,7 @@ export function applyLlmSelections(
       terminalType: resolved.terminalType,
       expandChain: resolved.expandChain,
       manyAt: resolved.manyAt,
+      supporting: supportingPaths(index, plan.rootResource, resolved.path, REQUIREMENTS_BY_KEY.get(choice.key)),
       reason: selection.reason || `Model selected ${plan.rootResource}.${resolved.path}.`,
       chosenBy: "llm" as const,
       alternatives: choice.path ? [choice.path, ...choice.alternatives] : choice.alternatives,
@@ -276,7 +470,7 @@ export function applyLlmSelections(
 
 /** Compact prompt view: every requirement with its schema-matched shortlist. */
 export function describePlanForPrompt(index: SchemaIndex, plan: DataPlan): string {
-  return REQUIREMENTS.map((spec) => {
+  return REQUIREMENTS.filter((spec) => spec.scope !== "queue").map((spec) => {
     const candidates = candidatesFor(index, plan.rootResource, spec, 6);
     const rendered = candidates.length
       ? candidates.map((candidate) => `${candidate.path} (${candidate.terminalType})`).join(", ")

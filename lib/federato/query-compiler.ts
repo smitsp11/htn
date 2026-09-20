@@ -5,13 +5,14 @@
  * select → sort → pagination. References are hydrated in the `expand` stage
  * (not with a `$expand` select leaf) because the derivations downstream need to
  * read through them, and array boundaries are never crossed with a dot-path.
+ *
+ * `where` and `filter` are deliberately empty: every submission is retained and
+ * appetite is judged client-side, so nothing is dropped for being out of
+ * appetite. `$elemMatch` would be the right tool for a targeted drill-down
+ * (for example "locations in FL"), but the queue must be complete.
  */
 
-import type { DataPlan, FieldChoice } from "./schema-planner";
-import type { RequirementKey } from "./requirements";
-import type { SchemaIndex } from "./schema-index";
-import { REQUIREMENTS } from "./requirements";
-import { choicesForResource } from "./schema-planner";
+import type { DataPlan, FallbackLocation, FieldChoice, QueuePlan } from "./schema-planner";
 
 export interface QueryPayload {
   resource: string;
@@ -33,7 +34,12 @@ export interface CompiledQuery {
   fallbacks: QueryPayload[];
 }
 
-function nest(target: Record<string, unknown>, path: string, value: unknown): void {
+/**
+ * Adds a dot path to a nested tree. In a `select` tree, narrowing a field that
+ * was selected whole keeps its id, or a reference link would come back without
+ * the one value that joins it; an `expand` tree lists references only.
+ */
+function nest(target: Record<string, unknown>, path: string, value: unknown, keepId = false): void {
   const segments = path.split(".").filter(Boolean);
   let cursor = target;
   segments.forEach((segment, index) => {
@@ -43,16 +49,20 @@ function nest(target: Record<string, unknown>, path: string, value: unknown): vo
       return;
     }
     const existing = cursor[segment];
-    if (!existing || typeof existing !== "object") cursor[segment] = {};
+    if (!existing || typeof existing !== "object") cursor[segment] = keepId && existing === true ? { id: true } : {};
     cursor = cursor[segment] as Record<string, unknown>;
   });
 }
 
-export function buildExpandStage(choices: FieldChoice[]): Record<string, unknown> | undefined {
+export function buildExpandStage(
+  choices: FieldChoice[],
+  fallback?: FallbackLocation,
+): Record<string, unknown> | undefined {
   const chains = new Set<string>();
   for (const choice of choices) {
     for (const hop of choice.expandChain) chains.add(hop);
   }
+  for (const hop of fallback?.expandChain ?? []) chains.add(hop);
   if (chains.size === 0) return undefined;
 
   const expand: Record<string, unknown> = {};
@@ -62,14 +72,34 @@ export function buildExpandStage(choices: FieldChoice[]): Record<string, unknown
   return expand;
 }
 
-function buildSelectStage(
+/** Every path a query must project: chosen fields, their supporting siblings, and the fallback. */
+export function projectedPaths(
   choices: FieldChoice[],
+  fallback?: FallbackLocation,
+  extraPaths: string[] = [],
+): string[] {
+  const paths = new Set<string>(["id", ...extraPaths]);
+  for (const choice of choices) {
+    if (!choice.path) continue;
+    paths.add(choice.path);
+    for (const path of choice.supporting) paths.add(path);
+  }
+  for (const path of fallback?.projectPaths ?? []) paths.add(path);
+  return [...paths];
+}
+
+export function buildSelectStage(
+  choices: FieldChoice[],
+  fallback?: FallbackLocation,
   extraPaths: string[] = [],
 ): Record<string, unknown> {
-  const select: Record<string, unknown> = { id: true };
-  for (const path of extraPaths) nest(select, path, true);
-  for (const choice of choices) {
-    if (choice.path) nest(select, choice.path, true);
+  const select: Record<string, unknown> = {};
+  // Shorter paths first so a reference selected whole (`submission: true`) is
+  // not later turned into a nested projection by a longer path under it.
+  for (const path of projectedPaths(choices, fallback, extraPaths).sort(
+    (left, right) => left.length - right.length,
+  )) {
+    nest(select, path, true, true);
   }
   return select;
 }
@@ -77,12 +107,14 @@ function buildSelectStage(
 const PAGE_LIMIT = 100;
 
 export function buildRootQuery(plan: DataPlan, offset = 0, limit = PAGE_LIMIT): CompiledQuery {
-  const expand = buildExpandStage(plan.choices);
-  const extras = plan.queueLinkPath ? [plan.queueLinkPath] : [];
+  const expand = buildExpandStage(plan.choices, plan.fallback);
+  // The link to the queue record is selected as its id only: an unexpanded
+  // reference is an id, and an expanded one keeps its id under this projection.
+  const extras = plan.queueLinkPath ? [`${plan.queueLinkPath}.id`] : [];
   const payload: QueryPayload = {
     resource: plan.rootResource,
     ...(expand ? { expand } : {}),
-    select: buildSelectStage(plan.choices, extras),
+    select: buildSelectStage(plan.choices, plan.fallback, extras),
     pagination: { limit, offset },
   };
 
@@ -99,66 +131,42 @@ export function buildRootQuery(plan: DataPlan, offset = 0, limit = PAGE_LIMIT): 
   };
 }
 
-/** Requirements a submission can answer before it becomes a policy. */
-const QUEUE_KEYS: RequirementKey[] = [
-  "submissionIdentifier",
-  "accountName",
-  "lineOfBusiness",
-  "riskState",
-  "effectiveDate",
-  "tiv",
-];
-
-export function queueChoicesFor(index: SchemaIndex, queueResource: string): FieldChoice[] {
-  return choicesForResource(
-    index,
-    queueResource,
-    REQUIREMENTS.filter((spec) => QUEUE_KEYS.includes(spec.key)),
-  ).choices;
-}
-
 /**
  * Submissions that never became a policy still belong in the queue — they are
  * the ones an underwriter has not acted on yet. They carry fewer fields, so
  * this query asks the queue resource directly and lets the rest stay unknown.
  */
 export function buildQueueQuery(
-  plan: DataPlan,
-  choices: FieldChoice[],
+  queuePlan: QueuePlan,
   offset = 0,
   limit = PAGE_LIMIT,
-): CompiledQuery | undefined {
-  if (!plan.queueResource) return undefined;
-
-  const expand = buildExpandStage(choices);
+): CompiledQuery {
+  const expand = buildExpandStage(queuePlan.choices, queuePlan.fallback);
 
   const payload: QueryPayload = {
-    resource: plan.queueResource,
+    resource: queuePlan.resource,
     ...(expand ? { expand } : {}),
-    select: buildSelectStage(choices),
+    select: buildSelectStage(queuePlan.choices, queuePlan.fallback),
     pagination: { limit, offset },
   };
   const withoutSelect: QueryPayload = { ...payload };
   delete withoutSelect.select;
 
   return {
-    purpose: `Fetch every ${plan.queueResource} so unbound submissions stay in the queue`,
+    purpose: `Fetch every ${queuePlan.resource} so unbound submissions stay in the queue`,
     payload,
-    fallbacks: [withoutSelect, { resource: plan.queueResource, pagination: { limit, offset } }],
+    fallbacks: [withoutSelect, { resource: queuePlan.resource, pagination: { limit, offset } }],
   };
 }
 
 /**
  * Cross-checks the TIV we derive per record against a server-side `$sum`.
  * Disagreement means our array handling is wrong, which is exactly the failure
- * mode the API documentation warns about.
+ * mode the API documentation warns about. The server sums every traversal, so
+ * the client compares its pre-deduplication total.
  */
-export function buildTivCheckQuery(
-  plan: DataPlan,
-  index: SchemaIndex,
-  limit = 500,
-): CompiledQuery | undefined {
-  const tiv = aggregationSourceForTiv(plan, index);
+export function buildTivCheckQuery(plan: DataPlan, limit = 500): CompiledQuery | undefined {
+  const tiv = plan.choices.find((choice) => choice.key === "tiv" && choice.path);
   if (!tiv?.path || tiv.manyAt.length === 0) return undefined;
 
   const expand = buildExpandStage([tiv]);
@@ -176,34 +184,4 @@ export function buildTivCheckQuery(
     payload,
     fallbacks: [],
   };
-}
-
-/**
- * The cross-check has to aggregate the same values the derivation sums, which
- * is per-building insured value whenever the schedule exposes it.
- */
-function aggregationSourceForTiv(
-  plan: DataPlan,
-  index: SchemaIndex,
-): FieldChoice | undefined {
-  const tiv = plan.choices.find((choice) => choice.key === "tiv" && choice.path);
-  const buildings = plan.choices.find(
-    (choice) => (choice.key === "buildingYear" || choice.key === "constructionType") && choice.path,
-  );
-
-  const buildingsPrefix = buildings?.path?.replace(/\.[^.]+$/, "");
-  if (buildingsPrefix) {
-    const resolved = index.resolve(plan.rootResource, `${buildingsPrefix}.tiv`);
-    if (resolved?.terminalType === "number") {
-      return {
-        ...buildings!,
-        key: "tiv",
-        path: resolved.path,
-        terminalType: resolved.terminalType,
-        expandChain: resolved.expandChain,
-        manyAt: resolved.manyAt,
-      };
-    }
-  }
-  return tiv;
 }

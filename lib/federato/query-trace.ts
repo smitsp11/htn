@@ -5,6 +5,9 @@
  * an underwriter: no credentials, no raw API objects, no stack traces.
  */
 
+import type { QueryReasoning } from "@/lib/domain/types";
+import type { DataPlan, QueuePlan } from "./schema-planner";
+
 export type TraceStage = "schema" | "plan" | "query" | "repair" | "derive" | "warning";
 
 export interface TraceStep {
@@ -45,4 +48,34 @@ export function parseApiError(error: unknown): { code?: string; message: string 
   const message = error instanceof Error ? error.message : String(error);
   const match = /\[([A-Z_]+)\]\s*(.*)/s.exec(message);
   return match ? { code: match[1], message: match[2].trim() } : { message };
+}
+
+/** The plan and steps as the dashboard-safe `QueryReasoning` shape. */
+export function buildQueryReasoning(plan: DataPlan, queuePlan: QueuePlan | undefined, steps: TraceStep[]): QueryReasoning {
+  return {
+    rootResource: plan.rootResource,
+    queueResource: plan.queueResource,
+    plannedBy: plan.plannedBy,
+    fields: plan.choices.map((choice) => {
+      const requires: string[] = [];
+      if (choice.expandChain.length) requires.push(`expand ${choice.expandChain.join(" → ")}`);
+      if (choice.manyAt.length) requires.push(`array at ${choice.manyAt.join(", ")}`);
+      return {
+        field: choice.key,
+        label: choice.label,
+        appetiteReason: choice.appetiteReason,
+        schemaPath: choice.path ? `${plan.rootResource}.${choice.path}` : undefined,
+        reason: choice.reason,
+        chosenBy: choice.chosenBy,
+        requires: requires.length ? requires.join("; ") : undefined,
+        alternatives: choice.alternatives.slice(0, 3),
+      };
+    }),
+    unresolved: plan.unresolved.map((item) => ({ field: item.label, reason: item.reason })),
+    fallbacks: [
+      ...(plan.fallback ? [`${plan.rootResource}.${plan.fallback.locationPath}: ${plan.fallback.reason}`] : []),
+      ...(queuePlan?.fallback ? [`${queuePlan.resource}.${queuePlan.fallback.locationPath}: ${queuePlan.fallback.reason}`] : []),
+    ],
+    steps: steps.map((step) => ({ stage: step.stage, title: step.title, detail: step.detail })),
+  };
 }

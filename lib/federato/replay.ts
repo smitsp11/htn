@@ -2,9 +2,10 @@
  * Offline executor backed by the captured API responses in `raw/`.
  *
  * It implements the slice of the query language the agent actually emits —
- * resource, where, expand, unwind + over + $sum, pagination — so the whole
- * pipeline, including reference hydration, can be exercised without
- * credentials. It is a test and demo aid, never a data source in live mode.
+ * resource, where, expand, select projection, unwind + over + $sum,
+ * pagination — so the whole pipeline, including reference hydration and the
+ * projection, can be exercised without credentials. It is a test and demo
+ * aid, never a data source in live mode.
  */
 
 import { readFileSync } from "node:fs";
@@ -64,7 +65,13 @@ export interface ReplaySource {
   index: SchemaIndex;
 }
 
-export function createReplaySource(directory = DEFAULT_DIR): ReplaySource {
+export interface ReplayOptions {
+  /** Set false to return whole records regardless of `select` (diagnostics only). */
+  honorSelect?: boolean;
+}
+
+export function createReplaySource(directory = DEFAULT_DIR, options: ReplayOptions = {}): ReplaySource {
+  const honorSelect = options.honorSelect ?? true;
   const rawSchema = readJson(path.join(directory, "schema.json"));
   const index = buildSchemaIndex(rawSchema);
   const tables = new Map<string, Map<string, UnknownRecord>>();
@@ -119,8 +126,15 @@ export function createReplaySource(directory = DEFAULT_DIR): ReplaySource {
       ? filtered.map((row) => hydrate(row, payload.resource, payload.expand))
       : filtered;
 
-    const aggregated = payload.select ? applyAggregations(hydrated, payload.select) : hydrated;
-    const limit = payload.pagination?.limit ?? aggregated.length;
+    let selected = hydrated;
+    if (payload.select) {
+      selected = hasAggregation(payload.select)
+        ? applyAggregations(hydrated, payload.select)
+        : honorSelect
+          ? hydrated.map((row) => project(row, payload.select!) as UnknownRecord)
+          : hydrated;
+    }
+    const limit = payload.pagination?.limit ?? selected.length;
     const offset = payload.pagination?.offset ?? 0;
 
     return {
@@ -128,8 +142,8 @@ export function createReplaySource(directory = DEFAULT_DIR): ReplaySource {
         {
           data: {
             resource: payload.resource,
-            total: aggregated.length,
-            results: aggregated.slice(offset, offset + limit),
+            total: selected.length,
+            results: selected.slice(offset, offset + limit),
           },
         },
       ],
@@ -140,14 +154,33 @@ export function createReplaySource(directory = DEFAULT_DIR): ReplaySource {
 }
 
 /**
+ * Applies a `select` tree the way the API does: `true` keeps a value whole, a
+ * nested object keeps only the listed keys, and arrays are projected element
+ * by element. Keys the record lacks are simply absent.
+ */
+export function project(value: unknown, select: unknown): unknown {
+  if (select === true || !isRecord(select)) return value;
+  if (Array.isArray(value)) return value.map((entry) => project(entry, select));
+  if (!isRecord(value)) return value;
+  const output: UnknownRecord = {};
+  for (const [key, nested] of Object.entries(select)) {
+    if (key in value) output[key] = project(value[key], nested);
+  }
+  return output;
+}
+
+function hasAggregation(select: Record<string, unknown>): boolean {
+  return Object.values(select).some((leaf) => isRecord(leaf) && typeof leaf.$sum === "string");
+}
+
+/**
  * Only `$sum` is supported, which is all the agent's cross-check query uses.
- * Rows without an aggregation leaf pass through unchanged.
+ * Like the API, it sums every traversal of the arrays it unwinds.
  */
 function applyAggregations(rows: UnknownRecord[], select: Record<string, unknown>): UnknownRecord[] {
   const sums = Object.entries(select).filter(
     ([, leaf]) => isRecord(leaf) && typeof leaf.$sum === "string",
   ) as Array<[string, { $sum: string }]>;
-  if (sums.length === 0) return rows;
 
   return rows.map((row) => {
     const aggregated: UnknownRecord = { id: row.id };
