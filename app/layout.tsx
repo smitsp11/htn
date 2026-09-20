@@ -3,8 +3,8 @@ import type { ReactNode } from "react";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Federato Appetite Queue",
-  description: "Schema-driven underwriting submission triage",
+  title: "Federanorth — Underwriting workspace",
+  description: "A clearer view of commercial-property risk.",
 };
 
 export default function RootLayout({ children }: Readonly<{ children: ReactNode }>) {
