@@ -1267,3 +1267,196 @@
     font-size: 13px;
   }
 }
+
+/* ---- Chase-list + methodology dialogs (Task 4.6) ---------------------------------
+   Ported from federanorth's `#chase-dialog`/`#method-dialog` markup and
+   `.chase-group`/`.method-dialog`/`.weight-grid`/`.source-counts` rules
+   (src/decision/dashboard.js, federanorth.css). Both dialogs render through the
+   shared `Dialog` primitive (a div-based backdrop + panel) rather than a native
+   `<dialog>`, so the width/padding overrides below key off `.dialog` instead of
+   a `.method-dialog` element. */
+
+.dialog .close-dialog {
+  position: absolute;
+  top: 19px;
+  right: 18px;
+  color: var(--ink-soft);
+}
+
+.dialog h2 {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 30px;
+  font-weight: 400;
+  letter-spacing: -0.5px;
+  line-height: 1.2;
+  color: var(--ink);
+  margin: 0;
+}
+
+.dialog .method-intro {
+  font-size: 13px;
+  color: var(--ink-soft);
+  margin: 12px 0 22px;
+}
+
+.dialog h3 {
+  font-weight: 600;
+  font-size: 15px;
+  margin: 24px 0 12px;
+  color: var(--ink);
+}
+
+.dialog p,
+.dialog li {
+  font-size: 12px;
+  line-height: 1.8;
+  color: var(--ink-soft);
+}
+
+.dialog li {
+  margin: 10px 0;
+}
+
+.dialog ul {
+  padding-left: 19px;
+}
+
+.dialog .copy-chase {
+  font-size: 11px;
+  margin-bottom: 10px;
+}
+
+.chase-body {
+  display: flex;
+  flex-direction: column;
+  gap: 26px;
+  margin-top: 22px;
+}
+
+.chase-group header {
+  display: flex;
+  align-items: baseline;
+  gap: 11px;
+  flex-wrap: wrap;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 9px;
+  margin-bottom: 13px;
+}
+
+.chase-group h3 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 15px;
+  margin: 0;
+  color: var(--ink);
+}
+
+.chase-group h3 .icon {
+  width: 14px;
+  height: 14px;
+}
+
+.chase-group header span {
+  font-size: 11px;
+  color: var(--ink-soft);
+}
+
+.chase-group ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 11px;
+}
+
+.chase-group li {
+  border-left: 2px solid var(--border);
+  padding-left: 13px;
+}
+
+.chase-group li b {
+  font-size: 13px;
+  color: var(--ink);
+}
+
+.chase-group li small {
+  display: inline;
+  margin-left: 7px;
+  color: var(--ink-faint);
+}
+
+.chase-group li ol {
+  margin: 6px 0 0;
+  padding-left: 19px;
+  color: var(--ink-soft);
+  font-size: 12px;
+  line-height: 1.85;
+}
+
+.chase-group li ol li {
+  border: 0;
+  padding: 0;
+  margin: 0;
+}
+
+.weight-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin: 15px 0 22px;
+}
+
+.weight-grid > div {
+  display: flex;
+  justify-content: space-between;
+  padding: 11px 13px;
+  background: var(--surface-muted);
+  font-size: 12px;
+  color: var(--ink);
+  border-radius: 6px;
+}
+
+.weight-grid b {
+  font-weight: 600;
+  color: var(--mint-strong);
+}
+
+.weight-grid small {
+  display: inline;
+  color: var(--ink-soft);
+  font-size: 10px;
+}
+
+.source-counts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 20px 0;
+}
+
+.source-counts span {
+  font-size: 11px;
+  background: var(--surface-muted);
+  padding: 6px 10px;
+  border: 1px solid var(--border);
+  color: var(--ink);
+  border-radius: 6px;
+}
+
+.source-counts b {
+  font-weight: 600;
+  color: var(--mint-strong);
+  margin-left: 6px;
+}
+
+@media (max-width: 700px) {
+  .dialog h2 {
+    font-size: 26px;
+  }
+
+  .weight-grid {
+    grid-template-columns: 1fr;
+  }
+}
