@@ -133,6 +133,7 @@
 /* Appetite verdict leads the row; the raw score is a small, muted tie-breaker. */
 .score-cell {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 8px;
   min-width: 70px;
@@ -639,9 +640,68 @@ select {
   box-shadow: 0 1px 2px #1a140e14;
 }
 
-/* W7 — Portfolio overview strip */
-.portfolio-strip { display: flex; flex-wrap: wrap; gap: 28px; padding: 14px 18px; border: 1px solid var(--border); border-radius: 10px; margin: 0 0 16px; background: var(--panel); }
-.ps-metric { display: flex; flex-direction: column; gap: 2px; }
-.ps-metric span { font-size: 11px; letter-spacing: 0.04em; text-transform: uppercase; color: var(--ink-faint); }
-.ps-metric strong { font-size: 18px; color: var(--ink); }
-.ps-metric small { font-size: 12px; color: var(--ink-faint); }
+/* Distance-from-appetite chips inside the appetite cell (one fix away, near miss). */
+.distance-chips {
+  flex-basis: 100%;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 2px;
+}
+.distance-label {
+  font-size: 10px;
+  color: var(--ink-faint);
+}
+
+/* Portfolio insights: the agent's read of the whole book, under the metric strip. */
+.portfolio-insights {
+  margin: 0 0 18px;
+}
+.portfolio-heading .eyebrow {
+  margin: 0 0 4px;
+}
+.portfolio-heading h2 {
+  margin: 0 0 14px;
+  font-size: 20px;
+}
+.portfolio-cards {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+}
+.portfolio-card {
+  padding: 14px 16px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.portfolio-card small {
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+.portfolio-card strong {
+  font-size: 14px;
+  line-height: 1.35;
+  color: var(--ink);
+}
+.portfolio-card p {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--ink-soft);
+}
+.portfolio-drift {
+  border-color: var(--orange-strong);
+}
+.portfolio-opportunity {
+  border-color: var(--mint-strong);
+}
