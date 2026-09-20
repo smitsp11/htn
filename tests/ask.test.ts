@@ -28,3 +28,25 @@ test("no-tool answer is returned as kind none", async () => {
   const r = await askQueue("what is the weather", ranked, { chat });
   assert.equal(r.kind, "none");
 });
+
+test("whatWouldFlip is grounded: the engine produces the facts, the model only phrases them", async () => {
+  const target = ranked.find((s) => s.status !== "in_appetite");
+  assert.ok(target, "need a submission with something to flip");
+  let toolResultSeen: string | undefined;
+  const chat = async (req: { messages: ChatMessage[]; toolChoice?: "auto" | "none" }) => {
+    if (req.toolChoice === "none") {
+      // phrasing turn: capture the tool result the model is handed
+      toolResultSeen = req.messages.find((m) => m.role === "tool")?.content ?? undefined;
+      return { role: "assistant", content: `Fix the flagged factors to move ${target.accountName} up.` } as ChatMessage;
+    }
+    return {
+      role: "assistant",
+      content: null,
+      tool_calls: [{ id: "t1", type: "function", function: { name: "whatWouldFlip", arguments: JSON.stringify({ nameOrId: target.id }) } }],
+    } as ChatMessage;
+  };
+  const r = await askQueue("what would move this into appetite?", ranked, { chat });
+  assert.equal(r.kind, "explain");
+  assert.deepEqual(r.matchedIds, [target.id]);
+  assert.ok(toolResultSeen && toolResultSeen.includes("changes"), "model must be handed the deterministic flip result");
+});

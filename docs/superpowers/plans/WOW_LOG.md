@@ -95,7 +95,10 @@ Status legend: `queued` · `planning` · `building` · `blocked` · `done`
 - **Risk:** medium (outward-facing content; keep human-in-the-loop).
 
 ### W5 — Agentic narration layer around the deterministic engine
-- **Status:** planned → `docs/superpowers/plans/2026-09-19-w5-agentic-narration.md` (independent)
+- **Status:** DONE (2026-09-19) → plan `2026-09-19-w5-agentic-narration.md`. Built on branch
+  `w5-agentic-narration` (individual PR #6, stacked on PR #5). `lib/domain/counterfactual.ts`
+  (`whatWouldFlip`) + ask.ts tool + contradiction-first prompt. Grounding proven in tests (LLM is
+  handed the engine's flip result; phrasing turn forbids tools). 197/197 tests green.
 - **Goal:** Extend the grounded LLM ask-layer with (a) **contradiction-first** phrasing and
   (b) a **"what would flip this"** counterfactual tool (min factor change to raise status),
   and (c) missing-vs-out-of-appetite distinction. The engine still owns every number.
