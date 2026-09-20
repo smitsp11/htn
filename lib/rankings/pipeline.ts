@@ -12,6 +12,9 @@ import type {
   RankingsResponse,
 } from "@/lib/domain/types";
 import { loadOfflineContext } from "@/lib/enrichment/context";
+import { loadConsolidationIndex } from "@/lib/enrichment/consolidation-index";
+import { buildResolution } from "@/lib/enrichment/resolution-result";
+import type { ConsolidationIndex } from "@/lib/enrichment/resolve-submission";
 import { runQueryAgent } from "@/lib/federato/adapter";
 import { FederatoClient } from "@/lib/federato/client";
 import { loadOfflineEnrichment, loadOfflineOutcomes } from "@/lib/federato/offline-data";
@@ -57,6 +60,13 @@ export interface RankingsPipelineDeps {
    * after ranking. Context never enters appetite scoring.
    */
   loadContext?: () => Promise<Map<string, ContextSignal[]>>;
+  /**
+   * When present, resolves each submission's absent required fields from the
+   * consolidation index and attaches a before/after re-score
+   * (`RankedSubmission.resolution`). Mirrors the other optional loaders
+   * (offline only); it never changes the queue's own status or score.
+   */
+  loadConsolidation?: () => Promise<ConsolidationIndex>;
   rank: (submissions: CanonicalSubmission[]) => RankedSubmission[];
   now: () => Date;
 }
@@ -98,6 +108,7 @@ export function defaultPipelineDeps(dataset: Dataset = "baseline"): RankingsPipe
     loadEnrichment: useDemoData || explicitLive ? undefined : loadOfflineEnrichment,
     loadOutcomes: useDemoData || explicitLive ? undefined : loadOfflineOutcomes,
     loadContext: useDemoData || explicitLive ? undefined : async () => loadOfflineContext(),
+    loadConsolidation: useDemoData || explicitLive ? undefined : async () => loadConsolidationIndex(),
     rank: (s) => rankSubmissions(s, { extended }),
     now: () => new Date(),
   };
@@ -167,6 +178,14 @@ export async function buildRankings(
     for (const submission of ranked) {
       const signals = context.get(submission.id);
       if (signals && signals.length) submission.context = signals;
+    }
+  }
+
+  if (deps.loadConsolidation) {
+    const index = await deps.loadConsolidation();
+    for (const submission of ranked) {
+      const resolution = buildResolution(submission, index, extended);
+      if (resolution) submission.resolution = resolution;
     }
   }
 
