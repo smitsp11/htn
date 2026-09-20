@@ -9,16 +9,6 @@ function floodHazard(topHazards: HazardEntry[]): HazardEntry | undefined {
   return topHazards.find((hazard) => hazard.type.toLowerCase().includes("flood"));
 }
 
-/** A single factual watch item pulled from the engine's own factor reasons --
- *  no LLM involved here, just a pick of the most pressing existing verdict. */
-function watchItem(submission: RankedSubmission): string {
-  const concern = submission.factors.find((factor) => factor.verdict === "not_acceptable");
-  if (concern) return `${concern.label}: ${concern.reason}`;
-  const gap = submission.factors.find((factor) => factor.verdict === "unknown");
-  if (gap) return `${gap.label}: ${gap.reason}`;
-  return "No open concerns on the factors evaluated so far.";
-}
-
 export function CaseSummary({ submission }: { submission: RankedSubmission }) {
   const completeness = completenessOf(submission);
   const establishedPct =
@@ -40,14 +30,10 @@ export function CaseSummary({ submission }: { submission: RankedSubmission }) {
       </div>
       {isOffStrategyBind(submission) ? (
         <p className="case-summary-offstrategy">
-          <b>Off-strategy bind:</b> this account was bound, but the appetite engine independently places it out
-          of appetite. Possible appetite drift — a risk on the books the carrier&rsquo;s stated appetite would
-          not have written.
+          <b>Off-strategy bind:</b> bound, though this engine places it outside appetite — possible appetite
+          drift.
         </p>
       ) : null}
-      <p className="case-summary-watch">
-        <b>AI watch:</b> {watchItem(submission)}
-      </p>
     </section>
   );
 }

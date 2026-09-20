@@ -122,19 +122,6 @@ export function ReviewTab({ submission }: { submission: RankedSubmission }) {
 
   return (
     <div className="review-tab">
-      <section className="recommendation">
-        <span>
-          <Icon name="shield" /> NEXT STEP
-        </span>
-        <p>{submission.recommendation}</p>
-        <small>{submission.accountName} · {completeness.resolved}/{completeness.total} factors established</small>
-      </section>
-
-      <section className="assessment-summary">
-        <h3>Assessment</h3>
-        <p>{submission.explanation}</p>
-      </section>
-
       {bundle.leads.length > 0 ? (
         <details className="leads">
           <summary>
@@ -154,13 +141,11 @@ export function ReviewTab({ submission }: { submission: RankedSubmission }) {
                 <b className="lead-value">{lead.value}</b>
                 <p>{lead.detail}</p>
                 <p className="lead-caution">
-                  <Icon name="info" /> {lead.caution ?? "Context only. Not scored."}
+                  <Icon name="info" /> Context only.
                 </p>
-                {lead.sources.length > 0 ? <p className="lead-sources">{lead.sources.join(", ")}</p> : null}
               </article>
             ))}
           </div>
-          <p className="lead-footer">Context only. None of this is scored, and none of it closes an open request.</p>
         </details>
       ) : null}
 

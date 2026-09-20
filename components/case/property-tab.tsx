@@ -1,8 +1,7 @@
 import type { AppetiteVerdict, RankedSubmission } from "@/lib/domain/types";
-import { fixturesFor } from "@/lib/demo/fixtures";
+import { pricingBandsFor } from "@/lib/domain/appetite";
 import { Badge, type BadgeTone } from "@/components/ui/badge";
 import { Track } from "@/components/ui/track";
-import { Icon } from "@/components/ui/icon";
 
 const money = (value: number | undefined): string =>
   value == null
@@ -37,13 +36,11 @@ const verdictLabel: Record<AppetiteVerdict, string> = {
  * loss evidence, the real appetite-factor checks (ported from federanorth's
  * `exposurePanel`/`buildingPanel`/`propertyLossPanel`/factor-list markup in
  * `src/decision/dashboard.js`), and a peer pricing comparison sourced from the
- * static demo fixtures (`lib/demo/fixtures.ts`). Every appetite fact here
- * comes straight from `submission`/`submission.factors` -- the pricing block
- * is presentational demo context only and never feeds back into scoring.
+ * static demo fixtures (`lib/demo/fixtures.ts`). Every appetite fact here,
+ * including the pricing bands below, comes straight from `submission` and the
+ * published guideline thresholds -- never a peer dataset the app doesn't have.
  */
 export function PropertyTab({ submission }: { submission: RankedSubmission }) {
-  const bundle = fixturesFor(submission.id);
-
   return (
     <div className="property-tab">
       <div className="section-title">
@@ -119,12 +116,9 @@ export function PropertyTab({ submission }: { submission: RankedSubmission }) {
       </details>
 
       <details className="detail-section">
-        <summary>Peer pricing comparison</summary>
-        <p className="factor-caption">
-          <Icon name="info" /> Demo peer context only -- not part of the appetite score.
-        </p>
+        <summary>Premium vs. guideline bands</summary>
         <div className="record-metrics">
-          {bundle.pricing.map((band) => (
+          {pricingBandsFor(submission).map((band) => (
             <div key={band.label}>
               <small>{band.label}</small>
               <strong>{band.value}</strong>

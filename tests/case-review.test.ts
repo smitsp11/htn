@@ -6,11 +6,9 @@ import { ReviewTab } from "../components/case/review-tab";
 import { rankSubmissions } from "../lib/domain/appetite";
 import { empty, fullTarget } from "./fixtures/domain/submissions";
 
-test("review tab shows the recommendation and research digest", () => {
+test("review tab shows the research digest", () => {
   const [submission] = rankSubmissions([fullTarget]);
   const html = renderToStaticMarkup(createElement(ReviewTab, { submission }));
-  assert.match(html, /NEXT STEP|Next step/i);
-  assert.match(html, new RegExp(submission.recommendation.slice(0, 12)));
   assert.match(html, /Research at a glance|flood zone/i);
 });
 

@@ -4,7 +4,7 @@ import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { ContextSignals } from "../components/context-signals/context-signals";
 
-test("renders each signal with a source link and 'not part of appetite' note", () => {
+test("renders each signal with a source link", () => {
   const html = renderToStaticMarkup(
     createElement(ContextSignals, {
       signals: [
@@ -21,7 +21,6 @@ test("renders each signal with a source link and 'not part of appetite' note", (
   assert.match(html, /Median income/);
   assert.match(html, /\$68,400/);
   assert.match(html, /href="https:\/\/data\.census\.gov/);
-  assert.match(html, /not part of the (carrier )?appetite/i);
 });
 
 test("renders nothing when there are no signals", () => {

@@ -47,14 +47,15 @@ export function EvidenceRequest({ submission, openGaps }: EvidenceRequestProps) 
   return (
     <details className="evidence-request request-draft">
       <summary>Prepare evidence request</summary>
-      <p>A draft only; copying it does not send anything or mark requests sent.</p>
       <textarea ref={textareaRef} rows={7} aria-label="Evidence request draft" defaultValue={draft} />
-      <button type="button" className="button ghost" onClick={copyRequest}>
-        <Icon name="copy" /> Copy request
-      </button>
-      <button type="button" className="button ghost" onClick={rebuild}>
-        Rebuild from open requests
-      </button>
+      <div className="request-actions">
+        <button type="button" className="button ghost" onClick={copyRequest}>
+          <Icon name="copy" /> Copy request
+        </button>
+        <button type="button" className="button ghost" onClick={rebuild}>
+          Rebuild from open requests
+        </button>
+      </div>
     </details>
   );
 }

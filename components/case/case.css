@@ -69,27 +69,12 @@
   margin-left: auto;
   display: flex;
   align-items: center;
-  gap: 20px;
+  gap: 8px;
   flex-shrink: 0;
 }
 
-.case-verdict .flag-chips {
-  margin-left: 4px;
-}
-
-/* Appetite outcome is the headline verdict: the lane badge leads the case bar,
-   sized up so the decision-relevant status reads first (the completeness score
-   below is demoted to a modest stat, not the biggest element on the page). */
-.case-verdict .badge.lane-work-now,
-.case-verdict .badge.lane-chase-evidence,
-.case-verdict .badge.lane-declined,
-.case-verdict .badge.lane-not-property {
-  font-size: 13px;
-  padding: 8px 13px;
-  border-radius: 7px;
-}
-
 .case-score {
+  margin-left: 12px;
   display: flex;
   align-items: baseline;
 }
@@ -150,16 +135,6 @@
 }
 .case-summary-offstrategy b {
   color: var(--orange-strong);
-}
-
-.case-summary-watch {
-  font-size: 11px;
-  color: var(--ink-soft);
-  margin-top: 8px;
-}
-
-.case-summary-watch b {
-  color: var(--ink);
 }
 
 /* .tabs/.tab base styling lives in components/ui/ui.css; the case view only
@@ -248,59 +223,6 @@
    `leadsPanel` (src/decision/{dashboard,review,research-panel,intake-panel,leads}.js)
    and federanorth.css. Class names match the source 1:1 where the shape carried over,
    so the CSS below is a close port rather than a fresh design. */
-
-.review-tab .recommendation {
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 18px 20px;
-  margin-bottom: 18px;
-  background: var(--surface);
-}
-
-.review-tab .recommendation > span {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 1px;
-  color: var(--mint-strong);
-}
-
-.review-tab .recommendation > span .icon {
-  width: 15px;
-  height: 15px;
-}
-
-.review-tab .recommendation p {
-  font-size: 17px;
-  font-weight: 600;
-  margin: 8px 0 4px;
-  color: var(--ink);
-}
-
-.review-tab .recommendation small {
-  color: var(--ink-soft);
-}
-
-.assessment-summary {
-  border: 1px solid var(--border);
-  padding: 18px;
-  margin: 0 0 18px;
-  border-radius: 8px;
-  background: var(--surface);
-}
-
-.assessment-summary h3 {
-  margin-top: 0;
-  color: var(--ink);
-}
-
-.assessment-summary p {
-  margin: 10px 0 0;
-  line-height: 1.6;
-  color: var(--ink-soft);
-}
 
 /* Related-account leads: context only, never scored. */
 .leads {
@@ -421,14 +343,6 @@
   margin-top: 2px;
 }
 
-.lead-sources {
-  margin-top: 6px;
-  font-size: 10px;
-  opacity: 0.75;
-  word-break: break-word;
-  color: var(--ink-faint);
-}
-
 .lead-footer {
   margin-top: 9px;
   font-size: 10px;
@@ -466,12 +380,6 @@
 .research-panel[open] > summary::after {
   content: "\2013";
 }
-.research-hint {
-  font-size: 11px;
-  color: var(--ink-faint);
-  white-space: nowrap;
-}
-
 .research-heading h3 {
   font-size: 20px;
   margin: 6px 0 0;
@@ -504,9 +412,17 @@
 
 .digest-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
   margin: 12px 0 0;
+}
+
+.digest-hazards {
+  margin: 10px 0 0;
+  padding-left: 18px;
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--ink-soft);
 }
 
 .digest-grid div {
@@ -596,13 +512,6 @@
   margin-top: 18px;
 }
 
-.research-sources > summary {
-  cursor: pointer;
-  font-size: 13px;
-  color: var(--mint-strong);
-  padding: 8px 0;
-}
-
 .research-source {
   border-top: 1px solid var(--border);
   padding: 12px 0;
@@ -635,16 +544,6 @@
   align-items: center;
   gap: 6px;
   text-decoration: underline;
-}
-
-.research-notice {
-  font-size: 12.5px;
-  line-height: 1.6;
-  border-left: 2px solid var(--orange);
-  padding: 8px 12px;
-  margin: 16px 0 0;
-  background: var(--orange-tint);
-  color: var(--ink);
 }
 
 /* Evidence intake. */
@@ -718,19 +617,22 @@
   margin-top: 12px;
 }
 
-/* Evidence-request draft. */
+/* Evidence-request draft. Same card treatment as .evidence-intake above, so the
+   two disclosures in the review tab read as one consistent design. */
 .evidence-request,
 .request-draft {
   border: 1px solid var(--border);
-  padding: 14px;
+  padding: 18px;
   margin: 0 0 18px;
   border-radius: 8px;
+  background: var(--surface);
 }
 
 .request-draft summary {
   cursor: pointer;
-  font-size: 13px;
-  color: var(--mint-strong);
+  font-weight: 600;
+  line-height: 1.5;
+  color: var(--ink);
 }
 
 .request-draft p {
@@ -753,9 +655,21 @@
   box-sizing: border-box;
 }
 
+.request-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
 .request-draft .button {
   font-size: 11px;
-  margin: 0 8px 0 0;
+  padding: 8px 12px;
+  gap: 6px;
+}
+
+.request-draft .button .icon {
+  width: 13px;
+  height: 13px;
 }
 
 /* Task list / cards. */
@@ -1159,12 +1073,6 @@
   color: var(--ink-faint);
 }
 
-.account-tab-footer {
-  margin-top: 25px;
-  font-size: 11px;
-  font-style: italic;
-  color: var(--ink-faint);
-}
 
 /* ---- Decision sidebar (Task 4.5) -------------------------------------------------
    Ported from federanorth's `workflowPanel` (src/decision/dashboard.js) and its

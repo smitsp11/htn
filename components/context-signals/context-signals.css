@@ -54,9 +54,3 @@
   text-decoration: underline;
   width: fit-content;
 }
-
-.ctx-note {
-  color: var(--ink-faint, #8d8268);
-  font-size: 0.7rem;
-  font-style: italic;
-}

@@ -52,11 +52,6 @@ export function EvidenceIntake({ submission }: { submission: RankedSubmission })
     <section className="evidence-intake">
       <details>
         <summary>Add evidence to this case</summary>
-        <p>
-          Review the suggested facts prepared for this submission and log the ones that apply. Add a source name,
-          date, and note to attach to the record. Logging evidence does not re-score the submission — appetite stays
-          the deterministic engine&rsquo;s call.
-        </p>
         <label>
           Source name or URL
           <input

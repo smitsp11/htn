@@ -30,10 +30,10 @@ const ACCEPTABLE_STATES = new Set([...TARGET_STATES, "NC", "SC", "GA", "VA", "UT
 const TIV_TARGET_MIN = 50_000_000;
 const TIV_TARGET_MAX = 100_000_000;
 const TIV_MAX = 150_000_000;
-const PREMIUM_MIN = 50_000;
-const PREMIUM_TARGET_MIN = 75_000;
-const PREMIUM_TARGET_MAX = 100_000;
-const PREMIUM_MAX = 175_000;
+export const PREMIUM_MIN = 50_000;
+export const PREMIUM_TARGET_MIN = 75_000;
+export const PREMIUM_TARGET_MAX = 100_000;
+export const PREMIUM_MAX = 175_000;
 const YEAR_ACCEPTABLE_AFTER = 1990;
 const YEAR_TARGET_AFTER = 2010;
 const LOSS_MAX = 100_000;
@@ -229,4 +229,18 @@ export function rankSubmissions(submissions: CanonicalSubmission[]): RankedSubmi
       left.accountName.localeCompare(right.accountName) ||
       left.id.localeCompare(right.id),
   );
+}
+
+/**
+ * Premium vs. the guideline bands, for the case pricing panels. Real per-submission
+ * data: the guideline bands are fixed by the published table, but "This submission"
+ * reads the actual quoted premium. There is no peer-premium dataset in this app's
+ * schema, so this never claims a peer-indicated figure.
+ */
+export function pricingBandsFor(submission: CanonicalSubmission): { label: string; value: string }[] {
+  return [
+    { label: "This submission", value: isFiniteNumber(submission.totalPremium) ? formatMoney(submission.totalPremium) : "—" },
+    { label: "Acceptable band", value: `${formatMoney(PREMIUM_MIN)} – ${formatMoney(PREMIUM_MAX)}` },
+    { label: "Target band", value: `${formatMoney(PREMIUM_TARGET_MIN)} – ${formatMoney(PREMIUM_TARGET_MAX)}` },
+  ];
 }

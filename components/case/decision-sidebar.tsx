@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import type { RankedSubmission } from "@/lib/domain/types";
 import { completenessOf } from "@/lib/rankings/completeness";
-import { fixturesFor } from "@/lib/demo/fixtures";
+import { pricingBandsFor } from "@/lib/domain/appetite";
 import {
   loadDemoState,
   reopenDecision,
@@ -59,7 +59,7 @@ export function DecisionSidebar({ submission, onDecided }: DecisionSidebarProps)
   }, [submission.id]);
 
   const completeness = completenessOf(submission);
-  const pricing = fixturesFor(submission.id).pricing;
+  const pricing = pricingBandsFor(submission);
 
   function record() {
     const input = {
