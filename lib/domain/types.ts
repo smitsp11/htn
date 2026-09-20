@@ -14,6 +14,30 @@ export type AppetiteStatus = "in_appetite" | "needs_investigation" | "out_of_app
 export type Dataset = "baseline" | "extended";
 
 export type LineOfBusiness = "property" | "cgl" | "auto" | "cyber" | "excess" | "health" | "lpl";
+export type EvidenceConfidence = "high" | "medium" | "low";
+
+/**
+ * Where a factor's input came from and how it was derived. Written by the
+ * query agent (Person 2) from its derivation notes, copied verbatim onto the
+ * matching `FactorEvaluation` by the appetite engine. Never influences a
+ * verdict; it exists so an underwriter can see the provenance of every number.
+ */
+export interface FactorEvidence {
+  /** Plain-language derivation: "Oldest of 5 buildings (1972–2015)." */
+  method: string;
+  /** Schema path the value was read from, e.g. `Policy.exposure_units.location.buildings.year_built`. */
+  sourcePath?: string;
+  confidence: EvidenceConfidence;
+  /** Anything that makes the value contestable. */
+  ambiguity?: string;
+}
+
+/** One building on the risk schedule, as the query agent found it. */
+export interface BuildingFact {
+  year?: number;
+  value?: number;
+  constructionType?: string;
+}
 
 export interface CanonicalSubmission {
   id: string;
@@ -29,6 +53,15 @@ export interface CanonicalSubmission {
   approvedConstructionPercentage?: number;
   constructionDescription?: string;
   fiveYearLossValue?: number;
+  /**
+   * The building schedule behind `buildingYear`, `approvedConstructionPercentage`
+   * and `tiv`, so the engine can state how sensitive a verdict is to the
+   * aggregation rule (oldest building versus value-weighted year). Optional and
+   * additive; the verdict itself is always taken from the aggregate fields above.
+   */
+  buildingSchedule?: BuildingFact[];
+  /** Provenance per factor, keyed by the factor it feeds. Optional and additive. */
+  derivations?: Partial<Record<FactorKey, FactorEvidence>>;
 }
 
 export interface FactorEvaluation {
@@ -36,6 +69,15 @@ export interface FactorEvaluation {
   label: string;
   verdict: AppetiteVerdict;
   reason: string;
+  /**
+   * A longer derivation or sensitivity note the short reason leaves out, e.g.
+   * how the verdict would change under a value-weighted building year.
+   */
+  detail?: string;
+  /** True when a not-acceptable value sits within the near-miss band of its boundary. */
+  nearMiss?: boolean;
+  /** Provenance copied from `CanonicalSubmission.derivations`. */
+  evidence?: FactorEvidence;
 }
 
 /**

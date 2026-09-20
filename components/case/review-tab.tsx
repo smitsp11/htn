@@ -160,10 +160,20 @@ export function ReviewTab({ submission }: { submission: RankedSubmission }) {
         <summary>Appetite breakdown · {submission.factors.length} factors</summary>
         <div className="factor-list">
           {submission.factors.map((factor) => (
-            <div className="appetite-check" key={factor.key}>
+            <div className="appetite-check" key={factor.key} data-factor={factor.key}>
               <span className="appetite-check-label">{factor.label}</span>
               <Badge tone={verdictTone[factor.verdict]}>{verdictLabel[factor.verdict]}</Badge>
+              {factor.nearMiss ? <Badge tone="amber">Near miss</Badge> : null}
               <p>{factor.reason}</p>
+              {factor.detail ? <p className="factor-detail">{factor.detail}</p> : null}
+              {factor.evidence ? (
+                <p className="factor-evidence">
+                  <b>Source:</b>{" "}
+                  {factor.evidence.sourcePath ? <code>{factor.evidence.sourcePath}</code> : "not recorded"} ·{" "}
+                  {factor.evidence.method} · {factor.evidence.confidence} confidence
+                  {factor.evidence.ambiguity ? <span className="ambiguity"> · {factor.evidence.ambiguity}</span> : null}
+                </p>
+              ) : null}
             </div>
           ))}
         </div>

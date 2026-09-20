@@ -17,8 +17,8 @@ export function SiteShell({ children }: SiteShellProps) {
         Skip to submissions
       </a>
       <header className="site-header">
-        <a className="brand" href="#main" aria-label="Federanorth home">
-          FEDERANORTH
+        <a className="brand" href="#main" aria-label="FedAgent home">
+          FEDAGENT
           <span className="brand-star">
             <Icon name="north-star" />
           </span>
@@ -26,8 +26,8 @@ export function SiteShell({ children }: SiteShellProps) {
       </header>
       <main id="main">{children}</main>
       <footer className="site-footer">
-        <a href="#main" aria-label="Federanorth home">
-          FEDERANORTH<span>+</span>
+        <a href="#main" aria-label="FedAgent home">
+          FEDAGENT<span>+</span>
         </a>
         <p>A clearer view of risk.</p>
       </footer>
