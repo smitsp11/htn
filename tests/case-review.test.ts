@@ -7,19 +7,20 @@ import { ResearchPanel } from "../components/case/research-panel";
 import { evaluateAppetite, rankSubmissions } from "../lib/domain/appetite";
 import { empty, fullTarget } from "./fixtures/domain/submissions";
 
-test("review tab shows the recommendation and research digest", () => {
+test("review tab shows the research digest", () => {
   const [submission] = rankSubmissions([fullTarget]);
   const html = renderToStaticMarkup(createElement(ReviewTab, { submission }));
-  assert.match(html, /NEXT STEP|Next step/i);
-  assert.match(html, new RegExp(submission.recommendation.slice(0, 12)));
   assert.match(html, /Research at a glance|flood zone/i);
+  assert.doesNotMatch(html, /Flip analysis/, "a fully in-appetite submission has nothing to flip");
 });
 
-test("submission with gaps renders evidence task cards and a request draft", () => {
+test("submission with gaps renders evidence task cards, a request draft, and flip analysis", () => {
   const [submission] = rankSubmissions([empty]);
   const html = renderToStaticMarkup(createElement(ReviewTab, { submission }));
   assert.match(html, /Evidence gap|Needs/i);
   assert.match(html, /Subject: Information needed/i);
+  assert.match(html, /Flip analysis/);
+  assert.match(html, /Actionable/);
 });
 
 test("research distinguishes composite rating from individual hazards and engine context from AI", () => {

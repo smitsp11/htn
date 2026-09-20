@@ -6,7 +6,7 @@ import type { AppetiteStatus, FactorEvaluation } from "./types";
  */
 const recommendations: Record<AppetiteStatus, string> = {
   in_appetite: "Review for acceptance",
-  needs_investigation: "Investigate missing or ambiguous data",
+  needs_investigation: "Investigate data",
   out_of_appetite: "Review for likely decline",
   out_of_scope: "Out of scope — line not written",
 };

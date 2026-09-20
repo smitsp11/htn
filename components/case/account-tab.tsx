@@ -20,9 +20,6 @@ export function AccountTab({ submission }: { submission: RankedSubmission }) {
     <div className="account-tab">
       <div className="section-title">
         <h3>Underwriting signals</h3>
-        <span>
-          {bundle.signals.length} signal{bundle.signals.length === 1 ? "" : "s"}
-        </span>
       </div>
       <div className="signal-list">
         {bundle.signals.map((signal) => (
@@ -40,10 +37,6 @@ export function AccountTab({ submission }: { submission: RankedSubmission }) {
 
       {bundle.leads.length > 0 ? (
         <div className="context-card">
-          <div className="section-title">
-            <h3>Relationship &amp; loss-history context</h3>
-            <span>{bundle.leads.length} items</span>
-          </div>
           {bundle.leads.map((lead) => (
             <div key={lead.label} className="lead">
               <header>
@@ -52,12 +45,9 @@ export function AccountTab({ submission }: { submission: RankedSubmission }) {
               </header>
               <b className="lead-value">{lead.value}</b>
               <p>{lead.detail}</p>
-              {lead.caution ? (
-                <p className="context-card-caution">
-                  <Icon name="info" /> {lead.caution}
-                </p>
-              ) : null}
-              {lead.sources.length > 0 ? <p className="lead-sources">{lead.sources.join(", ")}</p> : null}
+              <p className="context-card-caution">
+                <Icon name="info" /> Context only.
+              </p>
             </div>
           ))}
         </div>
@@ -69,8 +59,6 @@ export function AccountTab({ submission }: { submission: RankedSubmission }) {
         </summary>
         <p>{submission.id}</p>
       </details>
-
-      <p className="account-tab-footer">Context only. None of this is scored.</p>
     </div>
   );
 }
