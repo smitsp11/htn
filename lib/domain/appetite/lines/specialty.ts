@@ -1,11 +1,11 @@
-import { buildTable } from "./casualty";
+import { buildTable } from "./helpers";
 
 /**
  * Specialty appetite tables (cyber, health).
  *
  * provenance: synthesized-for-demo — plausible, documented bands for the
- * Extended-mode demo, NOT a real carrier filing. Reuses the shared casualty
- * builder so verdict semantics stay identical across every non-property line.
+ * Extended-mode demo, NOT a real carrier filing. Reuses the shared `buildTable`
+ * helper so verdict semantics stay identical across every non-property line.
  * Group Health omits the exposure (`tiv`) factor entirely.
  */
 
