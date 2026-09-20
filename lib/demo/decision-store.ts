@@ -2,7 +2,7 @@
 import type {
   DemoDecision,
   DemoDecisionKind,
-  DemoEvidenceEntry,
+  DemoEvidenceFact,
   DemoState,
   RequestState,
 } from "./types";
@@ -65,10 +65,40 @@ export function reopenDecision(submissionId: string): DemoState {
   return write(state);
 }
 
-export function addEvidence(entry: DemoEvidenceEntry): DemoState {
+/** Recompute disputed status for one factor: set the moment two facts disagree on value,
+ *  cleared the moment only one distinct value remains (e.g. after a correction is logged). */
+function reconcileFactor(facts: DemoEvidenceFact[], factorKey: string): void {
+  const forFactor = facts.filter((fact) => fact.factorKey === factorKey);
+  const distinctValues = new Set(forFactor.map((fact) => fact.value));
+  const disputed = distinctValues.size > 1;
+  for (const fact of forFactor) {
+    if (fact.state === "confirmed") continue; // an underwriter's confirmation stands
+    fact.state = disputed ? "disputed" : "observed";
+  }
+}
+
+export function addEvidenceFact(fact: Omit<DemoEvidenceFact, "id" | "state">): DemoState {
   const state = read();
-  (state.evidence[entry.submissionId] ??= []).push(entry);
+  const facts = (state.evidence[fact.submissionId] ??= []);
+  facts.push({ ...fact, id: `${fact.submissionId}:${fact.factorKey}:${facts.length}`, state: "observed" });
+  reconcileFactor(facts, fact.factorKey);
   return write(state);
+}
+
+export function confirmEvidenceFact(submissionId: string, factId: string, confirmedBy: string): DemoState {
+  const state = read();
+  const facts = state.evidence[submissionId] ?? [];
+  const fact = facts.find((f) => f.id === factId);
+  if (fact) {
+    fact.state = "confirmed";
+    fact.confirmedBy = confirmedBy;
+    fact.confirmedAt = new Date().toISOString();
+  }
+  return write(state);
+}
+
+export function evidenceFactsFor(submissionId: string): DemoEvidenceFact[] {
+  return read().evidence[submissionId] ?? [];
 }
 
 export function setRequestState(submissionId: string, requestKey: string, value: RequestState): DemoState {

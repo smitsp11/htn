@@ -1,3 +1,5 @@
+import type { FactorKey } from "@/lib/domain/types";
+
 export type DemoDecisionKind = "approve" | "decline" | "request_info";
 
 export interface DemoDecision {
@@ -10,18 +12,33 @@ export interface DemoDecision {
   decidedAt: string; // ISO timestamp
 }
 
-export interface DemoEvidenceEntry {
+/**
+ * A single fact's audit trail: where it came from, when it was logged, and
+ * whether anyone has verified it. `disputed` is set automatically -- never by a
+ * user -- the moment two logged facts for the same factor disagree on value.
+ */
+export type EvidenceState = "observed" | "confirmed" | "disputed";
+
+export interface DemoEvidenceFact {
+  id: string;
   submissionId: string;
+  factorKey: FactorKey;
+  factorLabel: string;
+  value: string;
   source: string;
-  note: string;
-  addedAt: string; // ISO timestamp
+  sourceDate?: string;
+  citation?: string;
+  state: EvidenceState;
+  confirmedBy?: string;
+  confirmedAt?: string;
+  recordedAt: string; // ISO timestamp
 }
 
 export type RequestState = "open" | "sent" | "received" | "waived";
 
 export interface DemoState {
   decisions: Record<string, DemoDecision>; // key: submissionId
-  evidence: Record<string, DemoEvidenceEntry[]>; // key: submissionId
+  evidence: Record<string, DemoEvidenceFact[]>; // key: submissionId
   requestStates: Record<string, Record<string, RequestState>>; // submissionId -> requestKey -> state
 }
 
@@ -62,6 +79,7 @@ export interface DemoResearch {
 }
 
 export interface DemoIntakeProposal {
+  factorKey: FactorKey;
   factorLabel: string;
   proposedValue: string;
   quote: string;

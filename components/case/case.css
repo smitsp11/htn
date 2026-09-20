@@ -704,6 +704,100 @@
   margin-top: 12px;
 }
 
+/* Evidence trail: per-fact audit record (source, date, confirmation/dispute state). */
+.evidence-trail {
+  margin-top: 18px;
+  border-top: 1px solid var(--border);
+  padding-top: 14px;
+}
+
+.evidence-trail h4 {
+  margin: 0 0 10px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.evidence-fact {
+  border-left: 2px solid var(--border-strong);
+  border-radius: 0 6px 6px 0;
+  padding: 8px 12px;
+  margin-bottom: 8px;
+  background: var(--surface-muted, #f1ede3);
+}
+
+.evidence-fact header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 12.5px;
+}
+
+.evidence-fact p {
+  margin: 4px 0 0;
+  font-size: 12px;
+  line-height: 1.55;
+  color: var(--ink-soft);
+}
+
+.evidence-fact-citation {
+  font-style: italic;
+}
+
+.evidence-fact small {
+  display: block;
+  margin-top: 6px;
+  font-size: 11px;
+  color: var(--ink-faint);
+}
+
+.evidence-fact-state {
+  font-size: 9px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 3px 7px;
+  border-radius: 4px;
+  color: var(--ink-faint);
+  background: var(--surface);
+  white-space: nowrap;
+}
+
+.evidence-confirmed {
+  border-left-color: var(--mint);
+}
+
+.evidence-confirmed .evidence-fact-state {
+  color: var(--mint-strong);
+  background: var(--mint-tint, #e4f6ec);
+}
+
+.evidence-disputed {
+  border-left-color: var(--danger);
+}
+
+.evidence-disputed .evidence-fact-state {
+  color: var(--danger);
+  background: var(--danger-tint, #fbeae6);
+}
+
+.evidence-fact-confirm {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.evidence-fact-confirm input {
+  flex: 1;
+  padding: 6px 8px;
+  font-size: 12px;
+  border: 1px solid var(--border-strong);
+  border-radius: 5px;
+  background: var(--surface);
+  color: var(--ink);
+}
+
 /* Evidence-request draft. Same card treatment as .evidence-intake above, so the
    two disclosures in the review tab read as one consistent design. */
 .evidence-request,
@@ -1034,6 +1128,13 @@
   font-size: 12px;
   line-height: 1.7;
   color: var(--ink-soft);
+}
+
+.appetite-check-provenance {
+  flex-basis: 100%;
+  font-size: 10px;
+  color: var(--ink-faint);
+  font-family: ui-monospace, "SFMono-Regular", Consolas, monospace;
 }
 
 @media (max-width: 700px) {

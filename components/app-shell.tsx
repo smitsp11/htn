@@ -141,7 +141,12 @@ export function AppShell() {
       <AnimatePresence mode="wait">
         {selected ? (
           <motion.div key="case" {...swap}>
-            <CaseView submission={selected} onBack={() => setSelectedId(null)} />
+            <CaseView
+              submission={selected}
+              onBack={() => setSelectedId(null)}
+              queryTrace={data.queryTrace}
+              retrievedAt={data.generatedAt}
+            />
           </motion.div>
         ) : (
           <motion.div key="queue" {...swap}>

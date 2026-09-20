@@ -3,14 +3,17 @@
 import { useState } from "react";
 import type { RankedSubmission } from "@/lib/domain/types";
 import { fixturesFor } from "@/lib/demo/fixtures";
-import { addEvidence } from "@/lib/demo/decision-store";
+import { addEvidenceFact } from "@/lib/demo/decision-store";
+import { EvidenceTrail } from "@/components/case/evidence-trail";
 
 /**
  * Demo-simple evidence intake, ported from federanorth's `intakePanel`
  * (`src/decision/intake-panel.js`). There is no real extraction here: "Extract proposed
- * facts" surfaces the fixed intake proposals for this demo bundle, and confirming writes
- * the selected facts to the local decision store as a single evidence entry. It never
- * recomputes the appetite score itself — that stays the deterministic engine's job.
+ * facts" surfaces the fixed intake proposals for this demo bundle. Confirming writes one
+ * evidence fact per selected proposal to the local decision store -- source, date, and
+ * citation attached per fact, not folded into a single free-text blob -- so the trail below
+ * can show where each value came from. It never recomputes the appetite score itself; that
+ * stays the deterministic engine's job.
  */
 export function EvidenceIntake({ submission }: { submission: RankedSubmission }) {
   const proposals = fixturesFor(submission.id).intakeProposals;
@@ -20,6 +23,7 @@ export function EvidenceIntake({ submission }: { submission: RankedSubmission })
   const [extracted, setExtracted] = useState(false);
   const [selected, setSelected] = useState<Record<number, boolean>>({});
   const [status, setStatus] = useState("");
+  const [refreshKey, setRefreshKey] = useState(0);
 
   function extract() {
     setExtracted(true);
@@ -33,19 +37,21 @@ export function EvidenceIntake({ submission }: { submission: RankedSubmission })
   function confirm() {
     const chosen = proposals.filter((_, index) => selected[index]);
     if (chosen.length === 0) return;
-    addEvidence({
-      submissionId: submission.id,
-      source: sourceName.trim() || "Unnamed source",
-      note: [
-        sourceDate ? `Source dated ${sourceDate}.` : null,
-        note.trim() || null,
-        ...chosen.map((proposal) => `${proposal.factorLabel}: ${proposal.proposedValue} (${proposal.quote}) — ${proposal.citation}`),
-      ]
-        .filter((line): line is string => Boolean(line))
-        .join("\n"),
-      addedAt: new Date().toISOString(),
-    });
-    setStatus(`Recorded ${chosen.length} fact${chosen.length === 1 ? "" : "s"} as evidence for ${submission.id}.`);
+    for (const proposal of chosen) {
+      addEvidenceFact({
+        submissionId: submission.id,
+        factorKey: proposal.factorKey,
+        factorLabel: proposal.factorLabel,
+        value: proposal.proposedValue,
+        source: sourceName.trim() || "Unnamed source",
+        sourceDate: sourceDate || undefined,
+        citation: [proposal.citation, proposal.quote, note.trim() || null].filter(Boolean).join(" — "),
+        recordedAt: new Date().toISOString(),
+      });
+    }
+    setStatus(`Logged ${chosen.length} fact${chosen.length === 1 ? "" : "s"} to the evidence trail below.`);
+    setNote("");
+    setRefreshKey((key) => key + 1);
   }
 
   return (
@@ -108,6 +114,7 @@ export function EvidenceIntake({ submission }: { submission: RankedSubmission })
             {status}
           </p>
         ) : null}
+        <EvidenceTrail submission={submission} refreshKey={refreshKey} />
       </details>
     </section>
   );

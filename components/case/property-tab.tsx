@@ -1,7 +1,20 @@
-import type { AppetiteVerdict, RankedSubmission } from "@/lib/domain/types";
+import type { AppetiteVerdict, FactorKey, QueryReasoning, RankedSubmission } from "@/lib/domain/types";
 import { pricingBandsFor } from "@/lib/domain/appetite";
 import { Badge, type BadgeTone } from "@/components/ui/badge";
 import { Track } from "@/components/ui/track";
+
+/** A factor key doesn't always match the query agent's own field name for it (see the
+ *  `field` values it actually emits in lib/federato/assemble.ts / query-trace.ts). */
+const SCHEMA_FIELD_FOR_FACTOR: Record<FactorKey, string> = {
+  submissionType: "submissionType",
+  lineOfBusiness: "lineOfBusiness",
+  primaryRiskState: "riskState",
+  tiv: "tiv",
+  totalPremium: "totalPremium",
+  buildingYear: "buildingYear",
+  construction: "constructionType",
+  fiveYearLossValue: "lossAmount",
+};
 
 const money = (value: number | undefined): string =>
   value == null
@@ -38,9 +51,23 @@ const verdictLabel: Record<AppetiteVerdict, string> = {
  * `src/decision/dashboard.js`), and a peer pricing comparison sourced from the
  * static demo fixtures (`lib/demo/fixtures.ts`). Every appetite fact here,
  * including the pricing bands below, comes straight from `submission` and the
- * published guideline thresholds -- never a peer dataset the app doesn't have.
+ * published guideline thresholds -- never a peer dataset the app doesn't have. When the
+ * query agent ran (live/replay mode), each factor also shows the real Federato schema path
+ * it was read from and when that batch was retrieved -- `queryTrace`/`retrievedAt` come
+ * straight from the query agent's own reasoning, never invented.
  */
-export function PropertyTab({ submission }: { submission: RankedSubmission }) {
+export function PropertyTab({
+  submission,
+  queryTrace,
+  retrievedAt,
+}: {
+  submission: RankedSubmission;
+  queryTrace?: QueryReasoning;
+  retrievedAt?: string;
+}) {
+  const schemaPathByField = new Map(queryTrace?.fields.map((field) => [field.field, field.schemaPath]) ?? []);
+  const retrievedLabel = retrievedAt && !Number.isNaN(Date.parse(retrievedAt)) ? new Date(retrievedAt).toLocaleString() : undefined;
+
   return (
     <div className="property-tab">
       <div className="section-title">
@@ -105,13 +132,22 @@ export function PropertyTab({ submission }: { submission: RankedSubmission }) {
       <details className="detail-section" open>
         <summary>Appetite checks · {submission.factors.length} factors</summary>
         <div className="factor-list">
-          {submission.factors.map((factor) => (
-            <div className="appetite-check" key={factor.key}>
-              <span className="appetite-check-label">{factor.label}</span>
-              <Badge tone={verdictTone[factor.verdict]}>{verdictLabel[factor.verdict]}</Badge>
-              <p>{factor.reason}</p>
-            </div>
-          ))}
+          {submission.factors.map((factor) => {
+            const schemaPath = schemaPathByField.get(SCHEMA_FIELD_FOR_FACTOR[factor.key]);
+            return (
+              <div className="appetite-check" key={factor.key}>
+                <span className="appetite-check-label">{factor.label}</span>
+                <Badge tone={verdictTone[factor.verdict]}>{verdictLabel[factor.verdict]}</Badge>
+                <p>{factor.reason}</p>
+                {schemaPath ? (
+                  <small className="appetite-check-provenance">
+                    Source: {schemaPath}
+                    {retrievedLabel ? ` · Retrieved ${retrievedLabel}` : ""}
+                  </small>
+                ) : null}
+              </div>
+            );
+          })}
         </div>
       </details>
 

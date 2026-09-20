@@ -47,6 +47,7 @@ const BUNDLE: DemoFixtureBundle = {
   },
   intakeProposals: [
     {
+      factorKey: "construction",
       factorLabel: "Construction",
       proposedValue: "Masonry non-combustible",
       quote: "\"Exterior walls are concrete block; roof is metal deck on steel joists.\"",

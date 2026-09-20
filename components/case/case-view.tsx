@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
-import type { RankedSubmission } from "@/lib/domain/types";
+import type { QueryReasoning, RankedSubmission } from "@/lib/domain/types";
 import { Tabs } from "@/components/ui/tabs";
 import { CaseBar } from "@/components/case/case-bar";
 import { CaseSummary } from "@/components/case/case-summary";
@@ -22,6 +22,11 @@ const CASE_TABS: { id: CaseTab; label: string }[] = [
 export interface CaseViewProps {
   submission: RankedSubmission;
   onBack: () => void;
+  /** Query-agent field provenance and batch retrieval time, when available (live/replay
+   *  mode only) -- passed through to the property tab to show where each factor's value
+   *  came from in the discovered Federato schema. */
+  queryTrace?: QueryReasoning;
+  retrievedAt?: string;
 }
 
 /**
@@ -32,7 +37,7 @@ export interface CaseViewProps {
  * the decision sidebar are all implemented; this shell just composes them and
  * owns the active-tab state.
  */
-export function CaseView({ submission, onBack }: CaseViewProps) {
+export function CaseView({ submission, onBack, queryTrace, retrievedAt }: CaseViewProps) {
   const [activeTab, setActiveTab] = useState<CaseTab>("review");
 
   return (
@@ -51,7 +56,9 @@ export function CaseView({ submission, onBack }: CaseViewProps) {
               transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
             >
               {activeTab === "review" && <ReviewTab submission={submission} />}
-              {activeTab === "property" && <PropertyTab submission={submission} />}
+              {activeTab === "property" && (
+                <PropertyTab submission={submission} queryTrace={queryTrace} retrievedAt={retrievedAt} />
+              )}
               {activeTab === "account" && <AccountTab submission={submission} />}
             </motion.div>
           </AnimatePresence>
