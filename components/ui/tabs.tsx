@@ -1,5 +1,6 @@
 "use client";
 
+import { motion } from "motion/react";
 import type { KeyboardEvent } from "react";
 
 export interface TabItem {
@@ -28,7 +29,7 @@ export function Tabs({ tabs, active, onChange }: TabsProps) {
   }
 
   return (
-    <div className="tabs" role="tablist">
+    <div className="tabs tabs-sliding" role="tablist">
       {tabs.map((tab, index) => {
         const selected = tab.id === active;
         return (
@@ -44,6 +45,13 @@ export function Tabs({ tabs, active, onChange }: TabsProps) {
           >
             {tab.label}
             {tab.count !== undefined ? <span>{tab.count}</span> : null}
+            {selected ? (
+              <motion.span
+                className="tab-underline"
+                layoutId="tabUnderline"
+                transition={{ type: "spring", stiffness: 520, damping: 40 }}
+              />
+            ) : null}
           </button>
         );
       })}

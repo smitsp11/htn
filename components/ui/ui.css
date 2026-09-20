@@ -40,8 +40,12 @@
 
 /* Tabs: ported from federanorth's .tabs/.tab. */
 .tabs{display:flex;gap:26px;padding:0 23px;border-bottom:1px solid var(--border);overflow-x:auto;scrollbar-width:thin}
-.tab{padding:15px 0 13px;border-bottom:2px solid transparent;display:flex;gap:8px;align-items:center;font-size:11px;white-space:nowrap;color:var(--ink-soft);transition:color .18s ease,border-color .18s ease}
+.tab{position:relative;padding:15px 0 13px;border-bottom:2px solid transparent;display:flex;gap:8px;align-items:center;font-size:11px;white-space:nowrap;color:var(--ink-soft);transition:color .18s ease,border-color .18s ease}
 .tab.active{color:var(--mint-strong);border-color:var(--mint)}
+/* Tabs that carry the motion sliding underline suppress the static border so the
+   two underlines don't overlap during the slide. */
+.tabs-sliding .tab.active{border-color:transparent}
+.tab-underline{position:absolute;left:0;right:0;bottom:-1px;height:2px;background:var(--mint);border-radius:2px}
 .tab span{font-size:9px;background:var(--surface-muted);padding:2px 5px;border-radius:4px;color:var(--ink-soft)}
 .tab.active span{background:var(--mint-tint);color:var(--mint-strong)}
 
@@ -51,7 +55,7 @@
 .dialog{color:var(--ink);background:var(--surface);border:1px solid var(--border);box-shadow:0 12px 60px #1a140e1c;border-radius:10px;max-width:calc(100vw - 32px);max-height:85dvh;overflow-y:auto;scrollbar-width:thin;padding:30px}
 
 /* Toast: ported from federanorth's #toast. */
-.toast{position:fixed;bottom:25px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;padding:13px 22px;font-size:12px;border-radius:8px;box-shadow:0 6px 30px #1a140e26;z-index:100}
+.toast{position:fixed;bottom:25px;left:0;right:0;margin-inline:auto;width:fit-content;background:var(--ink);color:#fff;padding:13px 22px;font-size:12px;border-radius:8px;box-shadow:0 10px 34px #1a140e33;z-index:100}
 
 /* Loading / empty / error state cards (migrated from old globals.css) */
 .state-panel {

@@ -1,3 +1,37 @@
+/* Loading skeleton: shimmering stand-ins shown while the rankings fetch runs.
+   The shimmer sweep pauses under prefers-reduced-motion (global guard). */
+.queue-skeleton {
+  padding: 4px 0 0;
+}
+.skeleton {
+  background: linear-gradient(100deg, var(--surface-muted) 30%, var(--surface-hover) 50%, var(--surface-muted) 70%);
+  background-size: 200% 100%;
+  border-radius: 6px;
+  animation: skeleton-sweep 1.3s ease-in-out infinite;
+}
+@keyframes skeleton-sweep {
+  from { background-position: 200% 0; }
+  to { background-position: -200% 0; }
+}
+.sk-eyebrow { width: 120px; height: 11px; margin-bottom: 12px; }
+.sk-title { width: 320px; height: 26px; margin-bottom: 26px; }
+.sk-tabs { width: 100%; max-width: 640px; height: 34px; margin-bottom: 26px; border-radius: 8px; }
+.sk-table { border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+.sk-row {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1.4fr 2.4fr;
+  align-items: center;
+  gap: 20px;
+  padding: 18px 22px;
+  border-bottom: 1px solid var(--border);
+  animation: row-in 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.sk-row:last-child { border-bottom: 0; }
+.sk-cell { height: 12px; }
+.sk-name { height: 16px; }
+.sk-bar { height: 8px; border-radius: 99px; }
+.sk-wide { height: 12px; }
+
 /* Queue table: ported from federanorth's `.queue-table` / `.table-scroll` block
    (src/decision/federanorth.css), adapted to read RankedSubmission columns. */
 .table-scroll {
