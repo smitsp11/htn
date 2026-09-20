@@ -47,6 +47,23 @@ test('all target criteria with a fully covered loss window score 100; weights su
   assert.equal(result.score, 100);
   assert.equal(result.decision, 'IN_APPETITE');
   assert.equal(buildEscalations(result, rules).verdict, 'work-now');
+  assert.equal(result.appetiteTier, 'target', 'every preference (state, TIV, premium, year) is at target');
+  assert.equal(result.targetMatches, 4);
+  assert.equal(result.targetEligible, 4);
+});
+
+test('an in-appetite submission missing even one preference is acceptable, not target', () => {
+  const f = facts(); f.primaryState = 'NC'; // acceptable state, not a target state
+  const result = scoreSubmission(f, rules);
+  assert.equal(result.decision, 'IN_APPETITE');
+  assert.equal(result.appetiteTier, 'acceptable');
+  assert.equal(result.targetMatches, 3);
+});
+
+test('appetite tier is null off the in-appetite path', () => {
+  assert.equal(scoreSubmission({ ...facts(), premium: 10 }, rules).appetiteTier, null, 'a hard failure is not tiered');
+  const review = facts(); review.loss.historyComplete = false;
+  assert.equal(scoreSubmission(review, rules).appetiteTier, null, 'review-required is not tiered');
 });
 
 test('premium and TIV boundaries follow inclusive ranges and hard failures cap scores', () => {
@@ -133,6 +150,13 @@ test('ranking uses score descending with stable numeric ID ties', () => {
   bad.id = 2; bad.premium = 10;
   assert.deepEqual(rankSubmissions([bad, review, good], rules).map(r => r.id), [1, 3, 2]);
   assert.deepEqual(rankSubmissions([{ ...good, id: 10 }, { ...good, id: 2 }], rules).map(r => r.id), [2, 10]);
+});
+
+test('equal-score ties prefer the sooner effective date, then fall back to ID', () => {
+  const soon = { ...facts(), id: 5, effectiveDate: '2025-02-01' };
+  const later = { ...facts(), id: 1, effectiveDate: '2025-06-01' };
+  const undated = { ...facts(), id: 2, effectiveDate: undefined };
+  assert.deepEqual(rankSubmissions([later, undated, soon], rules).map(r => r.id), [5, 1, 2]);
 });
 
 test('loss window coverage reports the uncovered ranges to request', () => {

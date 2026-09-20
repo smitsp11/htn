@@ -153,6 +153,15 @@ export function scoreSubmission(facts, rules) {
   const missing = factors.filter(f => f.status === 'unknown');
   const issues = facts.issues ?? [];
   const decision = failed.length ? 'OUT_OF_APPETITE' : missing.length || issues.length ? 'REVIEW_REQUIRED' : 'IN_APPETITE';
+
+  /**
+   * Guideline preferences (state, TIV, premium, building age) each carry a target tier above
+   * the acceptable one. An in-appetite submission is only "target" when every preference is
+   * actually hit, not merely acceptable — a distinction the score alone does not make explicit.
+   */
+  const preferenceFactors = factors.filter(f => f.hasTarget);
+  const targetMatches = preferenceFactors.filter(f => f.status === 'target').length;
+  const appetiteTier = decision !== 'IN_APPETITE' ? null : targetMatches === preferenceFactors.length ? 'target' : 'acceptable';
   const rawScore = Math.round(factors.reduce((s, f) => s + f.points, 0) * 10) / 10;
   const cap = decision === 'OUT_OF_APPETITE' ? rules.outOfAppetiteScoreCap : decision === 'REVIEW_REQUIRED' ? rules.reviewScoreCap : 100;
   const score = Math.min(rawScore, cap);
@@ -169,15 +178,19 @@ export function scoreSubmission(facts, rules) {
 
   return {
     ...facts, score, rawScore, scoreCap: cap, decision, recommendation, explanation, factors,
-    evidenceConfidence,
+    evidenceConfidence, appetiteTier, targetMatches, targetEligible: preferenceFactors.length,
     usesInterpretation: factors.some(f => f.basis === 'interpretation'),
     // Share of factors actually evaluated, not a statistical probability.
     evidenceCoverage: Math.round((factors.length - missing.length) / factors.length * 100),
   };
 }
 
+/** Sooner effective dates rank first among ties; missing or unparsable dates sort last. */
+const effectiveRank = row => { const t = Date.parse(row.effectiveDate); return Number.isFinite(t) ? t : Infinity; };
+
 export function rankSubmissions(facts, rules) {
   return facts.map(f => scoreSubmission(f, rules))
-    .sort((a, b) => b.score - a.score || b.rawScore - a.rawScore || String(a.id).localeCompare(String(b.id), 'en', { numeric: true }))
+    .sort((a, b) => b.score - a.score || b.rawScore - a.rawScore || effectiveRank(a) - effectiveRank(b) ||
+      String(a.id).localeCompare(String(b.id), 'en', { numeric: true }))
     .map((row, index) => ({ rank: index + 1, ...row }));
 }

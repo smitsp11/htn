@@ -36,6 +36,7 @@ dialog{color:var(--ink);background:var(--surface);border:1px solid var(--border)
 .lane-stat.active{border-color:var(--mint);background:var(--mint-tint)}
 .badge.lane-work-now i{background:var(--mint)}.badge.lane-chase-evidence i{background:var(--orange)}.badge.lane-declined i{background:var(--danger)}.badge.lane-not-property i{background:var(--ink-faint)}
 .badge.good-order{color:var(--mint-strong);background:var(--mint-tint)}
+.badge.target-tier{color:var(--orange-strong);background:var(--orange-tint)}
 .flag-chips{display:inline-flex;flex-wrap:wrap;gap:5px;margin-top:2px}
 .flag-chip{display:inline-flex;align-items:center;padding:3px 7px;font-size:9px;font-weight:600;border-radius:5px;white-space:nowrap}
 .flag-chip.flag-red{color:var(--danger);background:var(--danger-tint)}
