@@ -35,9 +35,29 @@
 }
 .queue-table tbody tr {
   cursor: pointer;
+  transition: background 0.15s ease, box-shadow 0.15s ease;
+  animation: row-in 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: calc(var(--row-index, 0) * 32ms);
 }
+@keyframes row-in {
+  from {
+    opacity: 0;
+    transform: translateY(7px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+/* Each row carries a status accent (matching its lane badge/bar); it surfaces as
+   a left rail on hover so the eye tracks the row's disposition, not a raw score. */
+.queue-table tbody tr[data-lane="work-now"] { --lane-accent: var(--mint); }
+.queue-table tbody tr[data-lane="chase-evidence"] { --lane-accent: var(--orange); }
+.queue-table tbody tr[data-lane="declined"] { --lane-accent: var(--danger); }
+.queue-table tbody tr[data-lane="not-property"] { --lane-accent: var(--ink-faint); }
 .queue-table tbody tr:hover {
   background: var(--surface-hover);
+  box-shadow: inset 3px 0 0 var(--lane-accent, var(--mint));
 }
 .queue-table tbody tr:focus-visible {
   outline: 2px solid var(--mint);
@@ -83,10 +103,16 @@
   flex-wrap: wrap;
   min-width: 70px;
 }
-.score-cell b {
+/* Status pill leads; the raw score is a muted secondary (the bar already encodes it). */
+.score-cell .badge {
+  font-size: 10px;
+  padding: 5px 9px;
+}
+.score-cell b.score-value {
   font-weight: 600;
-  font-size: 12px;
-  color: var(--ink);
+  font-size: 11px;
+  color: var(--ink-faint);
+  font-variant-numeric: tabular-nums;
 }
 /* Actual historical disposition, shown next to the predicted appetite lane so an
    underwriter can see predicted vs. actual at a glance. Read-only context. */
@@ -161,6 +187,7 @@
   font-size: 14px;
   color: var(--ink-soft);
   background: transparent;
+  transition: color 0.18s ease, border-color 0.18s ease;
 }
 .scope-switch button[aria-pressed="true"] {
   border-color: var(--mint);
@@ -408,6 +435,7 @@ select {
   padding: 6px 12px;
   background: transparent;
   white-space: nowrap;
+  transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
 }
 .lane-all[aria-pressed="true"] {
   color: var(--mint-strong);

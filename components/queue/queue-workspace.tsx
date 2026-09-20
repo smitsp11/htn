@@ -27,6 +27,23 @@ type LaneFilter = Lane | "all";
 
 const LANES = Object.keys(LANE_LABELS) as Lane[];
 
+const SCOPE_LABELS: Record<Scope, string> = {
+  property: "commercial property",
+  other: "other lines",
+  all: "all submissions",
+};
+
+/**
+ * Empty-state copy that names *which* filters combined to produce zero rows, so a
+ * stacked scope + lane filter reads as a filter (recoverable via Reset) rather than
+ * a broken table.
+ */
+function emptyStateMessage(scope: Scope, lane: LaneFilter): string {
+  const scopeLabel = SCOPE_LABELS[scope];
+  if (lane === "all") return `No ${scopeLabel} submissions in view.`;
+  return `No ${scopeLabel} submissions in the “${LANE_LABELS[lane]}” lane.`;
+}
+
 function laneCounts(list: RankedSubmission[]): Record<Lane, number> {
   const counts = Object.fromEntries(LANES.map((lane) => [lane, 0])) as Record<Lane, number>;
   for (const submission of list) counts[laneForStatus(submission.status)] += 1;
@@ -153,6 +170,11 @@ export function QueueWorkspace({ submissions, onOpen, matchedIds }: QueueWorkspa
         value={scope}
         onChange={(next) => {
           setScope(next);
+          // Reset the lane filter when the line-of-business scope changes: a lane
+          // selected under the old scope (e.g. "Ready for review") can have zero
+          // rows under the new one, which otherwise reads as a broken empty table
+          // rather than a stacked filter.
+          setLane("all");
           setPage(1);
         }}
       />
@@ -197,7 +219,7 @@ export function QueueWorkspace({ submissions, onOpen, matchedIds }: QueueWorkspa
       ) : (
         <div className="empty-state">
           <Icon name="inbox" />
-          <p>No submissions match the current filters.</p>
+          <p>{emptyStateMessage(scope, lane)}</p>
           <button type="button" onClick={clearFilters}>
             Reset filters
           </button>

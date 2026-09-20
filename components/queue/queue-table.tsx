@@ -1,9 +1,10 @@
 "use client";
 
-import type { KeyboardEvent } from "react";
+import type { CSSProperties, KeyboardEvent } from "react";
 import type { RankedSubmission } from "@/lib/domain/types";
 import { primaryReason } from "@/lib/rankings/presentation";
 import { isOffStrategyBind, outcomeChipText } from "@/lib/rankings/outcome";
+import { laneForStatus } from "@/lib/rankings/lanes";
 import { LaneBadge } from "@/components/ui/lane-badge";
 import { Badge } from "@/components/ui/badge";
 import { Track } from "@/components/ui/track";
@@ -60,11 +61,13 @@ export function QueueTable({ submissions, onOpen }: QueueTableProps) {
           </tr>
         </thead>
         <tbody>
-          {submissions.map((submission) => (
+          {submissions.map((submission, index) => (
             <tr
               key={submission.id}
               data-row-id={submission.id}
+              data-lane={laneForStatus(submission.status)}
               className="row"
+              style={{ "--row-index": index } as CSSProperties}
               role="button"
               tabIndex={0}
               onClick={() => onOpen(submission.id)}
@@ -84,8 +87,8 @@ export function QueueTable({ submissions, onOpen }: QueueTableProps) {
               <td>
                 <span className="score-cell">
                   <LaneBadge status={submission.status} />
-                  <Track value={submission.score} />
-                  <b>{submission.score}</b>
+                  <Track value={submission.score} tone={laneForStatus(submission.status)} />
+                  <b className="score-value">{submission.score}</b>
                   {submission.actualOutcome ? (
                     <span className="outcome-line">
                       {isOffStrategyBind(submission) ? <Badge tone="orange">Off-strategy bind</Badge> : null}
