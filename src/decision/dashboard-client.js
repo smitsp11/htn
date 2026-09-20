@@ -3,7 +3,7 @@
   const rows = [...document.querySelectorAll('.row')];
   const search = byId('search'), line = byId('line'), state = byId('state'), groupSelect = byId('group');
   const sort = byId('sort'), pageSize = byId('page-size');
-  const sourceStatus = byId('record-status');
+  const sourceStatus = byId('record-status'), otherLineFilter = byId('other-line-filter');
   let scope = 'property', lane = '', page = 1, filtered = [], lastRecordButton;
   const recordDialog = byId('record-dialog'), methodDialog = byId('method-dialog'), chaseDialog = byId('chase-dialog');
   const dialogs = [recordDialog, methodDialog, chaseDialog].filter(Boolean);
@@ -41,13 +41,17 @@
     byId('queue-title').textContent = scope === 'property' ? 'Commercial property' : scope === 'other' ? 'Other insurance lines' : 'All submissions';
     byId('property-lanes').hidden = scope !== 'property';
     byId('other-line-breakdown').hidden = scope !== 'other';
-    document.querySelectorAll('[data-line-filter]').forEach(button => {
-      const count = rows.filter(row => row.dataset.line === button.dataset.lineFilter &&
-        (sourceStatus.value === 'all' || (sourceStatus.value === 'history' ? row.dataset.historical === 'true' : row.dataset.historical !== 'true'))).length;
-      button.querySelector('b').textContent = count;
-      button.disabled = count === 0;
-      button.setAttribute('aria-pressed', String(line.value === button.dataset.lineFilter));
-    });
+    if (otherLineFilter) {
+      const activeRows = rows.filter(row => row.dataset.line !== 'property' &&
+        (sourceStatus.value === 'all' || (sourceStatus.value === 'history' ? row.dataset.historical === 'true' : row.dataset.historical !== 'true')));
+      otherLineFilter.options[0].textContent = `All other lines (${activeRows.length})`;
+      [...otherLineFilter.options].slice(1).forEach(option => {
+        const count = activeRows.filter(row => row.dataset.line === option.value).length;
+        option.textContent = `${option.dataset.lineLabel} (${count})`;
+        option.disabled = count === 0;
+      });
+      otherLineFilter.value = line.value;
+    }
     document.querySelectorAll('[data-scope]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.scope === scope)));
     document.querySelectorAll('[data-tab]').forEach(tab => {
       const selected = tab.dataset.tab === lane;
@@ -72,7 +76,7 @@
   document.querySelectorAll('[data-scope]').forEach(button => button.addEventListener('click', () => {
     scope = button.dataset.scope; line.value = ''; lane = ''; sort.value = scope === 'other' ? 'account' : 'priority'; render();
   }));
-  document.querySelectorAll('[data-line-filter]').forEach(button => button.addEventListener('click', () => { line.value = button.dataset.lineFilter; render(); }));
+  if (otherLineFilter) otherLineFilter.addEventListener('change', () => { line.value = otherLineFilter.value; render(); });
   [search, line, state, groupSelect, sort, pageSize, sourceStatus].forEach(element =>
     element.addEventListener(element === search ? 'input' : 'change', () => render()));
   byId('clear-filters').addEventListener('click', clear);
