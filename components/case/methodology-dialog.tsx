@@ -32,17 +32,12 @@ const SHARED_ASSUMPTIONS: string[] = [
   "Scores are normalized against the maximum points available from that line's applicable factors, so omitted factors never count against a line.",
   "A single not-acceptable factor is a hard gate: the submission is out of appetite regardless of how many other factors are favorable, and the score is informational only in that case.",
   "Any unresolved (\"unknown\") applicable factor moves the submission to needs-investigation instead of a verdict.",
-  "Ranking order is status first, then the number of not-acceptable factors (fewest first), then score. A submission that is one fix from appetite ranks above one that fails three factors, even when both count the same number of favorable factors.",
-  "A not-acceptable money value within 5% of its boundary is flagged as a near miss. The verdict does not change; the flag tells the underwriter that one confirmed figure could.",
-  "Every factor carries the source path and derivation it was read from, as recorded by the query agent. Provenance never changes a verdict; it shows where the number came from.",
 ];
 
 const PROPERTY_ASSUMPTIONS: string[] = [
   "Target verdicts exist only for the four factors with a published target band -- primary risk state, TIV, total premium, and building year. The other four factors (submission type, line of business, construction, five-year losses) only ever reach \"acceptable\" or \"not acceptable\".",
   "Property renewal business is not acceptable; only new property business is acceptable for the submission-type factor.",
   "A building from exactly 1990, a 50/50 construction split, or losses of exactly $100K remain unresolved under the property guideline.",
-  "Building year within 2 years of the 1990 cutoff and approved construction within 5 points of the 50% threshold also count as near misses.",
-  "Building year follows the oldest building on the schedule. When the schedule has several buildings, the factor also states what a value-weighted year would conclude, so the underwriter can see how much the verdict depends on that rule.",
 ];
 
 const LINE_METHODS = [

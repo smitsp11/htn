@@ -8,7 +8,7 @@
 import type { QueryReasoning } from "@/lib/domain/types";
 import type { DataPlan, QueuePlan } from "./schema-planner";
 
-export type TraceStage = "schema" | "plan" | "query" | "repair" | "derive" | "warning" | "follow-up";
+export type TraceStage = "schema" | "plan" | "query" | "repair" | "derive" | "warning";
 
 export interface TraceStep {
   stage: TraceStage;

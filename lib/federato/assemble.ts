@@ -23,7 +23,7 @@
  *   with no claims reports 0, a submission with no policy reports unknown.
  */
 
-import type { BuildingFact, CanonicalSubmission, FactorEvidence, FactorKey } from "@/lib/domain/types";
+import type { CanonicalSubmission } from "@/lib/domain/types";
 import type { DataPlan, FallbackLocation, FieldChoice, QueuePlan } from "./schema-planner";
 import { REQUIREMENTS_BY_KEY, type RequirementKey } from "./requirements";
 import { asNumber, asString, collectPath, getPath, isRecord, type UnknownRecord } from "./response";
@@ -39,8 +39,6 @@ export interface DerivationNote {
 export interface AssembledSubmission {
   submission: CanonicalSubmission;
   notes: DerivationNote[];
-  /** Resource the record was read from, to qualify note paths for the UI. */
-  resource?: string;
   /** `id` of the API record this was assembled from, for cross-checks. */
   sourceRecordId?: string;
   /** Building values summed over every traversal, as a server-side `$sum` would. */
@@ -329,7 +327,7 @@ function yearOf(value: unknown): number | undefined {
  * loss falls in the five years ending at the effective year (else the newest
  * claim year). Undated claims are included so a missing date never hides a loss.
  */
-export function deriveLosses(
+function deriveLosses(
   claims: UnknownRecord[],
   effectiveDate: string | undefined,
   choices: FieldChoice[],
@@ -425,24 +423,6 @@ interface BuildingFacts {
   primaryRiskState?: string;
   primaryLocation?: { state?: string; county?: string };
   undedupedTiv?: number;
-  buildingSchedule?: BuildingFact[];
-}
-
-/** The per-building facts behind the aggregates, for the engine's sensitivity note. */
-function scheduleOf(buildings: UnknownRecord[], leaves: BuildingLeaves): BuildingFact[] | undefined {
-  const schedule = buildings
-    .map((building) => {
-      const fact: BuildingFact = {};
-      const year = firstNumber(building, leaves.year);
-      const value = firstNumber(building, leaves.value);
-      const constructionType = firstString(building, leaves.construction);
-      if (year !== undefined) fact.year = year;
-      if (value !== undefined) fact.value = value;
-      if (constructionType) fact.constructionType = constructionType;
-      return fact;
-    })
-    .filter((fact) => Object.keys(fact).length > 0);
-  return schedule.length ? schedule : undefined;
 }
 
 /**
@@ -508,7 +488,6 @@ function deriveFromLocations(
     facts.undedupedTiv = undeduped.length ? undeduped.reduce((total, value) => total + value, 0) : undefined;
   }
 
-  facts.buildingSchedule = scheduleOf(buildings, leaves);
   facts.buildingYear = deriveBuildingYear(buildings, leaves, buildingSource, notes, lowConfidence);
   const construction = deriveConstruction(buildings, leaves, buildingSource, notes, lowConfidence);
   facts.approvedConstructionPercentage = construction.share;
@@ -547,7 +526,7 @@ export function assembleSubmissions({ plan, rootRows, queuePlan, queueRows = [] 
       asString(row.id) ??
       `record-${assembled.length + 1}`;
 
-    const entry: AssembledSubmission = {
+    assembled.push({
       sourceRecordId: asString(row.id),
       undedupedTiv: facts.undedupedTiv,
       primaryLocation: facts.primaryLocation,
@@ -570,16 +549,9 @@ export function assembleSubmissions({ plan, rootRows, queuePlan, queueRows = [] 
         approvedConstructionPercentage: facts.approvedConstructionPercentage,
         constructionDescription: facts.constructionDescription,
         fiveYearLossValue: losses,
-        buildingSchedule: facts.buildingSchedule,
       },
       notes,
-      resource: plan.rootResource,
-    };
-    entry.submission.derivations = {
-      ...directReads(entry, plan.choices, plan.rootResource, queueRow ? { choices: queueChoices, resource: queuePlan?.resource } : undefined),
-      ...evidenceFromNotes(entry),
-    };
-    assembled.push(entry);
+    });
   }
 
   for (const queueRow of queueRows) {
@@ -630,10 +602,9 @@ function assembleUnboundSubmission(
     }
   }
 
-  const entry: AssembledSubmission = {
+  return {
     sourceRecordId: asString(row.id),
     primaryLocation: facts.primaryLocation,
-    resource: queuePlan?.resource,
     submission: {
       id: scalarString(row, choiceFor(choices, "submissionIdentifier")) ?? asString(row.id) ?? "unknown-submission",
       accountName: scalarString(row, choiceFor(choices, "accountName")) ?? "Unknown account",
@@ -644,118 +615,7 @@ function assembleUnboundSubmission(
       buildingYear: facts.buildingYear,
       approvedConstructionPercentage: facts.approvedConstructionPercentage,
       constructionDescription: facts.constructionDescription,
-      buildingSchedule: facts.buildingSchedule,
     },
     notes,
   };
-  entry.submission.derivations = {
-    ...directReads(entry, choices, queuePlan?.resource),
-    ...evidenceFromNotes(entry),
-  };
-  return entry;
-}
-
-/* ---------------------------------------------------------------------- */
-/* Provenance: derivation notes as per-factor evidence.                     */
-/* ---------------------------------------------------------------------- */
-
-/** Which appetite factor each note's canonical field feeds. */
-const NOTE_FIELD_TO_FACTOR: Record<string, FactorKey> = {
-  submissionType: "submissionType",
-  lineOfBusiness: "lineOfBusiness",
-  primaryRiskState: "primaryRiskState",
-  tiv: "tiv",
-  totalPremium: "totalPremium",
-  buildingYear: "buildingYear",
-  approvedConstructionPercentage: "construction",
-  fiveYearLossValue: "fiveYearLossValue",
-};
-
-/** The canonical input each factor reads, to know when a value is absent. */
-const FACTOR_INPUT: Record<FactorKey, keyof CanonicalSubmission> = {
-  submissionType: "submissionType",
-  lineOfBusiness: "lineOfBusiness",
-  primaryRiskState: "primaryRiskState",
-  tiv: "tiv",
-  totalPremium: "totalPremium",
-  buildingYear: "buildingYear",
-  construction: "approvedConstructionPercentage",
-  fiveYearLossValue: "fiveYearLossValue",
-};
-
-/** Prefix a note's path with its resource unless it already names one. */
-function qualifyPath(path: string | undefined, resource: string | undefined): string | undefined {
-  const trimmed = path?.trim();
-  if (!trimmed) return undefined;
-  if (!resource || trimmed.startsWith(`${resource}.`) || /^[A-Z]/.test(trimmed)) return trimmed;
-  return `${resource}.${trimmed}`;
-}
-
-function toEvidence(note: DerivationNote, resource: string | undefined): FactorEvidence {
-  const evidence: FactorEvidence = { method: note.method, confidence: note.confidence };
-  const sourcePath = qualifyPath(note.sourcePath, resource);
-  if (sourcePath) evidence.sourcePath = sourcePath;
-  if (note.ambiguity) evidence.ambiguity = note.ambiguity;
-  return evidence;
-}
-
-/**
- * Evidence for the scalar factors the assembler reads straight off a record:
- * no aggregation, so no note was written, but the underwriter still deserves
- * to see the field it came from.
- */
-function directReads(
-  entry: AssembledSubmission,
-  choices: FieldChoice[],
-  resource: string | undefined,
-  queue?: { choices: FieldChoice[]; resource?: string },
-): Partial<Record<FactorKey, FactorEvidence>> {
-  const scalars: Array<[FactorKey, RequirementKey]> = [
-    ["submissionType", "submissionType"],
-    ["lineOfBusiness", "lineOfBusiness"],
-    ["totalPremium", "totalPremium"],
-  ];
-  const evidence: Partial<Record<FactorKey, FactorEvidence>> = {};
-  for (const [key, requirement] of scalars) {
-    if (entry.submission[FACTOR_INPUT[key]] === undefined) continue;
-    const root = choiceFor(choices, requirement);
-    const fromQueue = !root && queue ? choiceFor(queue.choices, requirement) : undefined;
-    const choice = root ?? fromQueue;
-    if (!choice?.path) continue;
-    evidence[key] = {
-      method: "Read directly from the record.",
-      sourcePath: qualifyPath(choice.path, root ? resource : queue?.resource),
-      confidence: "high",
-    };
-  }
-  return evidence;
-}
-
-/**
- * Per-factor evidence from the derivation notes. A later note for the same
- * field wins, so a follow-up query's note replaces the first pass. A `*` note
- * (no policy, fallback location) stands in for every factor whose value is
- * absent and has no note of its own.
- */
-export function evidenceFromNotes(entry: AssembledSubmission): Partial<Record<FactorKey, FactorEvidence>> {
-  const evidence: Partial<Record<FactorKey, FactorEvidence>> = {};
-  const wildcard = entry.notes.filter((note) => note.field === "*");
-  for (const note of entry.notes) {
-    const key = NOTE_FIELD_TO_FACTOR[note.field];
-    if (key) evidence[key] = toEvidence(note, entry.resource);
-  }
-  if (wildcard.length) {
-    // The first `*` note is the broadest ("no bound policy"); later ones
-    // (fallback location) already annotate the factors they touch.
-    const fallback = toEvidence(wildcard[0], entry.resource);
-    for (const key of Object.keys(FACTOR_INPUT) as FactorKey[]) {
-      if (!evidence[key] && entry.submission[FACTOR_INPUT[key]] === undefined) evidence[key] = fallback;
-    }
-  }
-  return evidence;
-}
-
-/** Re-derive the evidence after a follow-up patched a value and appended its note. */
-export function refreshDerivations(entry: AssembledSubmission): void {
-  entry.submission.derivations = { ...(entry.submission.derivations ?? {}), ...evidenceFromNotes(entry) };
 }

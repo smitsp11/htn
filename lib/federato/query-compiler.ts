@@ -140,14 +140,13 @@ export function buildQueueQuery(
   queuePlan: QueuePlan,
   offset = 0,
   limit = PAGE_LIMIT,
-  extraPaths: string[] = [],
 ): CompiledQuery {
   const expand = buildExpandStage(queuePlan.choices, queuePlan.fallback);
 
   const payload: QueryPayload = {
     resource: queuePlan.resource,
     ...(expand ? { expand } : {}),
-    select: buildSelectStage(queuePlan.choices, queuePlan.fallback, extraPaths),
+    select: buildSelectStage(queuePlan.choices, queuePlan.fallback),
     pagination: { limit, offset },
   };
   const withoutSelect: QueryPayload = { ...payload };

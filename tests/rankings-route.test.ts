@@ -76,65 +76,6 @@ test("pipeline: upstream failures propagate to the caller", async () => {
   await assert.rejects(buildRankings(d), /authentication failed/);
 });
 
-test("pipeline: undecided rows go back to the agent for a second pass and are re-ranked", async () => {
-  const seen: Array<{ submissionId: string; factor: string; reason: string }> = [];
-  const { deps: d, calls } = deps({
-    runAgent: async () => {
-      calls.push("agent");
-      return {
-        submissions: [fullTarget, missingLosses],
-        traceSummary: [],
-        followUp: async (gaps) => {
-          calls.push("followUp");
-          seen.push(...gaps);
-          return {
-            submissions: [fullTarget, { ...missingLosses, fiveYearLossValue: 25_000 }],
-            updated: [missingLosses.id],
-            queries: 1,
-            traceSummary: ["Follow-up: prior-term losses: resolved 1 submission."],
-            reasoning: { rootResource: "Policy", plannedBy: "heuristic", fields: [], unresolved: [], fallbacks: [], steps: [{ stage: "follow-up", title: "Merged prior-term losses", detail: "1 resolved." }] },
-          };
-        },
-      };
-    },
-  });
-  const result = await buildRankings(d);
-  assert.deepEqual(calls, ["agent", "rank", "followUp", "rank"], "rank, follow up on the gaps, rank again");
-  assert.deepEqual(seen, [{ submissionId: missingLosses.id, factor: "fiveYearLossValue", reason: "unknown" }]);
-  const row = result.submissions.find((item) => item.id === missingLosses.id);
-  assert.equal(row?.status, "in_appetite", "the second ranking uses the resolved value");
-  assert.equal(row?.fiveYearLossValue, 25_000);
-  assert.ok(result.trace.some((line) => /Follow-up: prior-term losses/.test(line)), "the agent's follow-up lines are forwarded");
-  assert.ok(result.trace.some((line) => line.includes("Second pass: 1 follow-up query") && line.includes(`1 changed status (${missingLosses.id})`)), result.trace.join("\n"));
-  assert.ok(result.queryTrace?.steps.some((step) => step.stage === "follow-up"), "the reasoning shown to the UI includes the second pass");
-});
-
-test("pipeline: an agent that resolves everything on the first pass is not asked to follow up", async () => {
-  const { deps: d, calls } = deps({
-    runAgent: async () => {
-      calls.push("agent");
-      return {
-        submissions: [fullTarget],
-        traceSummary: [],
-        followUp: async () => {
-          calls.push("followUp");
-          throw new Error("must not be called");
-        },
-      };
-    },
-  });
-  const result = await buildRankings(d);
-  assert.deepEqual(calls, ["agent", "rank"]);
-  assert.ok(result.trace.some((line) => /no follow-up was needed/.test(line)));
-});
-
-test("pipeline: an agent without a follow-up hook ranks once and says nothing about a second pass", async () => {
-  const { deps: d, calls } = deps({ runAgent: async () => ({ submissions: [missingLosses], traceSummary: [] }) });
-  const result = await buildRankings(d);
-  assert.deepEqual(calls, ["rank"]);
-  assert.ok(!result.trace.some((line) => /Second pass/.test(line)));
-});
-
 test("errors: authentication problems are categorised as auth", () => {
   assert.equal(categorizeError(new Error("Federato authentication failed (401). Check the Auth0 domain.")).category, "auth");
   assert.equal(categorizeError(new Error("FEDERATO_CLIENT_SECRET is required when demo mode is disabled.")).category, "auth");

@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "FedAgent — Underwriting workspace",
+  title: "Federanorth — Underwriting workspace",
   description: "A clearer view of commercial underwriting risk.",
 };
 

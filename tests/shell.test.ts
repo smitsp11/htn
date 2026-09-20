@@ -5,9 +5,9 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { SiteShell } from "../components/shell/site-shell";
 import { Hero } from "../components/shell/hero";
 
-test("header renders the FedAgent wordmark", () => {
+test("header renders the Federanorth wordmark", () => {
   const html = renderToStaticMarkup(createElement(SiteShell, { children: "content" }));
-  assert.match(html, /FEDAGENT/);
+  assert.match(html, /FEDERANORTH/);
   assert.match(html, /content/);
 });
 

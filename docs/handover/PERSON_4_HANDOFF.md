@@ -5,7 +5,7 @@ Status: complete against the brief in `PERSON_4_PRODUCT_INTEGRATION.md` using th
 ## Changed files
 
 - `app/api/rankings/route.ts` — now a thin orchestrator: calls the pipeline and maps errors to a categorised body and HTTP status.
-- `lib/rankings/pipeline.ts` — new. Dependency-injected `buildRankings` that runs schema discovery, planning, query, normalization, and ranking in order and writes the decision trace. `defaultPipelineDeps` wires the real client, adapter, and evaluator. *2026-09-20:* after the first ranking it selects undecided and near-miss rows (`lib/rankings/follow-up-targets.ts`), hands them to the agent's `followUp`, re-ranks the result, and adds "Second pass" trace lines naming which rows changed status. `AgentOutput.followUp` is optional so injected test agents keep working.
+- `lib/rankings/pipeline.ts` — new. Dependency-injected `buildRankings` that runs schema discovery, planning, query, normalization, and ranking in order and writes the decision trace. `defaultPipelineDeps` wires the real client, adapter, and evaluator.
 - `lib/rankings/errors.ts` — new. Categorises upstream failures as `auth`, `configuration`, `query`, or `unknown` and maps them to 401, 500, 502, or 500.
 - `lib/rankings/presentation.ts` — new. Status labels, the at-a-glance primary reason per row, and queue summary counts including unresolved-data diagnostics.
 - `components/rankings-dashboard.tsx` — reduced to the client shell: fetching, error parsing, expand/collapse state. Renders the pure view.

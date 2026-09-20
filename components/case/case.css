@@ -1666,23 +1666,3 @@
 .res-before { color: var(--ink-faint); }
 .res-after { color: var(--ink); font-weight: 600; }
 .res-verdict.res-flip .res-after { color: var(--mint-strong); }
-/* Factor sensitivity note and provenance line under each appetite check. */
-.appetite-check .factor-detail {
-  color: var(--ink);
-}
-.appetite-check .factor-evidence {
-  flex-basis: 100%;
-  margin: 0;
-  font-size: 11px;
-  line-height: 1.6;
-  color: var(--ink-faint);
-}
-.appetite-check .factor-evidence code {
-  font-size: 10px;
-  padding: 1px 4px;
-  border-radius: 4px;
-  background: var(--surface-muted);
-}
-.appetite-check .factor-evidence .ambiguity {
-  color: var(--orange-strong);
-}

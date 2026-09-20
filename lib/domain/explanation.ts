@@ -26,20 +26,6 @@ function names(factors: FactorEvaluation[]) {
   return factors.map((factor) => factor.label.toLowerCase()).join(", ");
 }
 
-/** "building year (built in 1985, 5 years before the 1990 cutoff)": the label with the observed value. */
-function withValue(factor: FactorEvaluation): string {
-  const reason = factor.reason.trim().replace(/\.$/, "");
-  // Lowercase a leading word unless it is an acronym or a state code (TIV, TX).
-  const firstWord = reason.split(" ")[0];
-  const acronym = firstWord.length > 1 && firstWord === firstWord.toUpperCase();
-  const clause = acronym ? reason : reason.charAt(0).toLowerCase() + reason.slice(1);
-  return `${factor.label.toLowerCase()} (${clause})`;
-}
-
-function valued(factors: FactorEvaluation[]) {
-  return factors.map(withValue).join(", ");
-}
-
 export interface ExplanationInput {
   accountName: string;
   status: AppetiteStatus;
@@ -51,9 +37,8 @@ export interface ExplanationInput {
 
 /**
  * Three deterministic sentences: appetite match with score, the material
- * factors (failures first, with their observed values, then unknowns, then
- * targets), and the recommendation. Contradictions are named explicitly
- * rather than averaged into the score.
+ * factors (failures first, then unknowns, then targets), and the recommendation.
+ * Contradictions are named explicitly rather than averaged into the score.
  */
 export function buildExplanation(input: ExplanationInput): string {
   if (input.status === "out_of_scope") {
@@ -69,7 +54,7 @@ export function buildExplanation(input: ExplanationInput): string {
 
   let second: string;
   if (unacceptable.length > 0) {
-    const clauses = [`Not acceptable: ${valued(unacceptable)}`];
+    const clauses = [`Not acceptable: ${names(unacceptable)}`];
     if (targets.length > 0) {
       clauses.push(`this contradicts target matches on ${names(targets)}, which do not offset it`);
     }
