@@ -1,6 +1,7 @@
 import { demoSubmissions } from "@/lib/demo/submissions";
 import { rankSubmissions } from "@/lib/domain/appetite";
 import type {
+  ActualOutcome,
   CanonicalSubmission,
   HazardProfile,
   QueryReasoning,
@@ -9,7 +10,7 @@ import type {
 } from "@/lib/domain/types";
 import { runQueryAgent } from "@/lib/federato/adapter";
 import { FederatoClient } from "@/lib/federato/client";
-import { loadOfflineEnrichment } from "@/lib/federato/offline-data";
+import { loadOfflineEnrichment, loadOfflineOutcomes } from "@/lib/federato/offline-data";
 import type { QueryPayload } from "@/lib/federato/query-compiler";
 import { createReplaySource } from "@/lib/federato/replay";
 import { summarize } from "./presentation";
@@ -41,6 +42,12 @@ export interface RankingsPipelineDeps {
    * tests that inject their own deps (without enrichment) keep passing.
    */
   loadEnrichment?: () => Promise<Map<string, HazardProfile>>;
+  /**
+   * When present, the pipeline attaches each submission's actual historical
+   * disposition (`RankedSubmission.actualOutcome`) after ranking. Read-only
+   * context only, mirroring `loadEnrichment`; never seen by the appetite engine.
+   */
+  loadOutcomes?: () => Promise<Map<string, ActualOutcome>>;
   rank: (submissions: CanonicalSubmission[]) => RankedSubmission[];
   now: () => Date;
 }
@@ -79,6 +86,7 @@ export function defaultPipelineDeps(): RankingsPipelineDeps {
     dataSource: explicitLive ? "live" : "offline",
     runAgent,
     loadEnrichment: useDemoData || explicitLive ? undefined : loadOfflineEnrichment,
+    loadOutcomes: useDemoData || explicitLive ? undefined : loadOfflineOutcomes,
     rank: rankSubmissions,
     now: () => new Date(),
   };
@@ -123,6 +131,14 @@ export async function buildRankings(deps: RankingsPipelineDeps): Promise<Ranking
     for (const submission of ranked) {
       const hazard = hazards.get(submission.id);
       if (hazard) submission.enrichment = hazard;
+    }
+  }
+
+  if (deps.loadOutcomes) {
+    const outcomes = await deps.loadOutcomes();
+    for (const submission of ranked) {
+      const outcome = outcomes.get(submission.id);
+      if (outcome) submission.actualOutcome = outcome;
     }
   }
 

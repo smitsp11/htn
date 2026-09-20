@@ -1,6 +1,7 @@
 import type { HazardEntry, RankedSubmission } from "@/lib/domain/types";
 import { completenessOf } from "@/lib/rankings/completeness";
 import { flagSummary } from "@/lib/rankings/flags";
+import { isOffStrategyBind, outcomeChipText } from "@/lib/rankings/outcome";
 
 /** The flood-related hazard entry from the enrichment layer, if any. Purely
  *  presentational -- enrichment never changes appetite, it only adds context. */
@@ -33,7 +34,17 @@ export function CaseSummary({ submission }: { submission: RankedSubmission }) {
         <span className="chip">{completeness.missing.length} gaps</span>
         <span className="chip">{exceptions} exceptions</span>
         <span className="chip">Flood zone: {hazard ? hazard.rating : "—"}</span>
+        {submission.actualOutcome ? (
+          <span className="chip">{outcomeChipText(submission.actualOutcome)}</span>
+        ) : null}
       </div>
+      {isOffStrategyBind(submission) ? (
+        <p className="case-summary-offstrategy">
+          <b>Off-strategy bind:</b> this account was bound, but the appetite engine independently places it out
+          of appetite. Possible appetite drift — a risk on the books the carrier&rsquo;s stated appetite would
+          not have written.
+        </p>
+      ) : null}
       <p className="case-summary-watch">
         <b>AI watch:</b> {watchItem(submission)}
       </p>

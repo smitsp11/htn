@@ -3,7 +3,9 @@
 import type { KeyboardEvent } from "react";
 import type { RankedSubmission } from "@/lib/domain/types";
 import { primaryReason } from "@/lib/rankings/presentation";
+import { isOffStrategyBind, outcomeChipText } from "@/lib/rankings/outcome";
 import { LaneBadge } from "@/components/ui/lane-badge";
+import { Badge } from "@/components/ui/badge";
 import { Track } from "@/components/ui/track";
 import { Icon } from "@/components/ui/icon";
 
@@ -84,6 +86,14 @@ export function QueueTable({ submissions, onOpen }: QueueTableProps) {
                   <LaneBadge status={submission.status} />
                   <Track value={submission.score} />
                   <b>{submission.score}</b>
+                  {submission.actualOutcome ? (
+                    <span className="outcome-line">
+                      {isOffStrategyBind(submission) ? <Badge tone="orange">Off-strategy bind</Badge> : null}
+                      <span className="outcome-chip" title={outcomeChipText(submission.actualOutcome)}>
+                        {outcomeChipText(submission.actualOutcome)}
+                      </span>
+                    </span>
+                  ) : null}
                 </span>
               </td>
               <td className="next-action">
