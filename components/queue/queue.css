@@ -604,11 +604,40 @@ select {
   .quadrant-cell { height: 240px; }
 }
 
-/* W6 — List / Quadrant view toggle */
-.view-toggle { display: inline-flex; border: 1px solid var(--border-strong); border-radius: 6px; overflow: hidden; }
-.view-toggle button { padding: 4px 12px; font-size: 13px; background: var(--surface); color: var(--ink-soft); border: 0; cursor: pointer; }
-.view-toggle button + button { border-left: 1px solid var(--border-strong); }
-.view-toggle button.active { background: var(--mint); color: #fff; }
+/* List / Quadrant view toggle — a refined pill segmented control, right-aligned
+   above the queue, matching the warm surfaces used elsewhere. */
+.queue-viewbar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 12px;
+}
+.view-toggle {
+  display: inline-flex;
+  gap: 3px;
+  background: var(--surface-muted);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 3px;
+}
+.view-toggle button {
+  padding: 6px 16px;
+  font-size: 12px;
+  font-weight: 600;
+  background: transparent;
+  color: var(--ink-soft);
+  border: 0;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+}
+.view-toggle button:hover {
+  color: var(--ink);
+}
+.view-toggle button.active {
+  background: var(--surface);
+  color: var(--mint-strong);
+  box-shadow: 0 1px 2px #1a140e14;
+}
 
 /* W7 — Portfolio overview strip */
 .portfolio-strip { display: flex; flex-wrap: wrap; gap: 28px; padding: 14px 18px; border: 1px solid var(--border); border-radius: 10px; margin: 0 0 16px; background: var(--panel); }
