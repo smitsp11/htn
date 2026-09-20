@@ -34,6 +34,22 @@ export interface FactorEvaluation {
   reason: string;
 }
 
+/**
+ * The submission's actual historical disposition, read straight from the raw
+ * Federato `Submission.status` (received → cleared → quoted → bound/declined/lost).
+ * This is a workflow/lifecycle outcome, NOT an appetite verdict. Like
+ * `enrichment`, it is a read-only decision-support layer attached AFTER ranking:
+ * the appetite engine only ever sees `CanonicalSubmission`, so this can never
+ * influence a score or status. It exists so the UI can contrast what the carrier
+ * actually did with what the appetite engine independently recommends.
+ */
+export interface ActualOutcome {
+  /** Raw `Submission.status` lifecycle disposition (e.g. "bound", "declined"). */
+  status: string;
+  /** Present only on declined submissions (`Submission.decline_reason`). */
+  declineReason?: string;
+}
+
 export interface RankedSubmission extends CanonicalSubmission {
   status: AppetiteStatus;
   score: number;
@@ -41,6 +57,7 @@ export interface RankedSubmission extends CanonicalSubmission {
   recommendation: string;
   explanation: string;
   enrichment?: HazardProfile;
+  actualOutcome?: ActualOutcome;
 }
 
 /** One appetite requirement and the schema field the query agent chose for it. */

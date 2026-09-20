@@ -1,6 +1,6 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
-import type { HazardProfile } from "@/lib/domain/types";
+import type { ActualOutcome, HazardProfile } from "@/lib/domain/types";
 import { hazardForLocation, loadHazardIndex } from "@/lib/enrichment/hazard";
 
 /**
@@ -245,5 +245,28 @@ export async function loadOfflineEnrichment(): Promise<Map<string, HazardProfile
     const county = typeof submission.primaryLocation?.county === "string" ? submission.primaryLocation.county : undefined;
     map.set(submission.id, hazardForLocation(hazardIndex, state, county));
   }
+  return map;
+}
+
+/**
+ * Build a `Map<canonicalSubmissionId, ActualOutcome>` from the raw
+ * `Submission.status` / `Submission.decline_reason` fields. This is the account's
+ * real historical disposition (bound, declined, ...), a read-only decision-support
+ * layer the pipeline attaches AFTER ranking — exactly like enrichment. It is never
+ * fed to the appetite engine, so it cannot change any score or status.
+ */
+export async function loadOfflineOutcomes(): Promise<Map<string, ActualOutcome>> {
+  const submissions = await loadResource("Submission");
+
+  const map = new Map<string, ActualOutcome>();
+  submissions.forEach((submission, index) => {
+    const status = typeof submission.status === "string" ? submission.status.trim() : "";
+    if (!status) return;
+    const declineReason =
+      typeof submission.decline_reason === "string" && submission.decline_reason.trim() !== ""
+        ? submission.decline_reason.trim()
+        : undefined;
+    map.set(canonicalSubmissionId(submission, index), { status, declineReason });
+  });
   return map;
 }

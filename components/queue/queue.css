@@ -1,0 +1,452 @@
+/* Queue table: ported from federanorth's `.queue-table` / `.table-scroll` block
+   (src/decision/federanorth.css), adapted to read RankedSubmission columns. */
+.table-scroll {
+  overflow-x: auto;
+  position: relative;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-strong) var(--surface);
+}
+.queue-table {
+  width: 100%;
+  border-collapse: collapse;
+  white-space: nowrap;
+  text-align: left;
+}
+.queue-table th {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--ink-soft);
+  padding: 0 13px;
+  height: 40px;
+  background: var(--surface-muted);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+.queue-table td {
+  height: 72px;
+  padding: 16px 13px;
+  vertical-align: top;
+  border-bottom: 1px solid var(--border);
+  font-size: 11px;
+  color: var(--ink);
+}
+.queue-table tr:last-child td {
+  border-bottom: 0;
+}
+.queue-table tbody tr {
+  cursor: pointer;
+}
+.queue-table tbody tr:hover {
+  background: var(--surface-hover);
+}
+.queue-table tbody tr:focus-visible {
+  outline: 2px solid var(--mint);
+  outline-offset: -2px;
+}
+.queue-table td:first-child,
+.queue-table th:first-child {
+  padding-left: 24px;
+}
+.number {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.queue-table td.number {
+  font-size: 12px;
+  color: var(--ink);
+}
+.account-link {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-width: 295px;
+}
+.account-link strong {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.account-link small {
+  color: var(--ink-faint);
+  font-size: 10px;
+}
+.line-label {
+  font-size: 11px;
+  color: var(--ink-soft);
+}
+.score-cell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  min-width: 70px;
+}
+.score-cell b {
+  font-weight: 600;
+  font-size: 12px;
+  color: var(--ink);
+}
+/* Actual historical disposition, shown next to the predicted appetite lane so an
+   underwriter can see predicted vs. actual at a glance. Read-only context. */
+.outcome-line {
+  flex-basis: 100%;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 2px;
+}
+.outcome-chip {
+  font-size: 10px;
+  color: var(--ink-faint);
+  max-width: 190px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.queue-table .next-action {
+  min-width: 220px;
+  max-width: 310px;
+  white-space: normal;
+  line-height: 1.5;
+}
+.next-action > span {
+  font-size: 12px;
+  color: var(--ink);
+}
+.icon-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  color: var(--ink-faint);
+  padding: 6px;
+  border: 0;
+  background: transparent;
+}
+.icon-button:hover {
+  background: var(--surface-muted);
+  color: var(--mint-strong);
+}
+.icon-button .icon {
+  width: 16px;
+  height: 16px;
+}
+.icon-button.open-record {
+  height: 26px;
+  width: 22px;
+}
+.icon-button.open-record .icon {
+  width: 14px;
+  height: 14px;
+}
+
+/* Scope switch: ported from federanorth's `.scope-switch`. */
+.scope-switch {
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+  margin: 0 0 18px;
+  border-bottom: 1px solid var(--border);
+}
+.scope-switch button {
+  border: 0;
+  border-bottom: 2px solid transparent;
+  padding: 0 0 13px;
+  border-radius: 0;
+  font-size: 14px;
+  color: var(--ink-soft);
+  background: transparent;
+}
+.scope-switch button[aria-pressed="true"] {
+  border-color: var(--mint);
+  color: var(--ink);
+  background: transparent;
+}
+
+/* Queue filters: ported from federanorth's `.queue-filters`. */
+.queue-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 18px;
+  padding: 16px 22px;
+  border-bottom: 1px solid var(--border);
+}
+.queue-filters label {
+  font-size: 11px;
+  color: var(--ink-soft);
+  display: flex;
+  gap: 7px;
+  align-items: center;
+}
+.record-status-label {
+  font-size: 12px;
+  color: var(--ink-soft);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.record-status-label select {
+  max-width: 190px;
+  font-size: 12px;
+}
+.sort-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 10px;
+  color: var(--ink-soft);
+  margin-left: auto;
+  white-space: nowrap;
+}
+.sort-label select {
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  padding-right: 3px;
+}
+.clear-filters {
+  color: var(--mint-strong);
+  font-size: 10px;
+  padding: 5px;
+  white-space: nowrap;
+  border: 0;
+  background: transparent;
+}
+select {
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: 5px;
+  padding: 7px 20px 7px 9px;
+  font-size: 10px;
+  color: var(--ink);
+  max-width: 160px;
+  cursor: pointer;
+}
+
+/* Table footer / pagination: ported from federanorth's `.table-footer` / `.pagination`. */
+.table-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 23px;
+  border-top: 1px solid var(--border);
+  font-size: 10px;
+  color: var(--ink-soft);
+}
+.pagination {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.pagination label {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  white-space: nowrap;
+}
+.pagination select {
+  padding: 4px 6px;
+  font-size: 10px;
+}
+.pagination .icon-button {
+  width: 26px;
+  height: 26px;
+  border: 1px solid var(--border-strong);
+}
+.pagination .icon-button .icon {
+  width: 13px;
+  height: 13px;
+}
+.pagination .icon-button.prev .icon {
+  transform: rotate(180deg);
+}
+.pagination .icon-button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+#page-label {
+  white-space: nowrap;
+}
+
+/* Search bar: ported from federanorth's `.global-search` bottom-border field, restyled
+   as the LLM ask-the-queue entry point. */
+.search-bar-wrap {
+  margin-bottom: 18px;
+}
+.search-bar {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  border-bottom: 1px solid var(--border-strong);
+  padding: 12px 0;
+  min-width: 255px;
+  color: var(--ink-soft);
+}
+.search-bar .icon {
+  width: 15px;
+  height: 15px;
+  flex-shrink: 0;
+}
+.search-bar:focus-within {
+  border-color: var(--mint);
+}
+.search-input {
+  flex: 1;
+  width: 100%;
+  background: none;
+  border: 0;
+  outline: none;
+  min-width: 0;
+  color: var(--ink);
+  font-size: 13px;
+}
+.search-input::placeholder {
+  color: var(--ink-faint);
+}
+.search-bar kbd {
+  font-family: monospace;
+  border: 1px solid var(--border-strong);
+  border-radius: 2px;
+  font-size: 10px;
+  padding: 0 4px;
+  color: var(--ink-soft);
+}
+.search-clear {
+  font-size: 11px;
+  color: var(--ink-soft);
+  padding: 5px;
+}
+.search-clear:hover {
+  color: var(--mint-strong);
+}
+.search-answer {
+  margin-top: 10px;
+  font-size: 12px;
+  color: var(--ink-soft);
+}
+
+/* Pipeline trace: plain, collapsible surfacing of the engine's query-reasoning
+   and decision-trace data (restores transparency the previous dashboard had). */
+.pipeline-trace {
+  margin-top: 24px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+.pipeline-trace details {
+  margin-bottom: 6px;
+}
+.pipeline-trace summary {
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink);
+  padding: 6px 0;
+}
+.pipeline-trace-body {
+  font-size: 11px;
+  color: var(--ink-soft);
+  line-height: 1.6;
+  padding: 4px 0 10px 18px;
+}
+.pipeline-trace-body code {
+  font-family: monospace;
+  font-size: 10px;
+  color: var(--ink);
+}
+.pipeline-trace-body li {
+  margin: 3px 0;
+}
+
+/* Queue workspace: heading, sticky lane/filter nav, and empty state. */
+.queue-heading {
+  margin: 0 0 20px;
+}
+.queue-heading .eyebrow {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--mint-strong);
+  margin: 0 0 4px;
+}
+.queue-heading h2 {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 26px;
+  font-weight: 400;
+  color: var(--ink);
+  margin: 0;
+}
+.queue-nav {
+  position: sticky;
+  top: 92px;
+  z-index: 20;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px 8px 0 0;
+  border-bottom: 0;
+}
+.lane-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 22px 0;
+  flex-wrap: wrap;
+}
+.lane-all {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--ink-soft);
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  padding: 6px 12px;
+  background: transparent;
+  white-space: nowrap;
+}
+.lane-all[aria-pressed="true"] {
+  color: var(--mint-strong);
+  border-color: var(--mint);
+  background: var(--mint-tint);
+}
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 60px 20px;
+  text-align: center;
+  color: var(--ink-soft);
+  border: 1px solid var(--border);
+  border-top: 0;
+}
+.empty-state .icon {
+  width: 28px;
+  height: 28px;
+  color: var(--ink-faint);
+}
+.empty-state p {
+  font-size: 13px;
+  margin: 0;
+}
+.empty-state button {
+  color: var(--mint-strong);
+  font-size: 12px;
+  border: 1px solid var(--border-strong);
+  border-radius: 6px;
+  padding: 8px 14px;
+}
+
+/* Toolbar row for chase-list / methodology triggers (migrated from old globals.css) */
+.queue-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 14px 0;
+}
