@@ -11,6 +11,10 @@ export type FactorKey =
 export type AppetiteVerdict = "target" | "acceptable" | "not_acceptable" | "unknown";
 export type AppetiteStatus = "in_appetite" | "needs_investigation" | "out_of_appetite" | "out_of_scope";
 
+export type Dataset = "baseline" | "extended";
+
+export type LineOfBusiness = "property" | "cgl" | "auto" | "cyber" | "excess" | "health" | "lpl";
+
 export interface CanonicalSubmission {
   id: string;
   accountName: string;
@@ -60,6 +64,8 @@ export interface RankedSubmission extends CanonicalSubmission {
   actualOutcome?: ActualOutcome;
   /** Public/government context signals — decision support only; never scored. */
   context?: ContextSignal[];
+  /** True only for records injected by the Extended synthetic dataset. */
+  synthetic?: boolean;
 }
 
 /** One appetite requirement and the schema field the query agent chose for it. */
@@ -109,6 +115,8 @@ export interface ContextSignal {
 
 export interface RankingsResponse {
   source: "demo" | "federato";
+  /** Which dataset produced this response; absent means baseline. */
+  dataset?: Dataset;
   generatedAt: string;
   schemaDiscovered: boolean;
   trace: string[];
