@@ -27,7 +27,7 @@ export interface CompletenessProfile {
 }
 
 /** The canonical input each appetite factor reads. */
-const FACTOR_INPUT: Record<FactorKey, keyof CanonicalSubmission> = {
+export const FACTOR_INPUT: Record<FactorKey, keyof CanonicalSubmission> = {
   submissionType: "submissionType",
   lineOfBusiness: "lineOfBusiness",
   primaryRiskState: "primaryRiskState",

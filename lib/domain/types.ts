@@ -66,6 +66,32 @@ export interface RankedSubmission extends CanonicalSubmission {
   context?: ContextSignal[];
   /** True only for records injected by the Extended synthetic dataset. */
   synthetic?: boolean;
+  /** Fields the consolidation waterfall could fill + the re-scored verdict. */
+  resolution?: ResolutionResult;
+}
+
+/** One required field the consolidation waterfall filled, with provenance. */
+export interface ResolvedField {
+  key: FactorKey;
+  label: string;
+  value: number | string;
+  /** Formatted for display (money/percent/plain). */
+  display: string;
+  source: string;
+  /** 0–1 confidence the source reported. */
+  confidence: number;
+  asOf: string;
+}
+
+/**
+ * Decision-support only: what the appetite verdict WOULD become if the resolved
+ * values are accepted. Attached AFTER ranking; the queue's own status/score
+ * (`before`) is unchanged. The human underwriter confirms before it counts.
+ */
+export interface ResolutionResult {
+  fields: ResolvedField[];
+  before: { status: AppetiteStatus; score: number };
+  after: { status: AppetiteStatus; score: number };
 }
 
 /** One appetite requirement and the schema field the query agent chose for it. */
