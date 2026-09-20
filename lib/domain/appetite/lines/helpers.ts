@@ -37,8 +37,23 @@ export interface AppetiteTable {
   evaluate(submission: CanonicalSubmission): FactorEvaluation[];
 }
 
-export function factor(key: FactorKey, label: string, verdict: AppetiteVerdict, reason: string): FactorEvaluation {
-  return { key, label, verdict, reason };
+export function factor(
+  key: FactorKey,
+  label: string,
+  verdict: AppetiteVerdict,
+  reason: string,
+  extra: Pick<FactorEvaluation, "nearMiss"> = {},
+): FactorEvaluation {
+  const evaluation: FactorEvaluation = { key, label, verdict, reason };
+  if (extra.nearMiss) evaluation.nearMiss = true;
+  return evaluation;
+}
+
+/** A not-acceptable money value within this share of its boundary is flagged as a near miss. */
+const NEAR_MISS_MONEY_SHARE = 0.05;
+
+function moneyNearMiss(delta: number, boundary: number): boolean {
+  return delta <= boundary * NEAR_MISS_MONEY_SHARE;
 }
 
 function isFiniteNumber(value: unknown): value is number {
@@ -92,7 +107,10 @@ function bandFactor(
     return factor(key, label, "unknown", `${label} ${money} sits exactly on an acceptable-range boundary.`);
   }
   if (value < band.min || value > band.max) {
-    return factor(key, label, "not_acceptable", `${label} ${money} is outside the ${range} acceptable range.`);
+    const delta = value < band.min ? band.min - value : value - band.max;
+    return factor(key, label, "not_acceptable", `${label} ${money} is outside the ${range} acceptable range.`, {
+      nearMiss: moneyNearMiss(delta, value < band.min ? band.min : band.max),
+    });
   }
   if (band.target && value >= band.target.min && value <= band.target.max) {
     const targetRange = `${formatMoney(band.target.min)}–${formatMoney(band.target.max)}`;
@@ -120,7 +138,11 @@ function upperBoundFactor(
   const money = formatMoney(value);
   const cap = formatMoney(max);
   if (value === max) return factor(key, label, "unknown", `${label} of ${money} sits exactly on the ${cap} limit.`);
-  if (value > max) return factor(key, label, "not_acceptable", `${label} of ${money} exceeds the ${cap} limit.`);
+  if (value > max) {
+    return factor(key, label, "not_acceptable", `${label} of ${money} exceeds the ${cap} limit.`, {
+      nearMiss: moneyNearMiss(value - max, max),
+    });
+  }
   return factor(key, label, "acceptable", `${label} of ${money} is within the ${cap} limit.`);
 }
 

@@ -35,7 +35,7 @@ The hand-written planner and normalizer were replaced by a query agent that reas
 
 - Live run once credentials exist: confirm the first attempt (with `select`) is accepted rather than falling back, `total` reads 113/158, and the TIV cross-check reports zero disagreements.
 - `lib/federato/offline-data.ts` still performs its own id-join only to find each submission's primary location for FEMA enrichment; `AssembledSubmission.primaryLocation` now exposes that and the join can be retired.
-- Adaptive follow-up queries (deeper analysis of high-value or borderline submissions) are not implemented; the trace and compiler are structured to add them.
+- ~~Adaptive follow-up queries are not implemented.~~ Done 2026-09-20: `lib/federato/follow-up.ts` plans a schema-resolved route from the queue record to the insured's prior terms and claims, compiles two batched follow-ups (prior-term losses for unbound submissions; a reserve-aware re-read for borderline losses), and merges the results with derivation notes. `runQueryAgent` exposes it as `followUp(gaps)`, which runs once per agent run and logs every step under the `follow-up` trace stage. The queue query now also projects the insured's id so the follow-up needs no second read of the queue. Prior-term losses count every line of business the insured holds, and the note says so. Tests: `tests/follow-up.test.ts`.
 
 ---
 
