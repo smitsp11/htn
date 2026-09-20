@@ -155,3 +155,17 @@ test("no out-of-scope section renders when every submission is in scope", () => 
   const html = render({ data: response() });
   assert.doesNotMatch(html, /out-of-scope-panel/);
 });
+
+test("quadrant view replaces the table, keeps out-of-scope lines in their own section, and offers Close", () => {
+  const mixed = rankSubmissions([
+    { id: "P1", accountName: "Prop Co", lineOfBusiness: "Property", submissionType: "New business", primaryRiskState: "FL", tiv: 60_000_000, totalPremium: 80_000, buildingYear: 2015, approvedConstructionPercentage: 0.9, fiveYearLossValue: 0 },
+    { id: "C1", accountName: "Cyber Co", lineOfBusiness: "Cyber", primaryRiskState: "TX" },
+  ]);
+  const html = render({ data: response({ submissions: mixed }), view: "quadrant", onViewChange: () => undefined, expandedId: "P1" });
+  assert.doesNotMatch(html, /<tr class="queue-row"/);
+  assert.match(html, /aria-label="Appetite by completeness"/);
+  assert.match(html, /aria-pressed="true"[^>]*>Quadrant/);
+  assert.match(text(html), /Out of scope \(1\)/);
+  assert.match(html, /quadrant-detail-head/);
+  assert.match(html, /Prop Co/);
+});

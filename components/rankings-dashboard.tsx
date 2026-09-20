@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import type { RankingsResponse } from "@/lib/domain/types";
 import type { RankingsErrorBody } from "@/lib/rankings/errors";
 import { AskBar } from "./ask-queue/ask-bar";
-import { DashboardView } from "./dashboard/dashboard-view";
+import { DashboardView, type QueueView } from "./dashboard/dashboard-view";
 
 function toErrorBody(body: unknown, fallback: string): RankingsErrorBody {
   if (typeof body === "object" && body !== null && "error" in body && typeof body.error === "string") {
@@ -23,6 +23,7 @@ export function RankingsDashboard() {
   const [loading, setLoading] = useState(true);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [matchedIds, setMatchedIds] = useState<string[] | null>(null);
+  const [view, setView] = useState<QueueView>("table");
 
   const loadRankings = useCallback(async () => {
     setLoading(true);
@@ -57,6 +58,8 @@ export function RankingsDashboard() {
         onToggle={(id) => setExpandedId((current) => (current === id ? null : id))}
         onRefresh={() => void loadRankings()}
         matchedIds={matchedIds}
+        view={view}
+        onViewChange={setView}
       />
     </>
   );

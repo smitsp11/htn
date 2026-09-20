@@ -3,6 +3,7 @@
 @import "../components/ask-queue/ask-bar.css";
 @import "../components/enrichment-resolution/resolution-chips.css";
 @import "../components/rfi-draft/rfi-draft.css";
+@import "../components/dashboard/quadrant-board.css";
 
 :root {
   color-scheme: light;
@@ -474,3 +475,10 @@ td small {
   margin: 0.5rem 0;
   font-size: 0.875rem;
 }
+
+.queue-toolbar-actions { display: flex; gap: 8px; align-items: center; }
+.view-toggle { display: inline-flex; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
+.view-toggle button { border: none; border-radius: 0; background: var(--surface); color: var(--ink); padding: 6px 12px; cursor: pointer; font-size: 13px; }
+.view-toggle button[aria-pressed="true"] { background: var(--navy); color: #fff; }
+.quadrant-detail { border: 1px solid var(--line); border-radius: 8px; margin-top: 12px; padding: 8px; }
+.quadrant-detail-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 4px; }

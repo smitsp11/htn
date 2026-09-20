@@ -3,8 +3,12 @@ import type { RankingsErrorBody } from "@/lib/rankings/errors";
 import { summarize } from "@/lib/rankings/presentation";
 import { OutOfScopeSection } from "./out-of-scope-section";
 import { QueueTable } from "./queue-table";
+import { QuadrantBoard } from "./quadrant-board";
+import { SubmissionDetail } from "./submission-detail";
 import { SourceStatus } from "./source-status";
 import { EmptyPanel, ErrorPanel, LoadingPanel, StaleBanner } from "./state-panels";
+
+export type QueueView = "table" | "quadrant";
 
 export interface DashboardViewProps {
   data: RankingsResponse | null;
@@ -14,10 +18,12 @@ export interface DashboardViewProps {
   onToggle: (id: string) => void;
   onRefresh: () => void;
   matchedIds?: string[] | null;
+  view?: QueueView;
+  onViewChange?: (view: QueueView) => void;
 }
 
 /** Pure presentational shell; all data fetching lives in RankingsDashboard. */
-export function DashboardView({ data, error, loading, expandedId, onToggle, onRefresh, matchedIds }: DashboardViewProps) {
+export function DashboardView({ data, error, loading, expandedId, onToggle, onRefresh, matchedIds, view = "table", onViewChange }: DashboardViewProps) {
   if (!data) {
     if (error) return <ErrorPanel error={error} onRetry={onRefresh} />;
     return <LoadingPanel />;
@@ -32,6 +38,7 @@ export function DashboardView({ data, error, loading, expandedId, onToggle, onRe
     : data.submissions;
   const rankedSubmissions = visibleSubmissions.filter((submission) => submission.status !== "out_of_scope");
   const outOfScopeSubmissions = visibleSubmissions.filter((submission) => submission.status === "out_of_scope");
+  const selected = expandedId ? rankedSubmissions.find((s) => s.id === expandedId) : undefined;
 
   return (
     <>
@@ -48,9 +55,17 @@ export function DashboardView({ data, error, loading, expandedId, onToggle, onRe
             <h2>Prioritized submissions</h2>
             <p>Appetite status is considered before the transparent match score. A human underwriter makes every decision.</p>
           </div>
-          <button type="button" onClick={onRefresh} disabled={loading}>
-            {loading ? "Refreshing…" : "Refresh queue"}
-          </button>
+          <div className="queue-toolbar-actions">
+            {onViewChange ? (
+              <div className="view-toggle" role="group" aria-label="Queue view">
+                <button type="button" aria-pressed={view === "table"} onClick={() => onViewChange("table")}>Table</button>
+                <button type="button" aria-pressed={view === "quadrant"} onClick={() => onViewChange("quadrant")}>Quadrant</button>
+              </div>
+            ) : null}
+            <button type="button" onClick={onRefresh} disabled={loading}>
+              {loading ? "Refreshing…" : "Refresh queue"}
+            </button>
+          </div>
         </div>
 
         {error ? <StaleBanner generatedAt={data.generatedAt} error={error} /> : null}
@@ -61,7 +76,22 @@ export function DashboardView({ data, error, loading, expandedId, onToggle, onRe
           </p>
         ) : null}
 
-        <QueueTable submissions={rankedSubmissions} expandedId={expandedId} onToggle={onToggle} />
+        {view === "quadrant" ? (
+          <>
+            <QuadrantBoard submissions={rankedSubmissions} onSelect={onToggle} selectedId={expandedId} />
+            {selected ? (
+              <div className="quadrant-detail">
+                <div className="quadrant-detail-head">
+                  <strong>{selected.accountName}</strong>
+                  <button type="button" className="detail-button" onClick={() => onToggle(selected.id)}>Close</button>
+                </div>
+                <SubmissionDetail submission={selected} />
+              </div>
+            ) : null}
+          </>
+        ) : (
+          <QueueTable submissions={rankedSubmissions} expandedId={expandedId} onToggle={onToggle} />
+        )}
 
         <OutOfScopeSection submissions={outOfScopeSubmissions} />
       </section>
