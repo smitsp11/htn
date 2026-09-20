@@ -18,3 +18,32 @@ test("RankingsResponse echoes the dataset", () => {
   const r = { dataset: "baseline" } as Partial<RankingsResponse>;
   assert.equal(r.dataset, "baseline");
 });
+
+import { buildRankings } from "../lib/rankings/pipeline";
+import type { CanonicalSubmission } from "../lib/domain/types";
+import { rankSubmissions } from "../lib/domain/appetite";
+
+function deps(subs: CanonicalSubmission[], extendedRank = false) {
+  return {
+    useDemoData: false, demoSubmissions: [], dataSource: "offline" as const,
+    runAgent: async () => ({ submissions: subs, traceSummary: [] }),
+    rank: (s: CanonicalSubmission[]) => rankSubmissions(s, { extended: extendedRank }),
+    now: () => new Date("2026-01-01T00:00:00Z"),
+  };
+}
+
+test("baseline does not inject synthetic and leaves non-property out_of_scope", async () => {
+  const cgl: CanonicalSubmission = { id: "c1", accountName: "Co", lineOfBusiness: "cgl", primaryRiskState: "CA", totalPremium: 60000 };
+  const r = await buildRankings(deps([cgl]), { dataset: "baseline" });
+  assert.equal(r.dataset, "baseline");
+  assert.ok(r.submissions.every((s) => !s.synthetic));
+  assert.equal(r.submissions.find((s) => s.id === "c1")!.status, "out_of_scope");
+});
+
+test("extended injects synthetic and scores cgl", async () => {
+  const cgl: CanonicalSubmission = { id: "c1", accountName: "Co", lineOfBusiness: "cgl", primaryRiskState: "CA", totalPremium: 60000 };
+  const r = await buildRankings(deps([cgl], true), { dataset: "extended" });
+  assert.equal(r.dataset, "extended");
+  assert.ok(r.submissions.some((s) => s.synthetic === true));
+  assert.notEqual(r.submissions.find((s) => s.id === "c1")!.status, "out_of_scope");
+});

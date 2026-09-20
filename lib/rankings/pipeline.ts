@@ -1,9 +1,11 @@
+import { syntheticPropertySubmissions } from "@/lib/demo/synthetic-property";
 import { demoSubmissions } from "@/lib/demo/submissions";
 import { rankSubmissions } from "@/lib/domain/appetite";
 import type {
   ActualOutcome,
   CanonicalSubmission,
   ContextSignal,
+  Dataset,
   HazardProfile,
   QueryReasoning,
   RankedSubmission,
@@ -66,10 +68,11 @@ export interface RankingsPipelineDeps {
  * - unset   -> the captured raw Federato snapshot under raw/, replayed through
  *              the query agent (offline, default).
  */
-export function defaultPipelineDeps(): RankingsPipelineDeps {
+export function defaultPipelineDeps(dataset: Dataset = "baseline"): RankingsPipelineDeps {
   const mode = process.env.FEDERATO_USE_DEMO_DATA;
   const useDemoData = mode === "true";
   const explicitLive = mode === "false";
+  const extended = dataset === "extended";
 
   const runAgent = explicitLive
     ? async () => {
@@ -95,7 +98,7 @@ export function defaultPipelineDeps(): RankingsPipelineDeps {
     loadEnrichment: useDemoData || explicitLive ? undefined : loadOfflineEnrichment,
     loadOutcomes: useDemoData || explicitLive ? undefined : loadOfflineOutcomes,
     loadContext: useDemoData || explicitLive ? undefined : async () => loadOfflineContext(),
-    rank: rankSubmissions,
+    rank: (s) => rankSubmissions(s, { extended }),
     now: () => new Date(),
   };
 }
@@ -113,13 +116,19 @@ function rankingTrace(ranked: RankedSubmission[]): string[] {
  * normalize), rank, attach enrichment. The route calls this and only
  * translates errors. Domain behaviour stays in the injected modules.
  */
-export async function buildRankings(deps: RankingsPipelineDeps): Promise<RankingsResponse> {
+export async function buildRankings(
+  deps: RankingsPipelineDeps,
+  options: { dataset?: Dataset } = {},
+): Promise<RankingsResponse> {
   const generatedAt = deps.now().toISOString();
+  const dataset = options.dataset ?? "baseline";
+  const extended = dataset === "extended";
 
   if (deps.useDemoData) {
     const ranked = deps.rank(deps.demoSubmissions);
     return {
       source: "demo",
+      dataset,
       generatedAt,
       schemaDiscovered: false,
       trace: [
@@ -132,7 +141,10 @@ export async function buildRankings(deps: RankingsPipelineDeps): Promise<Ranking
   }
 
   const agent = await deps.runAgent();
-  const ranked = deps.rank(agent.submissions);
+  const synthetic = extended ? syntheticPropertySubmissions() : [];
+  const syntheticIds = new Set(synthetic.map((s) => s.id));
+  const ranked = deps.rank([...agent.submissions, ...synthetic]);
+  for (const s of ranked) if (syntheticIds.has(s.id)) s.synthetic = true;
 
   if (deps.loadEnrichment) {
     const hazards = await deps.loadEnrichment();
@@ -168,6 +180,7 @@ export async function buildRankings(deps: RankingsPipelineDeps): Promise<Ranking
 
   return {
     source: "federato",
+    dataset,
     generatedAt,
     schemaDiscovered: true,
     trace: [sourceLine, ...agent.traceSummary, countLine, ...rankingTrace(ranked)],
