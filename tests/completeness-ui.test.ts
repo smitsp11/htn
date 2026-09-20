@@ -41,3 +41,11 @@ test("an out-of-scope submission shows no completeness checklist", () => {
   assert.doesNotMatch(html, /0 of 0/);
   assert.match(html, /out of scope/i);
 });
+
+test("no provenance list is rendered while no source has resolved anything", () => {
+  const html = renderToStaticMarkup(
+    createElement(SubmissionDetail, { submission: evaluateAppetite(empty) }),
+  );
+  assert.doesNotMatch(html, /Request from broker/);
+  assert.match(html, /igo-checklist/);
+});

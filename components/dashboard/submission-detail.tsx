@@ -1,6 +1,8 @@
 import { ExternalRisk } from "@/components/external-risk/external-risk";
 import { FactorBreakdown } from "@/components/factor-breakdown/factor-breakdown";
+import { ResolutionChips } from "@/components/enrichment-resolution/resolution-chips";
 import type { RankedSubmission } from "@/lib/domain/types";
+import { resolveSubmissionFields } from "@/lib/enrichment/resolve-submission";
 import { completenessOf } from "@/lib/rankings/completeness";
 
 export function SubmissionDetail({ submission }: { submission: RankedSubmission }) {
@@ -28,6 +30,11 @@ export function SubmissionDetail({ submission }: { submission: RankedSubmission 
 function InGoodOrder({ submission }: { submission: RankedSubmission }) {
   const completeness = completenessOf(submission);
   const pending = completeness.effortToDecision;
+  const resolutions = resolveSubmissionFields(submission);
+  // Provenance chips only earn their space once a source has filled a gap;
+  // until then the checklist above already names every broker chase.
+  const anyResolved = Object.values(resolutions).some(Boolean);
+  const factorLabels = Object.fromEntries(submission.factors.map((f) => [f.key, f.label]));
   const reasonFor = (key: string) => submission.factors.find((factor) => factor.key === key)?.reason;
   return (
     <div className="in-good-order" aria-label="Submission completeness">
@@ -51,6 +58,7 @@ function InGoodOrder({ submission }: { submission: RankedSubmission }) {
         </ul>
       ) : null}
       {pending > 0 ? <p className="igo-note">Unresolved fields never count as acceptable.</p> : null}
+      {anyResolved ? <ResolutionChips resolutions={resolutions} labels={factorLabels} /> : null}
     </div>
   );
 }
