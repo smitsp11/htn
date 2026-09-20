@@ -12,9 +12,11 @@
 import type { CanonicalSubmission, QueryReasoning } from "@/lib/domain/types";
 import { assembleSubmissions, type AssembledSubmission } from "./assemble";
 import { selectFieldsWithModel } from "./llm-planner";
+import { repairQueryWithModel } from "./llm-repair";
 import { buildQueueQuery, buildRootQuery, buildTivCheckQuery } from "./query-compiler";
-import { runPaged, runQuery, type QueryExecutor } from "./query-executor";
+import { runPaged, runQuery, type QueryExecutor, type RunQueryOptions } from "./query-executor";
 import { buildQueryReasoning, createTrace, type QueryTrace, type TraceStep } from "./query-trace";
+import { validateQuery } from "./query-validator";
 import { asNumber, asString, type UnknownRecord } from "./response";
 import { buildSchemaIndex } from "./schema-index";
 import {
@@ -68,11 +70,24 @@ export async function runQueryAgent({
   }
   describePlan(plan, trace);
 
-  const root = await runPaged(execute, (offset) => buildRootQuery(plan, offset), trace);
+  // Every payload is checked against the discovered schema before it is sent.
+  // A rejected payload costs no API call: the model may rewrite it (when a
+  // planner provider is configured), otherwise the next simpler fallback runs.
+  const options: RunQueryOptions = {
+    validate: (payload) => validateQuery(index, payload),
+    repair: useModel ? (payload, errors) => repairQueryWithModel(index, payload, errors, trace) : undefined,
+  };
+  trace.add(
+    "plan",
+    "Validating every query locally before it is sent",
+    "Each payload is checked against the discovered schema: fields must exist, references must be expanded before they are read through, arrays are never crossed by a dot-path, and only documented operators are used.",
+  );
+
+  const root = await runPaged(execute, (offset) => buildRootQuery(plan, offset), trace, options);
 
   const queuePlan = planQueueResource(index, plan, trace);
   const queue = queuePlan
-    ? await runPaged(execute, (offset) => buildQueueQuery(queuePlan, offset), trace)
+    ? await runPaged(execute, (offset) => buildQueueQuery(queuePlan, offset), trace, options)
     : undefined;
 
   const assembled = assembleSubmissions({
@@ -94,7 +109,7 @@ export async function runQueryAgent({
     );
   }
 
-  await crossCheckTiv(execute, plan, assembled, trace);
+  await crossCheckTiv(execute, plan, assembled, trace, options);
   reportUnresolved(plan, trace);
 
   return {
@@ -145,12 +160,13 @@ async function crossCheckTiv(
   plan: DataPlan,
   assembled: AssembledSubmission[],
   trace: QueryTrace,
+  options: RunQueryOptions,
 ): Promise<void> {
   const compiled = buildTivCheckQuery(plan);
   if (!compiled) return;
 
   try {
-    const result = await runQuery(execute, compiled, trace);
+    const result = await runQuery(execute, compiled, trace, options);
     const serverTotals = new Map<string, number>();
     for (const row of result.rows as UnknownRecord[]) {
       const id = asString(row.id);

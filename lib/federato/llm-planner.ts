@@ -51,7 +51,25 @@ function plannerModel(provider: Provider): string {
   return process.env.FEDERATO_PLANNER_MODEL ?? DEFAULT_MODELS[provider];
 }
 
-function extractJson(text: string): unknown {
+export interface PlannerModel {
+  provider: Provider;
+  model: string;
+}
+
+/** The configured planner model, or undefined when the model passes are off. */
+export function resolvePlannerModel(): PlannerModel | undefined {
+  const provider = plannerProvider();
+  return provider ? { provider, model: plannerModel(provider) } : undefined;
+}
+
+/** One prompt, one text reply, whichever provider is configured. */
+export async function askModel(target: PlannerModel, system: string, prompt: string): Promise<string> {
+  return target.provider === "openai"
+    ? askOpenAi(target.model, system, prompt)
+    : askAnthropic(target.model, system, prompt);
+}
+
+export function extractJson(text: string): unknown {
   const fenced = /```(?:json)?\s*([\s\S]*?)```/.exec(text);
   const body = fenced ? fenced[1] : text;
   const start = body.indexOf("{");
@@ -78,26 +96,26 @@ function readSelections(parsed: unknown): LlmSelection[] {
   });
 }
 
-async function askOpenAi(model: string, prompt: string): Promise<string> {
+async function askOpenAi(model: string, system: string, prompt: string): Promise<string> {
   const { default: OpenAI } = await import("openai");
   const client = new OpenAI();
   const response = await client.chat.completions.create({
     model,
     messages: [
-      { role: "system", content: SYSTEM },
+      { role: "system", content: system },
       { role: "user", content: prompt },
     ],
   });
   return response.choices[0]?.message?.content ?? "";
 }
 
-async function askAnthropic(model: string, prompt: string): Promise<string> {
+async function askAnthropic(model: string, system: string, prompt: string): Promise<string> {
   const { default: Anthropic } = await import("@anthropic-ai/sdk");
   const client = new Anthropic();
   const response = await client.messages.create({
     model,
     max_tokens: 4000,
-    system: SYSTEM,
+    system,
     messages: [{ role: "user", content: prompt }],
   });
   return response.content
@@ -110,8 +128,8 @@ export async function selectFieldsWithModel(
   plan: DataPlan,
   trace: QueryTrace,
 ): Promise<LlmSelection[] | undefined> {
-  const provider = plannerProvider();
-  if (!provider) {
+  const target = resolvePlannerModel();
+  if (!target) {
     trace.add(
       "plan",
       "Planned without a model",
@@ -120,7 +138,7 @@ export async function selectFieldsWithModel(
     return undefined;
   }
 
-  const model = plannerModel(provider);
+  const { provider, model } = target;
   const prompt = [
     `Root resource: ${plan.rootResource}`,
     plan.queueResource ? `Queue resource: ${plan.queueResource} (via ${plan.rootResource}.${plan.queueLinkPath})` : "",
@@ -135,9 +153,7 @@ export async function selectFieldsWithModel(
     .join("\n");
 
   try {
-    const text =
-      provider === "openai" ? await askOpenAi(model, prompt) : await askAnthropic(model, prompt);
-    const selections = readSelections(extractJson(text));
+    const selections = readSelections(extractJson(await askModel(target, SYSTEM, prompt)));
 
     trace.add(
       "plan",
