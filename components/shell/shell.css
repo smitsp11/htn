@@ -279,3 +279,13 @@
   letter-spacing: -0.4px;
   color: var(--ink-soft);
 }
+
+/* Ghost button variant (transparent, bordered) */
+.button.ghost {
+  background: transparent;
+  color: var(--ink);
+  border: 1px solid var(--border-strong);
+}
+.button.ghost:hover {
+  background: var(--surface-muted);
+}

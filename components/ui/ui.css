@@ -44,3 +44,31 @@
 
 /* Toast: ported from federanorth's #toast. */
 .toast{position:fixed;bottom:25px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;padding:13px 22px;font-size:12px;border-radius:8px;box-shadow:0 6px 30px #1a140e26;z-index:100}
+
+/* Loading / empty / error state cards (migrated from old globals.css) */
+.state-panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: 0 1px 2px #1a140e08;
+  padding: 40px 28px;
+  text-align: center;
+  color: var(--ink-soft);
+}
+.state-panel h2 {
+  font-family: Georgia, "Times New Roman", serif;
+  font-weight: 500;
+  color: var(--ink);
+  margin-bottom: 8px;
+}
+.state-panel span,
+.error-panel small {
+  display: block;
+  color: var(--ink-faint);
+  font-size: 13px;
+  margin-top: 6px;
+}
+.error-panel {
+  border-color: var(--danger);
+  background: var(--danger-tint);
+}
