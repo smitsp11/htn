@@ -17,22 +17,30 @@
 
 /* Flag chips: red/yellow/preferred factor-tone counts, ported from federanorth's .flag-chip. */
 .flag-chips{display:inline-flex;flex-wrap:wrap;gap:5px;margin-top:2px}
-.flag-chip{display:inline-flex;align-items:center;padding:3px 7px;font-size:9px;font-weight:600;border-radius:5px;white-space:nowrap}
+.flag-chip{display:inline-flex;align-items:center;padding:3px 8px;font-size:9px;font-weight:600;border-radius:5px;white-space:nowrap}
+.flag-chip b{margin-right:4px;font-weight:700}
 .flag-chip.flag-red{color:var(--danger);background:var(--danger-tint)}
 .flag-chip.flag-yellow{color:var(--amber);background:var(--amber-tint)}
 .flag-chip.flag-preferred{color:var(--mint-strong);background:var(--mint-tint)}
 
 /* Track: generic tone-colored progress fill, ported from federanorth's .score-track/.line-track. */
 .track{display:inline-block;width:60px;height:6px;background:var(--border);border-radius:99px;overflow:hidden;vertical-align:middle}
-.track i{display:block;height:100%;background:var(--mint);border-radius:inherit}
+.track i{display:block;height:100%;background:var(--mint);border-radius:inherit;transform-origin:left center;animation:track-fill .62s .08s cubic-bezier(.22,1,.36,1) both}
+@keyframes track-fill{from{transform:scaleX(0)}to{transform:scaleX(1)}}
 .track-orange i{background:var(--orange)}
 .track-amber i{background:var(--amber)}
 .track-danger i{background:var(--danger)}
 .track-neutral i{background:var(--ink-faint)}
+/* Lane-keyed fills so the queue bar encodes the SAME fact as its status badge
+   (green only in-appetite; orange needs-evidence; red outside appetite). */
+.track-work-now i{background:var(--mint)}
+.track-chase-evidence i{background:var(--orange)}
+.track-declined i{background:var(--danger)}
+.track-not-property i{background:var(--ink-faint)}
 
 /* Tabs: ported from federanorth's .tabs/.tab. */
 .tabs{display:flex;gap:26px;padding:0 23px;border-bottom:1px solid var(--border);overflow-x:auto;scrollbar-width:thin}
-.tab{padding:15px 0 13px;border-bottom:2px solid transparent;display:flex;gap:8px;align-items:center;font-size:11px;white-space:nowrap;color:var(--ink-soft)}
+.tab{padding:15px 0 13px;border-bottom:2px solid transparent;display:flex;gap:8px;align-items:center;font-size:11px;white-space:nowrap;color:var(--ink-soft);transition:color .18s ease,border-color .18s ease}
 .tab.active{color:var(--mint-strong);border-color:var(--mint)}
 .tab span{font-size:9px;background:var(--surface-muted);padding:2px 5px;border-radius:4px;color:var(--ink-soft)}
 .tab.active span{background:var(--mint-tint);color:var(--mint-strong)}

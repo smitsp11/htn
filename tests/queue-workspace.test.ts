@@ -15,9 +15,13 @@ test("renders the queue heading and a table of submissions", () => {
   assert.match(html, /Commercial property/);
 });
 
-test("empty result set shows the empty state", () => {
+test("empty result set shows the empty state naming the active scope", () => {
   const html = renderToStaticMarkup(
     createElement(QueueWorkspace, { submissions: [], onOpen: () => {}, matchedIds: null }),
   );
-  assert.match(html, /No submissions match/);
+  assert.match(html, /empty-state/);
+  // The empty-state copy names which filters produced zero rows, so a stacked
+  // filter reads as recoverable rather than as a broken table.
+  assert.match(html, /No commercial property submissions in view/);
+  assert.match(html, /Reset filters/);
 });
