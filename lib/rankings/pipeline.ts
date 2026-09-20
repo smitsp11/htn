@@ -1,31 +1,46 @@
 import { demoSubmissions } from "@/lib/demo/submissions";
 import { rankSubmissions } from "@/lib/domain/appetite";
-import type { CanonicalSubmission, HazardProfile, RankedSubmission, RankingsResponse } from "@/lib/domain/types";
-import { buildQueryPayload, normalizeQueryResponse } from "@/lib/federato/adapter";
+import type {
+  CanonicalSubmission,
+  HazardProfile,
+  QueryReasoning,
+  RankedSubmission,
+  RankingsResponse,
+} from "@/lib/domain/types";
+import { runQueryAgent } from "@/lib/federato/adapter";
 import { FederatoClient } from "@/lib/federato/client";
-import { loadOfflineEnrichment, loadOfflineSubmissions } from "@/lib/federato/offline-data";
+import { loadOfflineEnrichment } from "@/lib/federato/offline-data";
+import type { QueryPayload } from "@/lib/federato/query-compiler";
+import { createReplaySource } from "@/lib/federato/replay";
 import { summarize } from "./presentation";
+
+/** What the pipeline needs back from the query agent, whichever executor ran it. */
+export interface AgentOutput {
+  submissions: CanonicalSubmission[];
+  traceSummary: string[];
+  reasoning?: QueryReasoning;
+  totals?: { root?: number; queue?: number; assembled: number };
+}
 
 /** Every upstream capability is injected so the pipeline is testable offline. */
 export interface RankingsPipelineDeps {
   useDemoData: boolean;
   demoSubmissions: CanonicalSubmission[];
   /**
-   * When present (and demo mode is off) the pipeline serves the captured raw
-   * Federato snapshot instead of calling the live API. `defaultPipelineDeps`
-   * wires this whenever the engineer has not explicitly forced demo or live mode.
+   * "offline" replays the captured raw Federato snapshot through the agent;
+   * "live" runs the same agent against Auth0 + the Federato API. Only the
+   * executor differs: schema discovery, planning, querying and normalization
+   * are the same code either way.
    */
-  loadOfflineData?: () => Promise<CanonicalSubmission[]>;
+  dataSource: "offline" | "live";
+  /** Discover the schema, plan, query and normalize; the query agent. */
+  runAgent: () => Promise<AgentOutput>;
   /**
-   * When present, the offline branch attaches each submission's primary-location
+   * When present, the pipeline attaches each submission's primary-location
    * hazard profile (`RankedSubmission.enrichment`) after ranking. Optional so
    * tests that inject their own deps (without enrichment) keep passing.
    */
   loadEnrichment?: () => Promise<Map<string, HazardProfile>>;
-  getSchema: () => Promise<unknown>;
-  buildQueryPayload: (schema: unknown) => unknown;
-  query: (payload: unknown) => Promise<unknown>;
-  normalize: (raw: unknown) => CanonicalSubmission[];
   rank: (submissions: CanonicalSubmission[]) => RankedSubmission[];
   now: () => Date;
 }
@@ -34,36 +49,39 @@ export interface RankingsPipelineDeps {
  * Wire the default pipeline. `FEDERATO_USE_DEMO_DATA` selects the data source:
  * - "true"  -> local demo fixtures;
  * - "false" -> explicit LIVE Federato (Auth0 + query API);
- * - unset   -> the captured raw Federato snapshot under raw/ (offline, default).
+ * - unset   -> the captured raw Federato snapshot under raw/, replayed through
+ *              the query agent (offline, default).
  */
 export function defaultPipelineDeps(): RankingsPipelineDeps {
-  const client = new FederatoClient();
   const mode = process.env.FEDERATO_USE_DEMO_DATA;
   const useDemoData = mode === "true";
   const explicitLive = mode === "false";
+
+  const runAgent = explicitLive
+    ? async () => {
+        const client = new FederatoClient();
+        return runQueryAgent({
+          discoverSchema: () => client.getSchema(),
+          execute: (payload: QueryPayload) => client.query(payload),
+        });
+      }
+    : async () => {
+        const source = createReplaySource();
+        return runQueryAgent({
+          discoverSchema: source.discoverSchema,
+          execute: source.execute,
+        });
+      };
+
   return {
     useDemoData,
     demoSubmissions,
-    loadOfflineData: useDemoData || explicitLive ? undefined : loadOfflineSubmissions,
+    dataSource: explicitLive ? "live" : "offline",
+    runAgent,
     loadEnrichment: useDemoData || explicitLive ? undefined : loadOfflineEnrichment,
-    getSchema: () => client.getSchema(),
-    buildQueryPayload,
-    query: (payload) => client.query(payload),
-    normalize: normalizeQueryResponse,
     rank: rankSubmissions,
     now: () => new Date(),
   };
-}
-
-function countRows(raw: unknown): number | undefined {
-  if (Array.isArray(raw)) return raw.length;
-  if (typeof raw === "object" && raw !== null) {
-    for (const key of ["data", "results", "items", "records"]) {
-      const candidate = (raw as Record<string, unknown>)[key];
-      if (Array.isArray(candidate)) return candidate.length;
-    }
-  }
-  return undefined;
 }
 
 function rankingTrace(ranked: RankedSubmission[]): string[] {
@@ -75,9 +93,9 @@ function rankingTrace(ranked: RankedSubmission[]): string[] {
 }
 
 /**
- * Thin orchestration: discover schema, plan, query, normalize, rank. The
- * route calls this and only translates errors. Domain behaviour stays in the
- * injected modules.
+ * Thin orchestration: run the query agent (discover schema, plan, query,
+ * normalize), rank, attach enrichment. The route calls this and only
+ * translates errors. Domain behaviour stays in the injected modules.
  */
 export async function buildRankings(deps: RankingsPipelineDeps): Promise<RankingsResponse> {
   const generatedAt = deps.now().toISOString();
@@ -97,50 +115,31 @@ export async function buildRankings(deps: RankingsPipelineDeps): Promise<Ranking
     };
   }
 
-  if (deps.loadOfflineData) {
-    // Offline: serve the captured raw Federato snapshot (raw/full_*.json). The
-    // records are normalized through the same adapter and scored through the same
-    // appetite engine as a live query, so the source is reported as "federato".
-    const ranked = deps.rank(await deps.loadOfflineData());
-    if (deps.loadEnrichment) {
-      const hazards = await deps.loadEnrichment();
-      for (const s of ranked) {
-        const h = hazards.get(s.id);
-        if (h) s.enrichment = h;
-      }
+  const agent = await deps.runAgent();
+  const ranked = deps.rank(agent.submissions);
+
+  if (deps.loadEnrichment) {
+    const hazards = await deps.loadEnrichment();
+    for (const submission of ranked) {
+      const hazard = hazards.get(submission.id);
+      if (hazard) submission.enrichment = hazard;
     }
-    return {
-      source: "federato",
-      generatedAt,
-      schemaDiscovered: true,
-      trace: [
-        "Loaded submissions from the captured raw Federato snapshot (raw/full_*.json); no live Federato call was made.",
-        "Schema discovery ran when the snapshot was captured; records use the real Federato resource and field names.",
-        ...rankingTrace(ranked),
-      ],
-      submissions: ranked,
-    };
   }
 
-  const trace: string[] = [];
-  const schema = await deps.getSchema();
-  trace.push("Discovered the schema before constructing the production query.");
-  const payload = deps.buildQueryPayload(schema);
-  trace.push("Built the query payload for the eight appetite factors from the discovered schema.");
-  const raw = await deps.query(payload);
-  const submissions = deps.normalize(raw);
-  const rawCount = countRows(raw);
-  trace.push(
-    `Query returned ${rawCount === undefined ? "an unrecognised shape" : `${rawCount} raw records`}; normalized ${submissions.length} canonical submissions.`,
-  );
-  const ranked = deps.rank(submissions);
-  trace.push(...rankingTrace(ranked));
+  const sourceLine =
+    deps.dataSource === "offline"
+      ? "Replayed the captured raw Federato snapshot (raw/) through the query agent; no live Federato call was made."
+      : "Queried the live Federato API through the query agent.";
+  const countLine = `Query agent returned ${agent.submissions.length} canonical submissions${
+    agent.totals?.root !== undefined ? ` (${agent.totals.root} with a policy, ${agent.totals.queue ?? "?"} in the queue)` : ""
+  }.`;
 
   return {
     source: "federato",
     generatedAt,
     schemaDiscovered: true,
-    trace,
+    trace: [sourceLine, ...agent.traceSummary, countLine, ...rankingTrace(ranked)],
+    queryTrace: agent.reasoning,
     submissions: ranked,
   };
 }

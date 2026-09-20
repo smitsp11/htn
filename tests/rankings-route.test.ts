@@ -13,21 +13,14 @@ function deps(overrides: Partial<RankingsPipelineDeps> = {}) {
   const base: RankingsPipelineDeps = {
     useDemoData: false,
     demoSubmissions: [fullTarget],
-    getSchema: async () => {
-      calls.push("schema");
-      return { resources: ["submission"] };
-    },
-    buildQueryPayload: (schema) => {
-      calls.push("plan");
-      return { schema };
-    },
-    query: async () => {
-      calls.push("query");
-      return { data: [{ id: "raw-1" }, { id: "raw-2" }] };
-    },
-    normalize: () => {
-      calls.push("normalize");
-      return [contradictory, fullTarget];
+    dataSource: "live",
+    runAgent: async () => {
+      calls.push("agent");
+      return {
+        submissions: [contradictory, fullTarget],
+        traceSummary: ["Discovered the schema before querying: 2 resources."],
+        totals: { root: 2, queue: 2, assembled: 2 },
+      };
     },
     rank: (submissions: CanonicalSubmission[]) => {
       calls.push("rank");
@@ -50,17 +43,21 @@ test("pipeline: demo mode ranks fixtures without calling Federato", async () => 
   assert.ok(result.trace.some((line) => /demo fixtures/i.test(line)));
 });
 
-test("pipeline: live mode discovers schema before planning and querying", async () => {
+test("pipeline: live mode runs the query agent before ranking and forwards its trace", async () => {
   const { deps: d, calls } = deps();
   const result = await buildRankings(d);
-  assert.deepEqual(calls, ["schema", "plan", "query", "normalize", "rank"]);
+  assert.deepEqual(calls, ["agent", "rank"]);
   assert.equal(result.source, "federato");
   assert.equal(result.schemaDiscovered, true);
   assert.equal(result.submissions.length, 2);
+  assert.ok(result.trace.some((line) => /Discovered the schema/.test(line)), "agent trace lines are forwarded");
+  assert.ok(result.trace.some((line) => /live Federato API/.test(line)));
 });
 
 test("pipeline: trace reports counts and unresolved-data diagnostics", async () => {
-  const { deps: d } = deps({ normalize: () => [contradictory, fullTarget, missingLosses] });
+  const { deps: d } = deps({
+    runAgent: async () => ({ submissions: [contradictory, fullTarget, missingLosses], traceSummary: [] }),
+  });
   const result = await buildRankings(d);
   assert.ok(result.trace.some((line) => /3 canonical submissions/.test(line)), result.trace.join("\n"));
   assert.ok(result.trace.some((line) => /1 in appetite, 1 needs investigation, 1 out of appetite/.test(line)), result.trace.join("\n"));
@@ -68,14 +65,14 @@ test("pipeline: trace reports counts and unresolved-data diagnostics", async () 
 });
 
 test("pipeline: empty live result is returned, not treated as an error", async () => {
-  const { deps: d } = deps({ query: async () => ({ data: [] }), normalize: () => [] });
+  const { deps: d } = deps({ runAgent: async () => ({ submissions: [], traceSummary: [] }) });
   const result = await buildRankings(d);
   assert.deepEqual(result.submissions, []);
   assert.ok(result.trace.some((line) => /0 canonical submissions/.test(line)));
 });
 
 test("pipeline: upstream failures propagate to the caller", async () => {
-  const { deps: d } = deps({ getSchema: async () => { throw new Error("Federato authentication failed (401)."); } });
+  const { deps: d } = deps({ runAgent: async () => { throw new Error("Federato authentication failed (401)."); } });
   await assert.rejects(buildRankings(d), /authentication failed/);
 });
 

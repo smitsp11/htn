@@ -1,5 +1,45 @@
 # Person 2 handoff — schema-driven query agent
 
+## Query agent addendum (supersedes everything below)
+
+The hand-written planner and normalizer were replaced by a query agent that reasons from the discovered schema at runtime. Nothing in `lib/federato/` names a Federato field ahead of time; `lib/federato/requirements.ts` lists name *fragments* per appetite requirement, and every chosen path is resolved against the live schema before it is used.
+
+### How it works (`lib/federato/adapter.ts`, `runQueryAgent`)
+
+1. **Discover** — `{ "action": "schema" }` is indexed by `schema-index.ts` (resources, paths, reference hops, array boundaries).
+2. **Plan** — `schema-planner.ts` picks the root resource by requirement coverage with a depth penalty (Policy, not Claim, which merely reaches Policy), finds the queue resource through a single reference (`Policy.submission → Submission`), scores candidate paths for each requirement (lookalikes such as `driver.license_state`, `target_premium`, `roof_year` and anything under `hq`/`broker`/`producer` are penalized), attaches the *supporting* sibling paths each derivation reads (building `tiv`, claim `paid_expense`, exposure `kind`/`basis`, `id`s for de-duplication), and discovers a **fallback location** structurally: the only location reachable from the root without crossing an array (`insured.hq`), plus its buildings.
+3. **Optional model pass** — `llm-planner.ts` asks a model which discovered field answers each requirement. It is **off unless `FEDERATO_PLANNER_PROVIDER`** names a provider; every path it returns is re-resolved against the schema and rejected if absent. The model never writes a query and never sees a submission.
+4. **Compile** — `query-compiler.ts` emits Query Request Body payloads in the documented stage order: nested `expand` for references, a `select` projection covering every path the assembler reads, offset pagination, and progressively simpler fallback payloads. `where`/`filter` stay empty so all submissions are retained.
+5. **Execute with repair** — `query-executor.ts` pages until `total` is reached, retries a rejected payload with the next fallback, and parses the `[CODE]` error prefix.
+6. **Assemble** — `assemble.ts` turns hydrated rows into `CanonicalSubmission` with a derivation note per factor (method, source path, confidence, ambiguity). Unbound submissions come from a second query against the queue resource and are merged by the link id.
+7. **Cross-check** — a server-side `unwind` + `over` + `$sum` of building TIV is compared with the client's pre-deduplication total; a mismatch is traced as a warning.
+
+### Aggregation rules (same as the offline join they replace, verified on all 158 captured submissions)
+
+- Locations are **deduplicated by id** (46 policies have several exposure units on one location).
+- TIV = Σ building value over risk locations; else exposure units on an insured-value basis (a fleet's `cost_new` is never added); else the fallback location's buildings at low confidence; else the requested limit (unbound only, low confidence).
+- Primary risk state = state holding the most building value, summed per state (3 submissions differ from the old join, which took the single largest location). Equal weights when values are absent. Minority shares are flagged.
+- Building year = oldest building. Approved construction = value-weighted share in Joisted Masonry / Non-Combustible / Masonry Non-Combustible / Steel / (Modified) Fire Resistive; `Frame`/`Wood Frame` are combustible.
+- Five-year losses = Σ (`paid_indemnity` + `paid_expense`) on claims whose year of loss is in the five years ending at the effective year; undated claims included; **0** for a policy with no claims, **undefined** for a submission with no policy. (20 submissions differ from the old join, e.g. SUB-2026-00005 has three 2026 claims totalling 31,100 that it reported as 0.)
+- No exposure-unit location → the fallback location (`insured.hq`) supplies state, buildings, year and construction at **low confidence**, with a note on every affected submission. All 158 submissions therefore carry a state and a building year.
+
+### Offline and live modes
+
+`lib/federato/replay.ts` replays `raw/` through the same agent, honouring `expand`, `select`, `unwind`/`$sum` and pagination, so the offline path exercises the real projection. `lib/rankings/pipeline.ts` injects one `runAgent` dependency: the replay source when `FEDERATO_USE_DEMO_DATA` is unset, Person 1's `FederatoClient` when it is `false`. `RankingsResponse.queryTrace` (`QueryReasoning`, additive) carries the plan, fallbacks and steps; `components/query-trace/` renders it under "Query reasoning" on the dashboard. The `FEDERATO_QUERY_PAYLOAD_JSON` / `FEDERATO_FIELD_MAP_JSON` seams are gone.
+
+### Tests
+
+`tests/schema-planner.test.ts` (planner, compiler, fallback discovery, model-choice validation, alien schema) and `tests/federato-adapter.test.ts` (assembly rules on `tests/fixtures/federato/agent-*.ts`, plus the whole agent against `raw/`, including a projection-equivalence check: assembling projected rows equals assembling whole records). `tests/offline-data.test.ts` keeps the SUB-2025-00001 regression numbers.
+
+### Open items
+
+- Live run once credentials exist: confirm the first attempt (with `select`) is accepted rather than falling back, `total` reads 113/158, and the TIV cross-check reports zero disagreements.
+- `lib/federato/offline-data.ts` still performs its own id-join only to find each submission's primary location for FEMA enrichment; `AssembledSubmission.primaryLocation` now exposes that and the join can be retired.
+- Adaptive follow-up queries (deeper analysis of high-value or borderline submissions) are not implemented; the trace and compiler are structured to add them.
+
+---
+
+
 Status: complete against the brief in `PERSON_2_QUERY_AGENT.md`, then **refactored to the real captured Federato schema** (`raw/schema.json` + `raw/full_*.json`). Typecheck, the full suite (158 tests), and the production build pass.
 
 ## Real-schema addendum (supersedes the guessed assumptions below)

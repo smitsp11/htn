@@ -4,7 +4,7 @@
 
 Build one shared, read-only underwriter interface that discovers Federato's schema, retrieves the full submission queue, evaluates all eight published appetite factors, ranks the results, and explains every recommendation. A human underwriter remains the decision maker.
 
-The supplied Federato handler and Auth0 endpoint are required core infrastructure. “No external APIs” means no enrichment services such as Nominatim, OpenFEMA, or Open-Meteo, and no external LLM is needed.
+The supplied Federato handler and Auth0 endpoint are required core infrastructure. Enrichment services such as Nominatim, OpenFEMA, or Open-Meteo, and LLM calls, are permitted but optional; the MVP does not depend on them.
 
 ## Required user experience
 
@@ -101,7 +101,7 @@ Decision domain: interaction design—information hierarchy, status versus score
 
 - Calls schema before constructing the production query.
 - Retrieves and accounts for all 50+ submissions with pagination.
-- Does not use optional external APIs or an external LLM.
+- Any external enrichment API or LLM use is optional, supplements the Federato API rather than replacing it, and is explained in the trace or result.
 - Evaluates every available submission against all eight factors.
 - Unknown data is visible and never silently treated as acceptable.
 - Produces a stable rank, factor breakdown, explanation, and human recommendation.
