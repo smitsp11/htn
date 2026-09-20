@@ -12,10 +12,12 @@ const ACCEPTABLE_STATES = new Set([...TARGET_STATES, "NC", "SC", "GA", "VA", "UT
 const TIV_TARGET_MIN = 50_000_000;
 const TIV_TARGET_MAX = 100_000_000;
 const TIV_MAX = 150_000_000;
-const PREMIUM_MIN = 50_000;
-const PREMIUM_TARGET_MIN = 75_000;
-const PREMIUM_TARGET_MAX = 100_000;
-const PREMIUM_MAX = 175_000;
+export const PROPERTY_PREMIUM_BANDS = {
+  min: 50_000,
+  max: 175_000,
+  targetMin: 75_000,
+  targetMax: 100_000,
+} as const;
 const YEAR_ACCEPTABLE_AFTER = 1990;
 const YEAR_TARGET_AFTER = 2010;
 const LOSS_MAX = 100_000;
@@ -79,10 +81,10 @@ function evaluateTiv(value?: number): FactorEvaluation {
 function evaluatePremium(value?: number): FactorEvaluation {
   if (!isFiniteNumber(value) || value <= 0) return factor("totalPremium", "unknown", "Premium is missing or invalid.");
   const money = formatMoney(value);
-  if (value < PREMIUM_MIN || value > PREMIUM_MAX) {
+  if (value < PROPERTY_PREMIUM_BANDS.min || value > PROPERTY_PREMIUM_BANDS.max) {
     return factor("totalPremium", "not_acceptable", `Premium ${money} is outside the $50K–$175K acceptable range.`);
   }
-  if (value >= PREMIUM_TARGET_MIN && value <= PREMIUM_TARGET_MAX) {
+  if (value >= PROPERTY_PREMIUM_BANDS.targetMin && value <= PROPERTY_PREMIUM_BANDS.targetMax) {
     return factor("totalPremium", "target", `Premium ${money} is in the $75K–$100K target range.`);
   }
   return factor("totalPremium", "acceptable", `Premium ${money} is in the $50K–$175K acceptable range.`);

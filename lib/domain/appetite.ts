@@ -1,5 +1,6 @@
 import { APPETITE_TABLES, tableFor } from "./appetite/registry";
 import { buildExplanation, recommendationFor } from "./explanation";
+import { formatMoney } from "./format";
 import type {
   AppetiteStatus,
   AppetiteVerdict,
@@ -127,4 +128,20 @@ export function rankSubmissions(
       left.accountName.localeCompare(right.accountName) ||
       left.id.localeCompare(right.id),
   );
+}
+
+/** Actual quoted premium alongside the selected line's own guideline bands. */
+export function pricingBandsFor(submission: CanonicalSubmission): { label: string; value: string }[] {
+  const table = tableFor(submission.lineOfBusiness) ?? APPETITE_TABLES.property;
+  const bands = table.premiumBands;
+  const quoted =
+    typeof submission.totalPremium === "number" && Number.isFinite(submission.totalPremium)
+      ? formatMoney(submission.totalPremium)
+      : "—";
+
+  return [
+    { label: "This submission", value: quoted },
+    { label: "Acceptable band", value: `${formatMoney(bands.min)} – ${formatMoney(bands.max)}` },
+    { label: "Target band", value: `${formatMoney(bands.targetMin)} – ${formatMoney(bands.targetMax)}` },
+  ];
 }

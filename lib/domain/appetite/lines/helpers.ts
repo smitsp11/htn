@@ -20,10 +20,18 @@ import type {
 
 export type AppetiteProvenance = "provided-pdf" | "synthesized-for-demo";
 
+export interface PremiumBands {
+  min: number;
+  max: number;
+  targetMin: number;
+  targetMax: number;
+}
+
 export interface AppetiteTable {
   line: LineOfBusiness;
   displayName: string;
   provenance: AppetiteProvenance;
+  premiumBands: PremiumBands;
   /** Maximum points available from this line's applicable factors. */
   maxScorePoints: number;
   evaluate(submission: CanonicalSubmission): FactorEvaluation[];
@@ -123,7 +131,7 @@ interface LineConfig {
   targetStates: string[];
   /** Extra acceptable states, or "any" when every other US state is acceptable. */
   acceptableStates: string[] | "any";
-  premium: { min: number; max: number; targetMin: number; targetMax: number };
+  premium: PremiumBands;
   /** Exposure/limit ceiling (reused `tiv` key). Omit to drop the factor entirely. */
   exposureMax?: number;
   lossMax: number;
@@ -147,6 +155,7 @@ export function buildTable(cfg: LineConfig): AppetiteTable {
     line: cfg.line,
     displayName: cfg.displayName,
     provenance: "synthesized-for-demo",
+    premiumBands: cfg.premium,
     maxScorePoints: 1 + 2 + 2 + (cfg.exposureMax === undefined ? 0 : 1) + 1,
     evaluate(s: CanonicalSubmission): FactorEvaluation[] {
       const factors: FactorEvaluation[] = [

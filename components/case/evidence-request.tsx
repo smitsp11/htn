@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 import type { RankedSubmission } from "@/lib/domain/types";
+import { tableFor } from "@/lib/domain/appetite/registry";
 import { Icon } from "@/components/ui/icon";
 
 export interface EvidenceRequestGap {
@@ -24,7 +25,8 @@ function draftFor(submission: RankedSubmission, gaps: EvidenceRequestGap[]): str
   const body = gaps
     .map((gap, index) => `${index + 1}. ${gap.needs ?? `Confirm ${gap.label.toLowerCase()}.`}`)
     .join("\n");
-  return `${header}\n\nPlease provide the following to complete our commercial property review:\n\n${body}\n\nPlease include the source documents and dates covered. Thank you.`;
+  const reviewName = tableFor(submission.lineOfBusiness)?.displayName.toLowerCase() ?? "submission";
+  return `${header}\n\nPlease provide the following to complete our ${reviewName} review:\n\n${body}\n\nPlease include the source documents and dates covered. Thank you.`;
 }
 
 export function EvidenceRequest({ submission, openGaps }: EvidenceRequestProps) {
@@ -49,12 +51,14 @@ export function EvidenceRequest({ submission, openGaps }: EvidenceRequestProps) 
       <summary>Prepare evidence request</summary>
       <p>A draft only; copying it does not send anything or mark requests sent.</p>
       <textarea ref={textareaRef} rows={7} aria-label="Evidence request draft" defaultValue={draft} />
-      <button type="button" className="button ghost" onClick={copyRequest}>
-        <Icon name="copy" /> Copy request
-      </button>
-      <button type="button" className="button ghost" onClick={rebuild}>
-        Rebuild from open requests
-      </button>
+      <div className="request-actions">
+        <button type="button" className="button ghost" onClick={copyRequest}>
+          <Icon name="copy" /> Copy request
+        </button>
+        <button type="button" className="button ghost" onClick={rebuild}>
+          Rebuild from open requests
+        </button>
+      </div>
     </details>
   );
 }
