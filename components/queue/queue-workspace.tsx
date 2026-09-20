@@ -163,20 +163,7 @@ export function QueueWorkspace({ submissions, onOpen, matchedIds }: QueueWorkspa
           setPage(1);
         }}
       />
-      <div className="queue-nav">
-        {view === "list" && (
-          <div className="lane-row">
-            <LaneTabs
-              counts={counts}
-              total={scoped.length}
-              active={lane}
-              onChange={(next) => {
-                setLane(next);
-                setPage(1);
-              }}
-            />
-          </div>
-        )}
+      <div className="queue-viewbar">
         <div className="view-toggle" role="group" aria-label="Queue view">
           <button
             type="button"
@@ -196,6 +183,21 @@ export function QueueWorkspace({ submissions, onOpen, matchedIds }: QueueWorkspa
           </button>
         </div>
       </div>
+      {view === "list" && (
+        <div className="queue-nav">
+          <div className="lane-row">
+            <LaneTabs
+              counts={counts}
+              total={scoped.length}
+              active={lane}
+              onChange={(next) => {
+                setLane(next);
+                setPage(1);
+              }}
+            />
+          </div>
+        </div>
+      )}
       {view === "quadrant" ? (
         <QuadrantBoard submissions={scoped} onOpen={onOpen} />
       ) : visible.length > 0 ? (
