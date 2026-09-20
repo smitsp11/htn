@@ -152,7 +152,7 @@ test('actions persist across a reload and a bad action is refused', async () => 
 test('free text is bounded so a pasted document cannot bloat the store', () => {
   const store = { version: 1, records: {} };
   applyAction(store, {
-    type: 'decision', submissionId: '1', decision: 'refer',
+    type: 'decision', submissionId: '1', decision: 'decline',
     rationale: 'x'.repeat(9000), decidedBy: 'y'.repeat(400),
     pricing: { terms: 'z'.repeat(9000) },
   });

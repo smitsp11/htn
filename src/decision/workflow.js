@@ -12,12 +12,11 @@ import { isAmount } from './normalize.js';
  */
 
 export const REQUEST_STATES = ['open', 'sent', 'answered', 'waived'];
-export const DECISIONS = ['approve', 'decline', 'refer', 'request-info'];
+export const DECISIONS = ['approve', 'decline', 'request-info'];
 
 export const DECISION_LABELS = {
   approve: 'Approve',
   decline: 'Decline',
-  refer: 'Refer to senior underwriter',
   'request-info': 'Request more information',
 };
 
@@ -121,12 +120,6 @@ export function decisionOptions(row, review) {
     value: 'decline', label: DECISION_LABELS.decline, available: true,
     requiresRationale: failed.length === 0,
     warning: failed.length ? null : 'Nothing has failed appetite, so a decline needs a stated reason.',
-  });
-
-  options.push({
-    value: 'refer', label: DECISION_LABELS.refer, available: true,
-    requiresRationale: true,
-    warning: 'Say what the senior underwriter needs to weigh.',
   });
 
   options.push({

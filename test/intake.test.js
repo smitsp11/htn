@@ -20,7 +20,7 @@ function draft(row, revision = 0) {
   ] };
 }
 test('confirmed cited facts recalculate rules and ranking without changing the source snapshot', () => {
-  const row = sample(), original = structuredClone(row), record = { requests: {}, decision: { decision:'refer', decidedBy:'Reviewer' } }, d = draft(row);
+  const row = sample(), original = structuredClone(row), record = { requests: {}, decision: { decision:'decline', decidedBy:'Reviewer' } }, d = draft(row);
   const event = confirmEvidence(record,row,rules,d,d.facts.map(f=>f.id),'Reviewer','Matched broker response to SUB-1.','v1');
   assert.ok(event.after.score > event.before.score);
   assert.equal(event.after.coverage,100);

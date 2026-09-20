@@ -148,7 +148,7 @@
     } catch { return { ok: false, error: 'Server unreachable. Your changes have not been saved; retry when connected.' }; }
   }
 
-  const DECISION_LABELS = { approve: 'Approve', decline: 'Decline', refer: 'Referred to senior underwriter', 'request-info': 'Information requested' };
+  const DECISION_LABELS = { approve: 'Approve', decline: 'Decline', 'request-info': 'Information requested' };
 
   function paintQueue() {
     rows.forEach(row => {

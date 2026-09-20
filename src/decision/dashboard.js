@@ -141,11 +141,9 @@ function workflowPanel(row, rules) {
 }
 
 function demoWorkflowPanel(row) {
-  const decision = row.decision ?? (row.verdict === 'work-now' ? 'approve' : row.verdict === 'declined' ? 'decline' : 'refer');
-  const label = decision === 'approve' ? 'Approve' : decision === 'decline' ? 'Decline' : 'Refer to senior underwriter';
   return `<section class="workflow demo-workflow" data-demo-case>
     <div class="demo-active-banner"><span class="eyebrow">DEMO SCORING ACTIVE</span><h3>Decision walkthrough</h3></div>
-    <div class="record-metrics"><div><small>Recommendation</small><strong>${esc(label)}</strong></div><div><small>Appetite score</small><strong>${row.score}/100</strong></div><div><small>Factors established</small><strong>${row.evidenceCoverage}%</strong></div></div>
+    <div class="record-metrics"><div><small>Appetite score</small><strong>${row.score}/100</strong></div><div><small>Factors established</small><strong>${row.evidenceCoverage}%</strong></div></div>
   </section>`;
 }
 

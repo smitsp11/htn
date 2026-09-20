@@ -241,9 +241,9 @@ describe('property and account context stay distinct; requests and decisions sur
     assert.equal(await page.locator('[data-pricing]').isHidden(), true);
     await page.locator('[data-decision="approve"]').click();
     assert.equal(await page.locator('[data-pricing]').isHidden(), false);
-    await page.locator('[data-decision="refer"]').click();
+    await page.locator('[data-decision="decline"]').click();
     assert.equal(await page.locator('[data-pricing]').isHidden(), true);
-    await page.locator('[data-rationale]').fill('Senior review needed for incomplete property loss records.');
+    await page.locator('[data-rationale]').fill('Incomplete property loss records; declining pending further review.');
     await page.locator('[data-decided-by]').fill('Case Reviewer');
     await page.locator('[data-save-decision]').click();
     await page.getByText('Test save rejected. Please retry.').waitFor();
@@ -252,7 +252,7 @@ describe('property and account context stay distinct; requests and decisions sur
     await page.locator('[data-save-decision]').click();
     await page.locator('[data-decided]:visible').waitFor();
     await page.locator('[data-close-case]').click();
-    assert.match(await page.locator('.row:not([hidden]) [data-queue-next]').innerText(), /Referred/);
+    assert.match(await page.locator('.row:not([hidden]) [data-queue-next]').innerText(), /Decline/);
     await page.reload();
     await page.locator('#search').fill('SUB-GAP');
     await page.locator('.row:not([hidden]) .account-link').click();
