@@ -1,7 +1,7 @@
 (() => {
   const byId = id => document.getElementById(id);
   const rows = [...document.querySelectorAll('.row')];
-  const search = byId('search'), line = byId('line'), state = byId('state'), groupSelect = byId('group');
+  const search = byId('search'), line = byId('line');
   const sort = byId('sort'), pageSize = byId('page-size');
   const sourceStatus = byId('record-status'), otherLineFilter = byId('other-line-filter');
   let scope = 'property', lane = '', page = 1, filtered = [], lastRecordButton;
@@ -15,8 +15,6 @@
       (scope === 'all' || (scope === 'property' ? row.dataset.line === 'property' : row.dataset.line !== 'property')) &&
       (sourceStatus.value === 'all' || (sourceStatus.value === 'history' ? row.dataset.historical === 'true' : row.dataset.historical !== 'true')) &&
       (!line.value || row.dataset.line === line.value) &&
-      (!state.value || row.dataset.state === state.value) &&
-      (!groupSelect.value || row.dataset.group === groupSelect.value) &&
       (!lane || row.dataset.verdict === lane));
     const byRank = (a, b) => +a.dataset.rank - +b.dataset.rank;
     filtered.sort((a, b) =>
@@ -29,15 +27,14 @@
     page = Math.max(1, Math.min(page, pages));
     const start = (page - 1) * size;
     const body = byId('queue-body');
-    filtered.forEach((row, index) => { const rank = row.querySelector('[data-display-rank]'); if (rank) rank.textContent = scope === 'property' ? `#${index + 1} in this view` : ''; body.append(row); row.hidden = index < start || index >= start + size; });
+    filtered.forEach((row, index) => { body.append(row); row.hidden = index < start || index >= start + size; });
     byId('visible-count').textContent = filtered.length ? 'Showing ' + (start + 1) + '–' + Math.min(start + size, filtered.length) + ' of ' + filtered.length + ' submissions' : '0 submissions';
     byId('page-label').textContent = page + ' / ' + pages;
     byId('prev-page').disabled = page <= 1;
     byId('next-page').disabled = page >= pages;
     byId('empty-state').hidden = filtered.length > 0;
     document.querySelector('.table-scroll').hidden = filtered.length === 0;
-    byId('clear-filters').hidden = !(term || line.value || state.value || groupSelect.value || lane);
-    byId('ranking-explanation').textContent = scope !== 'property' ? 'Other lines are not assessed by the commercial property guideline.' : sort.value === 'priority' ? 'Review priority: established evidence → premium fit → remaining effort. Ties use appetite points, then submission ID. Not a loss probability.' : sort.value === 'score' ? 'Highest appetite points first. Missing facts earn no points; check evidence completeness before comparing risks.' : `Ordered by ${sort.value === 'premium' ? 'quoted premium, highest first' : 'account name'}.`;
+    byId('clear-filters').hidden = !(term || line.value || lane);
     byId('queue-title').textContent = scope === 'property' ? 'Commercial property' : scope === 'other' ? 'Other insurance lines' : 'All submissions';
     byId('property-lanes').hidden = scope !== 'property';
     byId('other-line-breakdown').hidden = scope !== 'other';
@@ -70,21 +67,16 @@
     });
   }
 
-  function clear() { search.value = ''; line.value = ''; state.value = ''; groupSelect.value = ''; lane = ''; render(); }
+  function clear() { search.value = ''; line.value = ''; lane = ''; render(); }
   function focusLane(value) { clear(); lane = value; sort.value = value === 'chase-evidence' ? 'priority' : 'score'; render(); byId('workspace').scrollIntoView({ block: 'start' }); }
 
   document.querySelectorAll('[data-scope]').forEach(button => button.addEventListener('click', () => {
     scope = button.dataset.scope; line.value = ''; lane = ''; sort.value = scope === 'other' ? 'account' : 'priority'; render();
   }));
   if (otherLineFilter) otherLineFilter.addEventListener('change', () => { line.value = otherLineFilter.value; render(); });
-  [search, line, state, groupSelect, sort, pageSize, sourceStatus].forEach(element =>
+  [search, line, sort, pageSize, sourceStatus].forEach(element =>
     element.addEventListener(element === search ? 'input' : 'change', () => render()));
   byId('clear-filters').addEventListener('click', clear);
-  byId('filters-toggle').addEventListener('click', () => {
-    const toggle = byId('filters-toggle'), open = toggle.getAttribute('aria-expanded') === 'true';
-    toggle.setAttribute('aria-expanded', String(!open));
-    byId('filterbar').hidden = open;
-  });
   byId('reset-empty').addEventListener('click', clear);
   byId('prev-page').addEventListener('click', () => { page--; render(false); });
   byId('next-page').addEventListener('click', () => { page++; render(false); });
@@ -544,7 +536,6 @@
     chaseDialog.showModal(); chaseDialog.scrollTop = 0;
   }));
   document.querySelectorAll('[data-method]').forEach(button => button.addEventListener('click', () => {
-    byId('sidebar').classList.remove('open'); byId('menu-toggle').setAttribute('aria-expanded', 'false');
     methodDialog.showModal(); methodDialog.scrollTop = 0;
     if (button.dataset.method === 'sources') byId('sources-section').scrollIntoView({ block: 'start' });
   }));
@@ -558,19 +549,9 @@
     const rect = dialog.getBoundingClientRect();
     if (event.clientX < rect.left || event.clientX > rect.right || event.clientY < rect.top || event.clientY > rect.bottom) dialog.close();
   }));
-  byId('menu-toggle').addEventListener('click', () => {
-    const open = byId('sidebar').classList.toggle('open');
-    byId('menu-toggle').setAttribute('aria-expanded', String(open));
-  });
   document.addEventListener('keydown', event => {
-    if (event.key === 'Escape') { byId('sidebar').classList.remove('open'); byId('menu-toggle').setAttribute('aria-expanded', 'false'); }
     if (event.key === '/' && !['INPUT', 'SELECT', 'TEXTAREA'].includes(document.activeElement.tagName) && !dialogs.some(d => d.open)) {
       event.preventDefault(); search.focus();
-    }
-  });
-  document.addEventListener('click', event => {
-    if (!event.target.closest('#sidebar,#menu-toggle')) {
-      byId('sidebar').classList.remove('open'); byId('menu-toggle').setAttribute('aria-expanded', 'false');
     }
   });
 

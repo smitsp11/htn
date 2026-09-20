@@ -119,7 +119,7 @@ function workflowPanel(row, rules) {
           <div><small>Acceptable band</small><strong class="band">${band(pricing.acceptableBand)}</strong></div>
           <div><small>Target band</small><strong class="band">${band(pricing.targetBand)}</strong></div>
         </div>
-        ${pricing.indicatedBasis ? `<p class="factor-caption">Indication is ${esc(pricing.indicatedBasis)}${pricing.varianceToIndicated != null ? `. The quote sits ${Math.abs(pricing.varianceToIndicated)}% ${pricing.varianceToIndicated < 0 ? 'below' : 'above'} it.` : '.'} Guidance for pricing against, not a rate.</p>` : '<p class="factor-caption">No comparable property risks in this industry group, so there is no peer indication to price against.</p>'}
+        ${pricing.indicatedBasis ? `<p class="factor-caption">${esc(pricing.indicatedBasis)}${pricing.varianceToIndicated != null ? ` · quote is ${Math.abs(pricing.varianceToIndicated)}% ${pricing.varianceToIndicated < 0 ? 'below' : 'above'} it` : ''}.</p>` : '<p class="factor-caption">No peer indication available for this industry group.</p>'}
         <label class="field"><span>Proposed premium (optional)</span><input type="number" min="0" step="100" data-pricing-premium placeholder="${pricing.quoted ?? ''}"></label>
         <label class="field"><span>Terms or conditions</span><input type="text" maxlength="500" data-pricing-terms placeholder="Deductible, sub-limits, warranties"></label>
       </div>
@@ -135,15 +135,14 @@ function demoWorkflowPanel(row) {
   const decision = row.decision ?? (row.verdict === 'work-now' ? 'approve' : row.verdict === 'declined' ? 'decline' : 'refer');
   const label = decision === 'approve' ? 'Approve' : decision === 'decline' ? 'Decline' : 'Refer to senior underwriter';
   return `<section class="workflow demo-workflow" data-demo-case>
-    <div class="demo-active-banner"><span class="eyebrow">DEMO SCORING ACTIVE</span><h3>Decision walkthrough</h3><p>The synthetic address and completed schedule are being run through the same appetite engine as a real submission.</p></div>
+    <div class="demo-active-banner"><span class="eyebrow">DEMO SCORING ACTIVE</span><h3>Decision walkthrough</h3></div>
     <div class="record-metrics"><div><small>Recommendation</small><strong>${esc(label)}</strong></div><div><small>Appetite score</small><strong>${row.score}/100</strong></div><div><small>Factors established</small><strong>${row.evidenceCoverage}%</strong></div></div>
-    <p class="factor-caption">This view demonstrates the underwriting reasoning with generated property facts. It cannot save a real decision, request evidence, or change the Federato record.</p>
   </section>`;
 }
 
 function demoReviewPanel(row, research) {
   return `<section class="demo-case-brief">
-    <div><span class="eyebrow">DEMO PROPERTY SCHEDULE</span><h3>${esc(row.demoLocation.address)}, ${esc(row.demoLocation.city)}, ${esc(row.demoLocation.state)} ${esc(row.demoLocation.zip)}</h3><p>Generated property facts are driving this score, recommendation, Browserbase research, FEMA lookup, weather check, and AI summary.</p></div>
+    <div><span class="eyebrow">DEMO PROPERTY SCHEDULE</span><h3>${esc(row.demoLocation.address)}, ${esc(row.demoLocation.city)}, ${esc(row.demoLocation.state)} ${esc(row.demoLocation.zip)}</h3></div>
     <div class="demo-brief-score"><small>Appetite score</small><strong>${row.score}/100</strong><span>${row.evidenceCoverage}% established</span></div>
   </section>${research}
   <details class="case-details"><summary>Why this recommendation <span>${row.factors.length} appetite checks</span></summary><div class="factor-list">${row.factors.map(f => `<details class="factor"><summary><span class="factor-status ${esc(f.status)}">${icon(f.status === 'fail' ? 'x' : f.status === 'unknown' ? 'info' : 'check')}</span><span>${esc(f.label)}<small>${esc(statusWords[f.status] ?? f.status)}</small></span><b>${f.points} / ${f.maxPoints}</b>${icon('chevron')}</summary><p>${esc(f.reason)}</p></details>`).join('')}</div></details>`;
@@ -152,15 +151,14 @@ function demoReviewPanel(row, research) {
 function signalsPanel(row, rules) {
   const signals = caseSignals(row, rules);
   if (!signals.length) return '';
-  return `<div class="section-title"><h3>What stands out</h3><span>${signals.length} signal${signals.length === 1 ? '' : 's'}</span></div>
-    <p class="factor-caption">Cross-cutting context the eight appetite factors cannot express. These do not change the score.</p>
+  return `<div class="section-title"><h3>Underwriting signals</h3><span>${signals.length} signal${signals.length === 1 ? '' : 's'}</span></div>
     <div class="signal-list">${signals.map(s => `<article class="signal tone-${esc(s.tone)}"><span class="signal-dot"></span><div><strong>${esc(s.headline)}</strong><p>${esc(s.detail)}</p></div></article>`).join('')}</div>`;
 }
 
 function relationshipPanel(row) {
   const rel = row.casefile?.relationship;
   if (!rel) return '';
-  return `<div class="section-title"><h3>Our relationship with this account</h3><span>${rel.isNewAccount ? 'New account' : `${rel.tenureYears ?? '—'} yr${rel.tenureYears === 1 ? '' : 's'}`}</span></div>
+  return `<div class="section-title"><h3>Account relationship</h3><span>${rel.isNewAccount ? 'New account' : `${rel.tenureYears ?? '—'} yr${rel.tenureYears === 1 ? '' : 's'}`}</span></div>
     ${rel.isNewAccount ? '<p class="factor-caption">No prior policies. Nothing in force to protect, and no internal loss history to lean on.</p>' : `
     <div class="record-metrics"><div><small>Policies in force</small><strong>${rel.inForceCount}</strong></div><div><small>Premium in force</small><strong>${money(rel.inForcePremium)}</strong></div><div><small>Other submissions</small><strong>${rel.otherSubmissions}</strong></div><div><small>Lapsed policies</small><strong>${rel.lapsed.length}</strong></div></div>
     ${rel.byLine.length ? `<div class="line-bars">${rel.byLine.map(l => `<div><span>${esc(lineLabels[l.line] ?? title(l.line))}</span><span class="line-track"><i style="width:${rel.inForcePremium > 0 ? Math.round(l.premium / rel.inForcePremium * 100) : 0}%"></i></span><b>${money(l.premium)}</b></div>`).join('')}</div>` : ''}
@@ -171,18 +169,16 @@ function relationshipPanel(row) {
 function propertyLossPanel(row) {
   const loss = row.loss ?? {};
   return `<div class="section-title"><h3>Property loss evidence</h3><span>Used for appetite</span></div>
-    <p class="factor-caption">Property policies only, ${esc(loss.windowStart ?? 'start date unavailable')} to ${esc(loss.windowEndExclusive ?? 'end date unavailable')}. Account-wide losses are shown separately.</p>
+    <p class="factor-caption">${esc(loss.windowStart ?? 'start date unavailable')} – ${esc(loss.windowEndExclusive ?? 'end date unavailable')} · ${pct(loss.coverageRatio)} of window covered by policies on file.</p>
     <div class="record-metrics"><div><small>Five-year property loss value</small><strong>${loss.historyComplete && loss.valuesComplete ? money(loss.observed) : 'Not established'}</strong></div><div><small>Recorded incurred in this window</small><strong>${money(loss.observed)}</strong></div></div>
-    <p class="factor-caption">Policies on file cover ${pct(loss.coverageRatio)} of the window. A period with no records is not proof of no losses.</p>
     ${(loss.gaps ?? []).length ? `<p class="gap-note">Missing periods: ${(loss.gaps ?? []).map(g => `${esc(g.start)} to ${esc(g.end)}`).join('; ')}.</p>` : ''}
     ${(loss.claims ?? []).length ? `<table class="claims"><thead><tr><th>Claim</th><th>Date</th><th>Cause</th><th>Incurred</th></tr></thead><tbody>${loss.claims.map(c => `<tr><td>${esc(c.id)}</td><td>${esc(c.dateOfLoss)}</td><td>${esc(title(c.cause))}</td><td>${money(c.incurred)}</td></tr>`).join('')}</tbody></table>` : '<p class="factor-caption">No property claims were returned for this window.</p>'}`;
 }
 
 function lossPanel(row) {
   const account = row.casefile?.lossExperience;
-  if (!account?.claimCount) return '<p class="factor-caption">No account claims on file. This does not establish a loss-free history.</p>';
-  return `<div class="section-title"><h3>Account loss history</h3><span>All lines &amp; recorded dates</span></div>
-    <p class="scope-note">Background context across this account. These totals are not the five-year property loss value used in appetite.</p>
+  if (!account?.claimCount) return '<p class="factor-caption">No account claims on file.</p>';
+  return `<div class="section-title"><h3>Account loss history</h3><span>All lines · not the property loss value used in appetite</span></div>
     <div class="record-metrics"><div><small>Claims on account</small><strong>${account.claimCount}</strong></div><div><small>All-line incurred</small><strong>${money(account.totalIncurred)}</strong></div><div><small>Still open</small><strong>${account.openCount}</strong></div><div><small>Open claim incurred (paid + reserves)</small><strong>${money(account.openIncurred)}</strong></div></div>
     <table class="claims"><thead><tr><th>Date</th><th>Line</th><th>Cause</th><th>Status</th><th class="number">Incurred</th></tr></thead><tbody>${account.claims.slice(0, 25).map(c => `<tr${c.open ? ' class="open-row"' : ''}><td>${esc(c.dateOfLoss ?? '—')}</td><td>${esc(lineLabels[c.line] ?? title(c.line))}</td><td>${esc(title(c.cause ?? 'Not stated'))}</td><td>${c.open ? `<span class="open-tag">${esc(c.status)}</span>` : esc(title(c.status ?? 'closed'))}</td><td class="number">${money(c.incurred)}</td></tr>`).join('')}</tbody></table>
     ${account.claims.length > 25 ? `<p class="factor-caption">Showing the 25 most recent of ${account.claims.length} claims.</p>` : ''}`;
@@ -191,7 +187,7 @@ function lossPanel(row) {
 function exposurePanel(row) {
   const exposure = row.casefile?.exposure;
   if (!exposure?.siteCount) return '';
-  return `<div class="section-title"><h3>Where the value sits</h3><span>${exposure.siteCount} site${exposure.siteCount === 1 ? '' : 's'} · ${exposure.buildingCount} building${exposure.buildingCount === 1 ? '' : 's'}</span></div>
+  return `<div class="section-title"><h3>Property exposure</h3><span>${exposure.siteCount} site${exposure.siteCount === 1 ? '' : 's'} · ${exposure.buildingCount} building${exposure.buildingCount === 1 ? '' : 's'}</span></div>
     ${exposure.concentration != null ? `<p class="factor-caption">Largest location holds ${pct(exposure.concentration)} of insured value${exposure.sprinkleredShare != null ? ` · ${pct(exposure.sprinkleredShare)} of buildings sprinklered` : ''}${exposure.oldestRoof ? ` · oldest roof ${exposure.oldestRoof}` : ''}.</p>` : ''}
     <table class="claims"><thead><tr><th>Location</th><th>State</th><th class="number">Buildings</th><th class="number">TIV</th><th>Share</th></tr></thead><tbody>${exposure.sites.map(s => `<tr><td>${esc(s.address ?? `Location ${s.id}`)}${s.city ? `<small>${esc(s.city)}${s.county ? `, ${esc(s.county)}` : ''}</small>` : ''}</td><td>${esc(s.state ?? '—')}</td><td class="number">${s.buildingCount}</td><td class="number">${shortMoney(s.tiv)}</td><td><span class="share-track"><i style="width:${Math.round((s.share ?? 0) * 100)}%"></i></span></td></tr>`).join('')}</tbody></table>
     ${exposure.constructionMix.length ? `<div class="line-bars">${exposure.constructionMix.map(m => `<div><span>${esc(m.type)}</span><span class="line-track"><i style="width:${Math.round((m.share ?? 0) * 100)}%"></i></span><b>${pct(m.share)}</b></div>`).join('')}</div>` : ''}`;
@@ -199,27 +195,26 @@ function exposurePanel(row) {
 
 function buildingPanel(row) {
   if (!row.buildings?.length) return '<p class="scope-note">No linked building records. Request a statement of values and building schedule.</p>';
-  return `<div class="section-title"><h3>Building facts</h3><span>Federato property records</span></div><table class="claims"><thead><tr><th>Building / location</th><th>Year built</th><th>Construction</th><th>Occupancy</th><th>Roof updated</th><th>Sprinklers</th></tr></thead><tbody>${row.buildings.map(b => `<tr><td>${esc(b.id)} / ${esc(b.locationId ?? 'Unlinked')}</td><td>${esc(b.yearBuilt ?? 'Missing')}</td><td>${esc(b.constructionType ?? 'Missing')}</td><td>${esc(b.occupancy ?? 'Missing')}</td><td>${esc(b.roofYear ?? 'Missing')}</td><td>${b.sprinklered == null ? 'Missing' : b.sprinklered ? 'Yes' : 'No'}</td></tr>`).join('')}</tbody></table>`;
+  return `<div class="section-title"><h3>Building details</h3><span>Federato property records</span></div><table class="claims"><thead><tr><th>Building / location</th><th>Year built</th><th>Construction</th><th>Occupancy</th><th>Roof updated</th><th>Sprinklers</th></tr></thead><tbody>${row.buildings.map(b => `<tr><td>${esc(b.id)} / ${esc(b.locationId ?? 'Unlinked')}</td><td>${esc(b.yearBuilt ?? 'Missing')}</td><td>${esc(b.constructionType ?? 'Missing')}</td><td>${esc(b.occupancy ?? 'Missing')}</td><td>${esc(b.roofYear ?? 'Missing')}</td><td>${b.sprinklered == null ? 'Missing' : b.sprinklered ? 'Yes' : 'No'}</td></tr>`).join('')}</tbody></table>`;
 }
 
 function reviewPanel(row, research = '', version = '', rules = null) {
   const attention = attentionFor(row);
   const tasks = reviewTasks(row);
-  if (isHistoricalCase(row)) return `<section class="recommendation"><span>SOURCE HISTORY</span><p>${esc(attention.title)}</p><small>${esc(attention.detail)}</small></section><p class="scope-note">The property tab shows the recorded buildings and loss evidence. AI can explain gaps for reference; these are not new broker requests.</p>${research}`;
+  if (isHistoricalCase(row)) return `<section class="recommendation"><span>SOURCE HISTORY</span><p>${esc(attention.title)}</p><small>${esc(attention.detail)}</small></section>${research}`;
   if (row.demoScenario) return demoReviewPanel(row, research);
   return `<section class="recommendation"><span>${icon('shield')} NEXT STEP</span><p>${esc(attention.title)}</p><small>${esc(attention.detail)}</small>${tasks.some(t => t.requestable) ? '<button class="button mint" data-open-request>Prepare evidence request</button>' : ''}</section>
     ${assessmentSummary(row)}${research}${intakePanel(row, version)}
     <div class="section-title"><h3>Review actions</h3><span data-action-count>${tasks.length} open</span></div>
-    <p class="factor-caption">Mark evidence received or exceptions reviewed as you work. These actions do not change the underlying appetite facts.</p>
-    <details class="request-draft" data-request-draft><summary>Prepare evidence request</summary><p>Editable draft for missing information. Copying does not send it.</p><textarea data-request-text rows="7" aria-label="Evidence request draft">${esc(evidenceRequest(row))}</textarea><button class="button ghost" data-copy-request>Copy request</button><button class="button ghost" data-reset-request>Rebuild from open requests</button></details>
+    <details class="request-draft" data-request-draft><summary>Prepare evidence request</summary><textarea data-request-text rows="7" aria-label="Evidence request draft">${esc(evidenceRequest(row))}</textarea><button class="button ghost" data-copy-request>Copy request</button><button class="button ghost" data-reset-request>Rebuild from open requests</button></details>
     <div class="task-list">${tasks.map((t, index) => taskCard(t, row, index < 2)).join('') || '<p class="all-clear">No outstanding evidence requests.</p>'}</div>`;
 }
 
 function comparablesPanel(row) {
   const peers = row.casefile?.comparables;
   if (!peers?.peerCount) return '';
-  return `<div class="section-title"><h3>How it prices against peers</h3><span>NAICS ${esc(peers.industryKey)} · ${peers.peerCount} peer${peers.peerCount === 1 ? '' : 's'}</span></div>
-    <p class="factor-caption">Rate per $1,000 of insured value across property risks in the same industry group. A sanity check on pricing, not a rating opinion.</p>
+  return `<div class="section-title"><h3>Peer pricing comparison</h3><span>NAICS ${esc(peers.industryKey)} · ${peers.peerCount} peer${peers.peerCount === 1 ? '' : 's'}</span></div>
+    <p class="factor-caption">Rate per $1,000 of insured value, same industry group.</p>
     ${peers.thisRate != null && peers.medianRate != null ? `<div class="record-metrics"><div><small>This submission</small><strong>$${peers.thisRate}</strong></div><div><small>Peer median</small><strong>$${peers.medianRate}</strong></div><div><small>Position</small><strong class="${peers.ratePosition < -15 ? 'alarm' : ''}">${peers.ratePosition > 0 ? '+' : ''}${peers.ratePosition}%</strong></div><div><small>Peer loss ratio</small><strong>${peers.peerMedianLossRatio != null ? `${Math.round(peers.peerMedianLossRatio)}%` : '—'}</strong></div></div>` : ''}
     <table class="claims"><thead><tr><th>Account</th><th class="number">Premium</th><th class="number">TIV</th><th class="number">Rate</th><th class="number">Loss ratio</th></tr></thead><tbody>${peers.peers.slice(0, 8).map(p => `<tr><td>${esc(p.accountName)}<small>${esc(p.submissionNumber)} · insured ${esc(p.insuredId)}</small></td><td class="number">${money(p.premium)}</td><td class="number">${shortMoney(p.tiv)}</td><td class="number">$${p.rate}</td><td class="number">${p.lossRatio != null ? `${p.lossRatio}%` : '—'}</td></tr>`).join('')}</tbody></table>`;
 }
@@ -227,7 +222,7 @@ function comparablesPanel(row) {
 function brokerPanel(row) {
   const broker = row.casefile?.broker;
   if (!broker) return '';
-  return `<div class="section-title"><h3>Who sent it</h3><span>${broker.resolved && broker.name ? esc(broker.name) : `Broker ${esc(broker.id)}`}${broker.tier ? ` · Tier ${esc(broker.tier)}` : ''}</span></div>
+  return `<div class="section-title"><h3>Submitting broker</h3><span>${broker.resolved && broker.name ? esc(broker.name) : `Broker ${esc(broker.id)}`}${broker.tier ? ` · Tier ${esc(broker.tier)}` : ''}</span></div>
     <div class="record-metrics"><div><small>Submissions in book</small><strong>${broker.submissionCount}</strong></div><div><small>Bound</small><strong>${broker.bound}</strong></div><div><small>Declined or lost</small><strong>${broker.lost}</strong></div><div><small>Hit rate</small><strong>${broker.hitRate != null ? `${broker.hitRate}%` : '—'}</strong></div></div>
     ${broker.byLine.length ? `<p class="factor-caption">Mostly ${broker.byLine.slice(0, 3).map(l => `${esc(lineLabels[l.line] ?? title(l.line))} (${l.count})`).join(', ')}.${broker.resolved ? '' : ' Broker record was not returned by the schema, so tier and region are unavailable.'}</p>` : ''}`;
 }
@@ -236,7 +231,7 @@ function queueRow(r, i) {
   const property = isPropertyCase(r);
   const next = attentionFor(r).title;
   return `<tr class="row" data-index="${i}" data-id="${esc(r.id)}" data-historical="${isHistoricalCase(r)}" data-verdict="${esc(r.verdict)}" data-group="${group(r)}" data-line="${esc(r.lineOfBusiness)}" data-state="${esc(r.primaryState)}" data-score="${property ? r.score : ''}" data-priority="${property ? r.reviewPriority ?? 0 : 0}" data-tasks="${property ? (r.tasks ?? []).length : 0}" data-premium="${r.premium ?? -1}" data-rank="${r.rank}" data-account="${esc(r.accountName)}" data-submission="${esc(r.submissionNumber)}" data-tiv="${property ? r.tiv ?? '' : ''}" data-next-title="${esc(next)}" data-search="${esc(`${r.submissionNumber} ${r.accountName} ${r.primaryState ?? ''} ${r.lineOfBusiness} ${r.queueStatus}`.toLowerCase())}">
-    <td><button class="account-link" data-detail="${i}" aria-label="View ${esc(r.accountName)} submission ${esc(r.submissionNumber)}"><span><strong>${esc(r.accountName)}</strong><small>${esc(r.submissionNumber)}</small><small data-display-rank></small></span></button></td>
+    <td><button class="account-link" data-detail="${i}" aria-label="View ${esc(r.accountName)} submission ${esc(r.submissionNumber)}"><span><strong>${esc(r.accountName)}</strong><small>${esc(r.submissionNumber)}</small></span></button></td>
     <td>${esc(lineLabels[r.lineOfBusiness] ?? title(r.lineOfBusiness))}<small>Federato: ${esc(title(r.queueStatus))}</small></td>
     <td>${esc(dateLabel(r.effectiveDate))}</td><td class="number">${money(r.premium)}</td>
     <td>${property ? `<span class="badge lane-${esc(r.verdict)}">${esc(laneLabels[r.verdict])}</span><small>${r.evidenceCoverage}% established · ${r.factors.filter(f => f.status === 'fail').length} exceptions</small><small>Appetite points ${r.score}/100</small>` : '<span class="muted-cell">Not evaluated</span><small>Property rules do not apply</small>'}</td>
@@ -260,19 +255,18 @@ export function caseTemplate(r, i, report) {
       ${property ? `<section data-case-panel="review" id="case-review-${esc(r.id)}" role="tabpanel" aria-labelledby="tab-review-${esc(r.id)}">
         ${reviewPanel(r, researchPanel(r, report.generatedAt), report.generatedAt, report.rules)}
       </section><section data-case-panel="property" id="case-property-${esc(r.id)}" role="tabpanel" aria-labelledby="tab-property-${esc(r.id)}" hidden>
-        <p class="scope-note">Property evidence: buildings, insured values and the property loss window used by the commercial property guideline.</p>
         ${exposurePanel(r)}${buildingPanel(r)}${propertyLossPanel(r)}
         <details class="detail-section"><summary>Appetite checks · ${r.factors.length} factors</summary>
-        <p class="factor-caption">${r.rawScore} factor points · ${r.scoreCap} score cap. ${r.usesInterpretation ? 'Includes a documented interpretation.' : ''}</p>
+        <p class="factor-caption">${r.rawScore} factor points · ${r.scoreCap} score cap${r.usesInterpretation ? ' · includes a documented interpretation' : ''}.</p>
         <div class="factor-list">${r.factors.map(f => `<details class="factor"><summary><span class="factor-status ${esc(f.status)}">${icon(f.status === 'fail' ? 'x' : f.status === 'unknown' ? 'info' : 'check')}</span><span>${esc(f.label)}<small>${esc(statusWords[f.status] ?? f.status)}</small></span><b>${f.points} / ${f.maxPoints}</b>${icon('chevron')}</summary><p>${esc(f.reason)}</p><div class="factor-meta">${confidenceChip(f.confidence)}${f.basis === 'interpretation' ? '<span class="chip chip-interp">Interpretation</span>' : ''}</div></details>`).join('')}</div></details>
         <details class="detail-section"><summary>Property pricing comparisons</summary>${comparablesPanel(r) || '<p>No comparable risks available.</p>'}</details>
-      </section>` : `<section class="recommendation"><span>OTHER LINE OF BUSINESS</span><p>${esc(lineLabels[r.lineOfBusiness] ?? title(r.lineOfBusiness))} submission</p><small>No appetite model is configured for this line. Property scores, property evidence requests and property pricing guidance are not applied.</small></section>`}
+      </section>` : `<section class="recommendation"><span>OTHER LINE OF BUSINESS</span><p>${esc(lineLabels[r.lineOfBusiness] ?? title(r.lineOfBusiness))} submission</p><small>Not scored — no appetite model configured for this line.</small></section>`}
       <section data-case-panel="account" id="case-account-${esc(r.id)}"${property ? ` role="tabpanel" aria-labelledby="tab-account-${esc(r.id)}" hidden` : ''}>
-        <p class="scope-note">Account context: the insured's relationship, claims across all lines and broker history. These figures provide background and do not replace property-specific evidence.</p>
-        ${signalsPanel(r, report.rules)}${relationshipPanel(r)}${lossPanel(r)}${brokerPanel(r)}
+        ${signalsPanel(r, report.rules)}
+        ${[relationshipPanel(r), lossPanel(r), brokerPanel(r)].filter(Boolean).map(panel => `<div class="context-card">${panel}</div>`).join('')}
         <details class="source-records"><summary>Source record IDs ${icon('chevron')}</summary><p>${esc(Object.values(r.sources).flat().join(', '))}</p></details>
       </section></div>
-      ${property ? `<aside class="case-side"><div class="record-metrics side"><div><small>Submission premium</small><strong>${money(r.premium)}</strong></div><div><small>Property TIV</small><strong>${money(r.tiv)}</strong></div><div><small>Effective date</small><strong>${esc(dateLabel(r.effectiveDate))}</strong></div><div><small>Factors established</small><strong>${r.evidenceCoverage}%</strong></div></div>${isHistoricalCase(r) ? '<p class="scope-note">Reference case. The recorded Federato outcome is shown above; no new underwriting action is recorded here.</p><p data-history-note></p>' : r.demoScenario ? demoWorkflowPanel(r) : workflowPanel(r, report.rules)}</aside>` : ''}
+      ${property ? `<aside class="case-side"><div class="record-metrics side"><div><small>Submission premium</small><strong>${money(r.premium)}</strong></div><div><small>Property TIV</small><strong>${money(r.tiv)}</strong></div><div><small>Effective date</small><strong>${esc(dateLabel(r.effectiveDate))}</strong></div><div><small>Factors established</small><strong>${r.evidenceCoverage}%</strong></div></div>${isHistoricalCase(r) ? '<p class="scope-note">Reference case — no new action recorded here.</p><p data-history-note></p>' : r.demoScenario ? demoWorkflowPanel(r) : workflowPanel(r, report.rules)}</aside>` : ''}
     </div></template>`;
 }
 
@@ -282,9 +276,9 @@ export function htmlReport(rawReport) {
   const propertyCount = report.rows.filter(isPropertyCase).length;
   const otherCounts = Object.entries(report.rows.filter(r => !isPropertyCase(r)).reduce((counts, r) => { counts[r.lineOfBusiness] = (counts[r.lineOfBusiness] ?? 0) + 1; return counts; }, {}));
   const lines = [...new Set(report.rows.map(r => r.lineOfBusiness).filter(Boolean))].sort();
-  const states = [...new Set(report.rows.map(r => r.primaryState).filter(Boolean))].sort();
   const css = readFileSync(new URL('./federanorth.css', import.meta.url), 'utf8');
   const js = readFileSync(new URL('./dashboard-client.js', import.meta.url), 'utf8');
+  const heroImage = `data:image/png;base64,${readFileSync(new URL('../../assets/federanorth-aerial.png', import.meta.url)).toString('base64')}`;
 
   const rows = report.rows.map(queueRow).join('');
   const details = report.rows.map((r, i) => caseTemplate(r, i, report)).join('');
@@ -293,15 +287,14 @@ export function htmlReport(rawReport) {
     <ul>${group.submissions.map(entry => `<li data-chase-account><b>${esc(entry.accountName)}</b> <small>${esc(entry.submissionNumber)}</small><ol>${entry.tasks.map(t => `<li data-chase-task="${esc(t.id)}" data-chase-submission="${esc(t.submissionId)}">${esc(t.question)}</li>`).join('')}</ol></li>`).join('')}</ul></section>`).join('');
 
   return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Federanorth · Submission Queue</title><style>${css}</style></head><body>
-    ${federanorthShell({ icon })}
+    ${federanorthShell({ icon, heroImage })}
     <div class="queue-actions"><button data-open-chase>View outstanding evidence requests ${icon('arrow')}</button></div>
-    <div class="scope-switch" role="group" aria-label="Submission portfolio"><button data-scope="property" aria-pressed="true">Commercial property <b>${propertyCount}</b></button><button data-scope="other" aria-pressed="false">Other lines <b>${report.rows.length - propertyCount}</b></button><button data-scope="all" aria-pressed="false">All submissions <b>${report.rows.length}</b></button></div>
+    <div class="scope-switch" role="group" aria-label="Submission portfolio"><button data-scope="property" aria-pressed="true">Commercial property</button><button data-scope="other" aria-pressed="false">Other lines</button><button data-scope="all" aria-pressed="false">All submissions</button></div>
     <div class="line-breakdown" id="other-line-breakdown" hidden><label for="other-line-filter">Line of business</label><select id="other-line-filter" aria-label="Other insurance line"><option value="">All other lines (${report.rows.length - propertyCount})</option>${otherCounts.map(([key,count]) => `<option value="${esc(key)}" data-line-label="${esc(lineLabels[key] ?? title(key))}">${esc(lineLabels[key] ?? title(key))} (${count})</option>`).join('')}</select></div>
-    <section class="queue-panel" aria-label="Submission queue"><div class="queue-sticky-nav"><div class="panel-heading"><div><h2 id="queue-title">Commercial property</h2><p>Review the next action, then open a case for evidence and context.</p></div><span class="snapshot-label">${icon('clock')} ${esc(dateLabel(report.fetchedAt ?? report.generatedAt))} snapshot</span></div>
+    <section class="queue-panel" aria-label="Submission queue"><div class="queue-sticky-nav"><div class="panel-heading"><div><h2 id="queue-title">Commercial property</h2></div></div>
     <div class="tabs" id="property-lanes" role="tablist" aria-label="Property appetite"><button class="tab active" role="tab" aria-selected="true" aria-controls="queue-results" data-tab="">All in view <span>${propertyCount}</span></button>${Object.entries(laneLabels).filter(([key]) => key !== 'not-property').map(([lane, label]) => `<button class="tab" role="tab" aria-selected="false" aria-controls="queue-results" data-tab="${lane}">${esc(label)} <span>${lanes[lane] ?? 0}</span></button>`).join('')}</div>
-    <div class="queue-filters"><button type="button" class="filters-toggle" id="filters-toggle" aria-expanded="false" aria-controls="filterbar">Filter submissions</button><label class="record-status-label">Show <select id="record-status"><option value="active">Active submissions</option><option value="history">Bound / closed history</option><option value="all">All source statuses</option></select></label><button class="clear-filters" id="clear-filters" hidden>Clear filters</button><label class="sort-label">Sort by <select id="sort"><option value="priority">Review priority</option><option value="score">Appetite fit</option><option value="premium">Premium</option><option value="account">Account name</option></select></label><div class="filterbar" id="filterbar" hidden><label>Line <select id="line"><option value="">All lines in this view</option>${lines.map(l => `<option value="${esc(l)}">${esc(lineLabels[l] ?? title(l))}</option>`).join('')}</select></label><label>State <select id="state"><option value="">All states</option>${states.map(s => `<option>${esc(s)}</option>`).join('')}</select></label><label>Business <select id="group"><option value="">New and renewal</option><option value="new">New business</option><option value="renewal">Renewals</option><option value="unknown">Unverified type</option></select></label></div></div></div>
-    <p class="factor-caption" id="ranking-explanation">Ranked by review priority: evidence readiness, premium fit and remaining effort. Switch to appetite fit for highest guideline score.</p>
-    <div id="queue-results" role="tabpanel"><div class="table-scroll"><table class="queue-table"><thead><tr><th scope="col">Account / submission</th><th scope="col">Coverage / source status</th><th scope="col">Effective</th><th scope="col" class="number">Premium</th><th scope="col">Property appetite</th><th scope="col">Next step / your work</th><th scope="col"><span class="sr-only">Open record</span></th></tr></thead><tbody id="queue-body">${rows}</tbody></table></div><div class="empty-state" id="empty-state" hidden>${icon('search')}<h3>No submissions match</h3><p>Try another search or clear your filters to see the full queue.</p><button class="button" id="reset-empty">Clear filters</button></div></div>
+    <div class="queue-filters"><label class="record-status-label">Show <select id="record-status"><option value="active">Active submissions</option><option value="history">Bound / closed history</option><option value="all">All source statuses</option></select></label><button class="clear-filters" id="clear-filters" hidden>Clear filters</button><label class="sort-label">Sort by <select id="sort"><option value="priority">Review priority</option><option value="score">Appetite fit</option><option value="premium">Premium</option><option value="account">Account name</option></select></label><select id="line" hidden aria-hidden="true"><option value="">All lines in this view</option>${lines.map(l => `<option value="${esc(l)}">${esc(lineLabels[l] ?? title(l))}</option>`).join('')}</select></div></div>
+    <div id="queue-results" role="tabpanel"><div class="table-scroll"><table class="queue-table"><thead><tr><th scope="col">Account / submission</th><th scope="col">Coverage</th><th scope="col">Effective</th><th scope="col" class="number">Premium</th><th scope="col">Property appetite</th><th scope="col">Next step / your work</th><th scope="col"><span class="sr-only">Open record</span></th></tr></thead><tbody id="queue-body">${rows}</tbody></table></div><div class="empty-state" id="empty-state" hidden>${icon('search')}<h3>No submissions match</h3><p>Try another search or clear your filters to see the full queue.</p><button class="button" id="reset-empty">Clear filters</button></div></div>
     <div class="table-footer"><span id="visible-count" aria-live="polite"></span><div class="pagination"><label>Rows per page <select id="page-size"><option>10</option><option selected>15</option><option>25</option><option>50</option></select></label><span id="page-label"></span><button class="icon-button" id="prev-page" aria-label="Previous page">${icon('chevron')}</button><button class="icon-button" id="next-page" aria-label="Next page">${icon('chevron')}</button></div></div></section>
     <footer class="page-footer"><span><span class="footer-dot"></span>Scores reflect the 2025 Commercial Property guidelines</span><button data-method="rules">View scoring methodology ${icon('arrow')}</button></footer></div><footer class="site-footer"><a href="#main">FEDERANORTH<span>+</span></a><p>A clearer view of risk.</p></footer></main>
     <dialog id="record-dialog" class="record-dialog" aria-labelledby="record-title"><button class="icon-button close-dialog" aria-label="Close submission details">${icon('x')}</button><div id="record-content"></div><div class="drawer-footer">Decision support · No policy actions are taken</div></dialog>${details}

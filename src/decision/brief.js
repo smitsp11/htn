@@ -102,7 +102,7 @@ export function briefInput(row) {
 
 export async function generateBriefs(row, {
   apiKey = process.env.OPENAI_API_KEY,
-  model = process.env.OPENAI_MODEL || 'gpt-4.1-mini',
+  model = process.env.OPENAI_MODEL || 'o3',
   fetchImpl = globalThis.fetch,
 } = {}) {
   if (!apiKey) throw new Error('Set OPENAI_API_KEY in .env.');
@@ -125,7 +125,7 @@ export async function generateBriefs(row, {
     body: JSON.stringify({
       model, store: false, instructions: INSTRUCTIONS,
       input: JSON.stringify({ ...input, sourceLabels: [...sourceLabels] }),
-      max_output_tokens: 1400,
+      max_output_tokens: 4000,
       text: { format: { type: 'json_schema', name: 'underwriting_context', strict: true, schema } },
     }),
   });

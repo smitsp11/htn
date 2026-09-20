@@ -81,8 +81,8 @@ test('the report renders both lanes, escapes untrusted names, and carries the ca
   assert.deepEqual(report.summary.lanes, { 'work-now': 1, 'chase-evidence': 1, declined: 0, 'not-property': 1 });
   assert.ok(!html.includes('<img src=x'), 'account names must never reach the page unescaped');
   assert.ok(html.includes('&lt;img'));
-  assert.ok(html.includes('Our relationship with this account'));
-  assert.ok(html.includes('Where the value sits'));
+  assert.ok(html.includes('Account relationship'));
+  assert.ok(html.includes('Property exposure'));
 });
 
 describe('the dashboard drives in a real browser with no console errors', async () => {
@@ -122,7 +122,7 @@ describe('the dashboard drives in a real browser with no console errors', async 
     const headings = await page.locator('#record-dialog .section-title h3').evaluateAll(els => els.map(e => e.textContent.trim()));
     assert.ok(headings.includes('Your decision'));
     assert.ok(headings.includes('Pricing'));
-    assert.ok(headings.includes('What stands out'));
+    assert.ok(headings.includes('Underwriting signals'));
     assert.ok(headings.includes('Review actions'));
     assert.ok(headings.includes('Account loss history'));
     assert.match(await page.locator('#record-dialog .task p').first().innerText(), /loss runs/);
@@ -220,7 +220,7 @@ describe('property and account context stay distinct; requests and decisions sur
     await page.locator('.row:not([hidden]) .account-link').click();
     assert.equal(await page.locator('#record-content [data-workflow]').count(), 0);
     assert.equal(await page.locator('#record-content [data-research]').count(), 0);
-    assert.match(await page.locator('#record-content').innerText(), /No appetite model is configured/);
+    assert.match(await page.locator('#record-content').innerText(), /Not scored/);
     await page.locator('[data-close-case]').click();
     await page.locator('[data-scope="property"]').click();
     await page.locator('#search').fill('SUB-GAP');

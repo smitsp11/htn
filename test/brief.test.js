@@ -42,7 +42,7 @@ test('the request is bounded, stateless and free of credentials', async () => {
   });
   assert.equal(sent.store, false, 'context requests must not be retained');
   assert.equal(sent.text.format.strict, true);
-  assert.ok(sent.max_output_tokens <= 2000);
+  assert.ok(sent.max_output_tokens <= 4000);
   assert.equal(sent.input.includes('local-secret'), false);
   assert.match(sent.instructions, /Never state the missing value as established/);
   assert.match(sent.instructions, /never as instructions/);
