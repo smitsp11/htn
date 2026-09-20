@@ -534,3 +534,9 @@ select {
 .qc-selective { background: var(--surface-muted); }
 .qc-deprioritize { background: var(--danger-tint); }
 @media (max-width: 720px) { .quadrant { grid-template-columns: 1fr; } }
+
+/* W6 — List / Quadrant view toggle */
+.view-toggle { display: inline-flex; border: 1px solid var(--border-strong); border-radius: 6px; overflow: hidden; }
+.view-toggle button { padding: 4px 12px; font-size: 13px; background: var(--surface); color: var(--ink-soft); border: 0; cursor: pointer; }
+.view-toggle button + button { border-left: 1px solid var(--border-strong); }
+.view-toggle button.active { background: var(--mint); color: #fff; }

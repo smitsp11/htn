@@ -6,6 +6,7 @@ import { LANE_LABELS, laneForStatus, type Lane } from "@/lib/rankings/lanes";
 import { Icon } from "@/components/ui/icon";
 import { LaneTabs } from "@/components/queue/lane-tabs";
 import { Pagination } from "@/components/queue/pagination";
+import { QuadrantBoard } from "@/components/queue/quadrant-board";
 import { QueueFilters, type SortKey, type SourceStatus } from "@/components/queue/queue-filters";
 import { QueueTable } from "@/components/queue/queue-table";
 import { ScopeSwitch, type Scope } from "@/components/queue/scope-switch";
@@ -95,6 +96,7 @@ function comparatorFor(sort: SortKey): ((a: RankedSubmission, b: RankedSubmissio
  * federanorth's `dashboard-client.js#render`).
  */
 export function QueueWorkspace({ submissions, onOpen, matchedIds }: QueueWorkspaceProps) {
+  const [view, setView] = useState<"list" | "quadrant">("list");
   const [scope, setScope] = useState<Scope>("property");
   const [lane, setLane] = useState<LaneFilter>("all");
   const [sourceStatus, setSourceStatus] = useState<SourceStatus>("active");
@@ -183,26 +185,46 @@ export function QueueWorkspace({ submissions, onOpen, matchedIds }: QueueWorkspa
         }}
       />
       <div className="queue-nav">
-        <div className="lane-row">
+        {view === "list" && (
+          <div className="lane-row">
+            <button
+              type="button"
+              className="lane-all"
+              aria-pressed={lane === "all"}
+              onClick={() => {
+                setLane("all");
+                setPage(1);
+              }}
+            >
+              All lanes in view
+            </button>
+            <LaneTabs
+              counts={counts}
+              active={lane === "all" ? LANES[0] : lane}
+              onChange={(next) => {
+                setLane(next);
+                setPage(1);
+              }}
+            />
+          </div>
+        )}
+        <div className="view-toggle" role="group" aria-label="Queue view">
           <button
             type="button"
-            className="lane-all"
-            aria-pressed={lane === "all"}
-            onClick={() => {
-              setLane("all");
-              setPage(1);
-            }}
+            aria-pressed={view === "list"}
+            className={view === "list" ? "active" : ""}
+            onClick={() => setView("list")}
           >
-            All lanes in view
+            List
           </button>
-          <LaneTabs
-            counts={counts}
-            active={lane === "all" ? LANES[0] : lane}
-            onChange={(next) => {
-              setLane(next);
-              setPage(1);
-            }}
-          />
+          <button
+            type="button"
+            aria-pressed={view === "quadrant"}
+            className={view === "quadrant" ? "active" : ""}
+            onClick={() => setView("quadrant")}
+          >
+            Quadrant
+          </button>
         </div>
         <QueueFilters
           sourceStatus={sourceStatus}
@@ -218,7 +240,9 @@ export function QueueWorkspace({ submissions, onOpen, matchedIds }: QueueWorkspa
           onClear={clearFilters}
         />
       </div>
-      {visible.length > 0 ? (
+      {view === "quadrant" ? (
+        <QuadrantBoard submissions={sourceFiltered} onOpen={onOpen} />
+      ) : visible.length > 0 ? (
         <QueueTable submissions={visible} onOpen={onOpen} />
       ) : (
         <div className="empty-state">
@@ -229,17 +253,19 @@ export function QueueWorkspace({ submissions, onOpen, matchedIds }: QueueWorkspa
           </button>
         </div>
       )}
-      <Pagination
-        page={clampedPage}
-        pageCount={pageCount}
-        pageSize={pageSize}
-        total={sorted.length}
-        onPage={setPage}
-        onPageSize={(size) => {
-          setPageSize(size);
-          setPage(1);
-        }}
-      />
+      {view === "list" && (
+        <Pagination
+          page={clampedPage}
+          pageCount={pageCount}
+          pageSize={pageSize}
+          total={sorted.length}
+          onPage={setPage}
+          onPageSize={(size) => {
+            setPageSize(size);
+            setPage(1);
+          }}
+        />
+      )}
     </section>
   );
 }
