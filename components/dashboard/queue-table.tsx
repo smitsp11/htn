@@ -1,4 +1,5 @@
 import type { RankedSubmission } from "@/lib/domain/types";
+import { flagSummary, reasonsByTone, type FlagTone } from "@/lib/rankings/flags";
 import { primaryReason, statusLabels } from "@/lib/rankings/presentation";
 import { SubmissionDetail } from "./submission-detail";
 
@@ -23,6 +24,7 @@ export function QueueTable({ submissions, expandedId, onToggle }: QueueTableProp
             <th>Rank</th>
             <th>Account</th>
             <th>Status</th>
+            <th>Flags</th>
             <th>Score</th>
             <th>State</th>
             <th>TIV</th>
@@ -40,6 +42,7 @@ export function QueueTable({ submissions, expandedId, onToggle }: QueueTableProp
                 <td className="rank-cell">{index + 1}</td>
                 <td><strong>{submission.accountName}</strong><small>{submission.id}</small></td>
                 <td><span className={`status-badge ${submission.status}`}>{statusLabels[submission.status]}</span></td>
+                <td className="flags-cell"><FlagChips submission={submission} /></td>
                 <td><strong>{submission.score}</strong><small>/100</small></td>
                 <td>{submission.primaryRiskState ?? "—"}</td>
                 <td>{formatMoney(submission.tiv)}</td>
@@ -62,7 +65,7 @@ export function QueueTable({ submissions, expandedId, onToggle }: QueueTableProp
               </tr>,
               expanded ? (
                 <tr className="detail-row" key={`${submission.id}-detail`}>
-                  <td colSpan={10}><SubmissionDetail submission={submission} /></td>
+                  <td colSpan={11}><SubmissionDetail submission={submission} /></td>
                 </tr>
               ) : null,
             ];
@@ -70,5 +73,30 @@ export function QueueTable({ submissions, expandedId, onToggle }: QueueTableProp
         </tbody>
       </table>
     </div>
+  );
+}
+
+const TONE_ORDER: FlagTone[] = ["red", "yellow", "preferred"];
+const TONE_LABEL: Record<FlagTone, string> = { red: "not acceptable", yellow: "unresolved", preferred: "wanted" };
+
+function FlagChips({ submission }: { submission: RankedSubmission }) {
+  const summary = flagSummary(submission);
+  const reasons = reasonsByTone(submission);
+  return (
+    <span className="flag-chips">
+      {TONE_ORDER.map((tone) =>
+        summary[tone] > 0 ? (
+          <span
+            key={tone}
+            role="img"
+            className={`flag-chip flag-${tone}`}
+            title={reasons[tone].join("\n")}
+            aria-label={`${summary[tone]} ${TONE_LABEL[tone]}`}
+          >
+            {summary[tone]}
+          </span>
+        ) : null,
+      )}
+    </span>
   );
 }
