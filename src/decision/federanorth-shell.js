@@ -1,10 +1,9 @@
-export function federanorthShell({ icon, heroImage }) {
-  const northStar = '<svg viewBox="0 0 40 40" aria-hidden="true"><path d="M20 0c1.9 13.5 6.5 18.1 20 20-13.5 1.9-18.1 6.5-20 20C18.1 26.5 13.5 21.9 0 20 13.5 18.1 18.1 13.5 20 0Z" fill="currentColor"/></svg>';
+export function federanorthShell({ icon }) {
   return `<a class="skip-link" href="#workspace">Skip to submissions</a>
-    <header class="site-header"><a class="brand" href="#main" aria-label="Federanorth home">FEDERANORTH<span class="brand-star">${northStar}</span></a>
-    <nav class="site-nav" id="sidebar" aria-label="Main navigation"><button data-nav="queue">Workspace ${icon('chevron')}</button></nav>
-    <a class="button mint header-cta" href="#workspace">Open workspace ${icon('arrow')}</a><button id="menu-toggle" class="icon-button mobile-menu" aria-label="Toggle navigation" aria-expanded="false" aria-controls="sidebar">${icon('menu')}</button></header>
-    <main id="main"><section class="hero" aria-labelledby="hero-title"><div class="hero-copy"><h1 id="hero-title">A clearer view.<br>A better way<br>to underwrite.</h1><p>Review the submission. Check local conditions.<br>Get the context to make your next decision.</p><a class="button mint hero-cta" href="#workspace">Explore your queue ${icon('arrow')}</a></div>
-    <div class="hero-visual"><img class="hero-photo" src="${heroImage}" alt="Aerial view of highway routes crossing a green forest landscape"><div class="image-shade"></div><svg class="route-overlay" viewBox="0 0 1536 1024" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><path d="M-40 750C400 580 960 485 1580 383"/><path d="M385-20C475 224 630 410 820 535S1250 858 1540 1075"/><path d="M575 260C695 154 822 70 932 101S1080 224 1112 343"/></svg><span class="map-grid vertical one"></span><span class="map-grid vertical two"></span><span class="map-grid horizontal"></span><span class="map-star">${northStar}</span><div class="image-coordinates">THE VIEW FROM ABOVE<span>A NEW PERSPECTIVE</span></div><div class="image-label"><span class="status-dot"></span> CONNECTING THE DOTS</div></div></section>
-    <div class="workspace" id="workspace"><div class="page-heading"><div><h2>Opportunity, in focus.</h2></div><div class="workspace-actions"><label class="global-search">${icon('search')}<input id="search" type="search" aria-label="Search submissions" placeholder="Find an account or submission"><kbd>/</kbd></label><button class="button export-button" id="export-csv">${icon('download')} Export queue</button></div></div>`;
+    <header class="site-header">
+      <a class="brand" href="#workspace" aria-label="Federanorth workspace">FEDERANORTH<span class="brand-mark">+</span></a>
+      <nav class="site-nav" id="sidebar" aria-label="Main navigation"><button class="active" data-nav="queue">Submissions</button></nav>
+      <div class="header-tools"><span class="data-status"><i></i> Updated now</span><button id="menu-toggle" class="icon-button mobile-menu" aria-label="Toggle navigation" aria-expanded="false" aria-controls="sidebar">${icon('menu')}</button></div>
+    </header>
+    <main id="main"><div class="workspace" id="workspace"><div class="page-heading"><div><h2>Submissions</h2></div><div class="workspace-actions"><label class="global-search">${icon('search')}<input id="search" type="search" aria-label="Search submissions" placeholder="Search account or submission"><kbd>/</kbd></label><button class="button export-button" id="export-csv">${icon('download')} Export</button></div></div>`;
 }

@@ -285,7 +285,6 @@ export function htmlReport(rawReport) {
   const states = [...new Set(report.rows.map(r => r.primaryState).filter(Boolean))].sort();
   const css = readFileSync(new URL('./federanorth.css', import.meta.url), 'utf8');
   const js = readFileSync(new URL('./dashboard-client.js', import.meta.url), 'utf8');
-  const heroImage = `data:image/png;base64,${readFileSync(new URL('../../assets/federanorth-aerial.png', import.meta.url)).toString('base64')}`;
 
   const rows = report.rows.map(queueRow).join('');
   const details = report.rows.map((r, i) => caseTemplate(r, i, report)).join('');
@@ -294,7 +293,7 @@ export function htmlReport(rawReport) {
     <ul>${group.submissions.map(entry => `<li data-chase-account><b>${esc(entry.accountName)}</b> <small>${esc(entry.submissionNumber)}</small><ol>${entry.tasks.map(t => `<li data-chase-task="${esc(t.id)}" data-chase-submission="${esc(t.submissionId)}">${esc(t.question)}</li>`).join('')}</ol></li>`).join('')}</ul></section>`).join('');
 
   return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Federanorth · Submission Queue</title><style>${css}</style></head><body>
-    ${federanorthShell({ icon, heroImage })}
+    ${federanorthShell({ icon })}
     <div class="queue-actions"><button data-open-chase>View outstanding evidence requests ${icon('arrow')}</button></div>
     <div class="scope-switch" role="group" aria-label="Submission portfolio"><button data-scope="property" aria-pressed="true">Commercial property <b>${propertyCount}</b></button><button data-scope="other" aria-pressed="false">Other lines <b>${report.rows.length - propertyCount}</b></button><button data-scope="all" aria-pressed="false">All submissions <b>${report.rows.length}</b></button></div>
     <div class="line-breakdown" id="other-line-breakdown" hidden>${otherCounts.map(([key,count]) => `<button data-line-filter="${esc(key)}">${esc(lineLabels[key] ?? title(key))} <b>${count}</b></button>`).join('')}</div>
