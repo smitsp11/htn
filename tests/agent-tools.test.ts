@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { rankSubmissions } from "../lib/domain/appetite";
-import { filterQueue, resolveSubmission } from "../lib/agent/query-tools";
+import { FILTER_ROW_LIMIT, filterQueue, resolveSubmission } from "../lib/agent/query-tools";
 import { allAcceptable, contradictory, fullTarget, multipleFailures } from "./fixtures/domain/submissions";
 
 const ranked = rankSubmissions([fullTarget, allAcceptable, contradictory, multipleFailures]);
@@ -25,4 +25,12 @@ test("resolveSubmission finds by id or fuzzy name", () => {
   assert.equal(resolveSubmission(ranked, "fx-target")?.id, "fx-target");
   assert.equal(resolveSubmission(ranked, "target account")?.id, "fx-target");
   assert.equal(resolveSubmission(ranked, "no such account"), undefined);
+});
+
+test("filterQueue returns the highest-ranked matches by name, capped, without dropping ids", () => {
+  const { matchedIds, rows } = filterQueue(ranked, {});
+  assert.equal(matchedIds.length, ranked.length);
+  assert.ok(rows.length <= FILTER_ROW_LIMIT);
+  assert.deepEqual(rows.map((row) => row.id), matchedIds.slice(0, rows.length), "rows follow rank order");
+  assert.equal(rows[0].status, "in_appetite");
 });

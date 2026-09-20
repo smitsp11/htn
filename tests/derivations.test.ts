@@ -136,3 +136,26 @@ test("on the captured book every non-unknown factor carries evidence, before and
     assert.match(factor?.evidence?.method ?? "", /^Follow-up/, `${id} loss evidence names the follow-up`);
   }
 });
+
+test("on the captured book, TIV and construction cite the leaf they were read from, not the year path", async () => {
+  const source = createReplaySource();
+  const agent = await runQueryAgent({ discoverSchema: source.discoverSchema, execute: source.execute, useModel: false });
+  const ranked = rankSubmissions(agent.submissions);
+  let checked = 0;
+  for (const submission of ranked) {
+    if (submission.status === "out_of_scope") continue;
+    for (const factor of submission.factors) {
+      // Rows read from the insured's HQ fallback cite the fallback buildings path instead.
+      if (!factor.evidence || factor.evidence.confidence === "low") continue;
+      if (factor.key === "tiv") {
+        assert.match(factor.evidence.sourcePath ?? "", /\.(tiv|building_value|basis_amount)$/, `${submission.id} tiv cites ${factor.evidence.sourcePath}`);
+        checked += 1;
+      }
+      if (factor.key === "construction") {
+        assert.match(factor.evidence.sourcePath ?? "", /construction_type$/, `${submission.id} construction cites ${factor.evidence.sourcePath}`);
+        checked += 1;
+      }
+    }
+  }
+  assert.ok(checked > 20, `${checked} factors checked`);
+});

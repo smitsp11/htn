@@ -286,6 +286,26 @@
   background: var(--mint-tint, #e4f6ec);
 }
 
+/* The engine's three-sentence explanation: appetite match with the verdict tally, factors with values, recommendation. */
+.assessment-summary {
+  border: 1px solid var(--border);
+  padding: 18px;
+  margin: 0 0 18px;
+  border-radius: 8px;
+  background: var(--surface);
+}
+
+.assessment-summary h3 {
+  margin-top: 0;
+  color: var(--ink);
+}
+
+.assessment-summary p {
+  margin: 10px 0 0;
+  line-height: 1.6;
+  color: var(--ink-soft);
+}
+
 /* Related-account leads: context only, never scored. */
 .leads {
   margin: 0 0 18px;
