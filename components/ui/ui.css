@@ -29,3 +29,18 @@
 .track-amber i{background:var(--amber)}
 .track-danger i{background:var(--danger)}
 .track-neutral i{background:var(--ink-faint)}
+
+/* Tabs: ported from federanorth's .tabs/.tab. */
+.tabs{display:flex;gap:26px;padding:0 23px;border-bottom:1px solid var(--border);overflow-x:auto;scrollbar-width:thin}
+.tab{padding:15px 0 13px;border-bottom:2px solid transparent;display:flex;gap:8px;align-items:center;font-size:11px;white-space:nowrap;color:var(--ink-soft)}
+.tab.active{color:var(--mint-strong);border-color:var(--mint)}
+.tab span{font-size:9px;background:var(--surface-muted);padding:2px 5px;border-radius:4px;color:var(--ink-soft)}
+.tab.active span{background:var(--mint-tint);color:var(--mint-strong)}
+
+/* Dialog: div-based backdrop + panel standing in for federanorth's <dialog>/::backdrop,
+   since we don't control focus-trapping semantics of the native element from React here. */
+.dialog-backdrop{position:fixed;inset:0;background:#1a140e40;backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;z-index:100;padding:16px}
+.dialog{color:var(--ink);background:var(--surface);border:1px solid var(--border);box-shadow:0 12px 60px #1a140e1c;border-radius:10px;max-width:calc(100vw - 32px);max-height:85dvh;overflow-y:auto;scrollbar-width:thin;padding:30px}
+
+/* Toast: ported from federanorth's #toast. */
+.toast{position:fixed;bottom:25px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;padding:13px 22px;font-size:12px;border-radius:8px;box-shadow:0 6px 30px #1a140e26;z-index:100}
