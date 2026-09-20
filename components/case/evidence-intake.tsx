@@ -51,8 +51,12 @@ export function EvidenceIntake({ submission }: { submission: RankedSubmission })
   return (
     <section className="evidence-intake">
       <details>
-        <summary>Add evidence &amp; update assessment</summary>
-        <p>Paste a broker response or document excerpt. AI proposes cited facts; you choose what to confirm for this submission.</p>
+        <summary>Add evidence to this case</summary>
+        <p>
+          Review the suggested facts prepared for this submission and log the ones that apply. Add a source name,
+          date, and note to attach to the record. Logging evidence does not re-score the submission — appetite stays
+          the deterministic engine&rsquo;s call.
+        </p>
         <label>
           Source name or URL
           <input
@@ -77,7 +81,7 @@ export function EvidenceIntake({ submission }: { submission: RankedSubmission })
           />
         </label>
         <button type="button" className="button mint" onClick={extract}>
-          Extract proposed facts
+          Show suggested facts
         </button>
         {extracted ? (
           <div className="evidence-proposals">
@@ -97,7 +101,7 @@ export function EvidenceIntake({ submission }: { submission: RankedSubmission })
                 ))}
                 <div className="evidence-confirm">
                   <button type="button" className="button mint" onClick={confirm}>
-                    Confirm selected facts &amp; recalculate
+                    Log selected facts to this case
                   </button>
                 </div>
               </>

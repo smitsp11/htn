@@ -14,14 +14,16 @@ test("scope switch marks the active scope", () => {
   assert.match(html, /aria-pressed="true"/);
 });
 
-test("lane tabs render counts per lane", () => {
+test("lane tabs render an all-lanes tab plus counts per lane", () => {
   const html = renderToStaticMarkup(
     createElement(LaneTabs, {
       counts: { "work-now": 4, "chase-evidence": 2, declined: 1, "not-property": 0 },
-      active: "work-now",
+      total: 7,
+      active: "all",
       onChange: () => {},
     }),
   );
+  assert.match(html, /All lanes/);
   assert.match(html, /Ready for review/);
   assert.match(html, /Needs evidence/);
 });

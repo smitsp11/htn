@@ -76,3 +76,8 @@ export function setRequestState(submissionId: string, requestKey: string, value:
   (state.requestStates[submissionId] ??= {})[requestKey] = value;
   return write(state);
 }
+
+/** Persisted state for a single evidence request, so task cards survive a reload. */
+export function getRequestState(submissionId: string, requestKey: string): RequestState | undefined {
+  return read().requestStates[submissionId]?.[requestKey];
+}

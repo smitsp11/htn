@@ -166,20 +166,10 @@ export function QueueWorkspace({ submissions, onOpen, matchedIds }: QueueWorkspa
       />
       <div className="queue-nav">
         <div className="lane-row">
-          <button
-            type="button"
-            className="lane-all"
-            aria-pressed={lane === "all"}
-            onClick={() => {
-              setLane("all");
-              setPage(1);
-            }}
-          >
-            All lanes in view
-          </button>
           <LaneTabs
             counts={counts}
-            active={lane === "all" ? LANES[0] : lane}
+            total={scoped.length}
+            active={lane}
             onChange={(next) => {
               setLane(next);
               setPage(1);
