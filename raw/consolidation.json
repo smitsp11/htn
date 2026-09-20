@@ -34,5 +34,35 @@
         "asOf": "2026-09-20"
       }
     }
+  },
+  "SUB-SYN-0011": {
+    "totalPremium": {
+      "value": 88000,
+      "provenance": {
+        "source": "broker email",
+        "confidence": 0.9,
+        "asOf": "2026-09-20"
+      }
+    }
+  },
+  "SUB-SYN-0012": {
+    "fiveYearLossValue": {
+      "value": 40000,
+      "provenance": {
+        "source": "broker loss run",
+        "confidence": 0.85,
+        "asOf": "2026-09-20"
+      }
+    }
+  },
+  "SUB-SYN-0013": {
+    "buildingYear": {
+      "value": 2014,
+      "provenance": {
+        "source": "broker sov",
+        "confidence": 0.8,
+        "asOf": "2026-09-20"
+      }
+    }
   }
 }
