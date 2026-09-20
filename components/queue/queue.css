@@ -1,0 +1,128 @@
+/* Queue table: ported from federanorth's `.queue-table` / `.table-scroll` block
+   (src/decision/federanorth.css), adapted to read RankedSubmission columns. */
+.table-scroll {
+  overflow-x: auto;
+  position: relative;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-strong) var(--surface);
+}
+.queue-table {
+  width: 100%;
+  border-collapse: collapse;
+  white-space: nowrap;
+  text-align: left;
+}
+.queue-table th {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--ink-soft);
+  padding: 0 13px;
+  height: 40px;
+  background: var(--surface-muted);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+.queue-table td {
+  height: 72px;
+  padding: 16px 13px;
+  vertical-align: top;
+  border-bottom: 1px solid var(--border);
+  font-size: 11px;
+  color: var(--ink);
+}
+.queue-table tr:last-child td {
+  border-bottom: 0;
+}
+.queue-table tbody tr {
+  cursor: pointer;
+}
+.queue-table tbody tr:hover {
+  background: var(--surface-hover);
+}
+.queue-table tbody tr:focus-visible {
+  outline: 2px solid var(--mint);
+  outline-offset: -2px;
+}
+.queue-table td:first-child,
+.queue-table th:first-child {
+  padding-left: 24px;
+}
+.number {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.queue-table td.number {
+  font-size: 12px;
+  color: var(--ink);
+}
+.account-link {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-width: 295px;
+}
+.account-link strong {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.account-link small {
+  color: var(--ink-faint);
+  font-size: 10px;
+}
+.line-label {
+  font-size: 11px;
+  color: var(--ink-soft);
+}
+.score-cell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  min-width: 70px;
+}
+.score-cell b {
+  font-weight: 600;
+  font-size: 12px;
+  color: var(--ink);
+}
+.queue-table .next-action {
+  min-width: 220px;
+  max-width: 310px;
+  white-space: normal;
+  line-height: 1.5;
+}
+.next-action > span {
+  font-size: 12px;
+  color: var(--ink);
+}
+.icon-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  color: var(--ink-faint);
+  padding: 6px;
+  border: 0;
+  background: transparent;
+}
+.icon-button:hover {
+  background: var(--surface-muted);
+  color: var(--mint-strong);
+}
+.icon-button .icon {
+  width: 16px;
+  height: 16px;
+}
+.icon-button.open-record {
+  height: 26px;
+  width: 22px;
+}
+.icon-button.open-record .icon {
+  width: 14px;
+  height: 14px;
+}
