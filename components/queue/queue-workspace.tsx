@@ -51,18 +51,22 @@ function laneCounts(list: RankedSubmission[]): Record<Lane, number> {
 }
 
 /**
- * Is this submission part of the commercial-property book? We defer to
- * `status` rather than re-matching `lineOfBusiness` text here: the appetite
- * engine (`lib/domain/appetite.ts#classifyScope`) already made this exact call
- * when it evaluated the submission -- anything it did NOT route to
- * `out_of_scope` is either a stated property submission or one with a missing
- * line that intentionally stays in the property pipeline pending
- * investigation. Re-deriving property-ness from `lineOfBusiness` text in this
- * component would duplicate that policy decision and could drift out of sync
- * with it (e.g. if the engine's matching rule changes).
+ * Is this submission part of the commercial-property book? This is a
+ * presentation-layer LINE-OF-BUSINESS slice (which book the row belongs to),
+ * so it reads `lineOfBusiness` directly. It deliberately does NOT defer to the
+ * appetite engine's `status`: status-based slicing worked only while property
+ * was the sole scored line and everything else was `out_of_scope`. Once the
+ * Extended dataset began scoring non-property lines (cgl, auto, cyber, excess,
+ * health, lpl), those rows stopped being `out_of_scope`, so a status check
+ * wrongly pulled them into "Commercial property". Slicing by line of business
+ * keeps the two concerns separate: appetite scoping is the engine's job, book
+ * membership is this component's.
  */
 function isPropertyScope(submission: RankedSubmission): boolean {
-  return submission.status !== "out_of_scope";
+  const line = submission.lineOfBusiness?.trim().toLowerCase();
+  // A missing line stays in the property pipeline (the engine scores it with the
+  // property table), so it belongs to the property book here too.
+  return !line || line.includes("property");
 }
 
 /** Comparator for a given sort key, or `null` for "priority" (keep the engine's own rank order). */
@@ -112,7 +116,7 @@ export function QueueWorkspace({ submissions, onOpen, matchedIds }: QueueWorkspa
   );
 
   // 2. Scope: property / other lines / everything. See isPropertyScope() above
-  // for why this reads `status` instead of re-matching `lineOfBusiness`.
+  // for why this slices by `lineOfBusiness` rather than appetite `status`.
   const scoped = useMemo(
     () =>
       matched.filter((submission) => {
