@@ -87,6 +87,14 @@
   color: #fff;
 }
 
+/* Workspace gutter: the hero is full-bleed by design, but the ask bar, queue,
+   and state panels below it must share the same page inset as the header
+   (padding 0 3.6%) and footer (margin 15px 3.6% 0). The full-screen case view
+   is position:fixed and escapes this wrapper, keeping its own 3% bar gutter. */
+.workspace {
+  padding: 30px 3.6% 0;
+}
+
 /* Hero: intentionally dark and off-token — federanorth's hero keeps its own bg/ink/coral
    colors even though the rest of the shell uses the shared --bg/--ink token set. */
 .hero {

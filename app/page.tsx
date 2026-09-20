@@ -6,7 +6,9 @@ export default function Home() {
   return (
     <SiteShell>
       <Hero />
-      <AppShell />
+      <div className="workspace">
+        <AppShell />
+      </div>
     </SiteShell>
   );
 }
