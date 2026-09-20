@@ -6,7 +6,6 @@ import type { RankingsResponse } from "@/lib/domain/types";
 import type { RankingsErrorBody, RankingsErrorCategory } from "@/lib/rankings/errors";
 import { SearchBar } from "@/components/queue/search-bar";
 import { QueueWorkspace } from "@/components/queue/queue-workspace";
-import { PortfolioStrip } from "@/components/queue/portfolio-strip";
 import { PortfolioInsights } from "@/components/queue/portfolio-insights";
 import { QueueSkeleton } from "@/components/queue/queue-skeleton";
 import { PipelineTrace } from "@/components/queue/pipeline-trace";
@@ -167,7 +166,7 @@ export function AppShell() {
                   aria-pressed={dataset === "baseline"}
                   onClick={() => changeDataset("baseline")}
                 >
-                  Federato baseline
+                  Baseline
                 </button>
                 <button
                   type="button"
@@ -190,7 +189,6 @@ export function AppShell() {
                 Scoring methodology
               </button>
             </div>
-            <PortfolioStrip submissions={data.submissions} />
             <PortfolioInsights submissions={data.submissions} />
             <QueueWorkspace submissions={data.submissions} onOpen={setSelectedId} matchedIds={matchedIds} />
             <PipelineTrace trace={data.trace} queryTrace={data.queryTrace} />
