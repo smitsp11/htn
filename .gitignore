@@ -10,3 +10,4 @@ npm-debug.log*
 # Dev/verification artifacts
 .playwright-mcp/
 htn-*.png
+.vercel

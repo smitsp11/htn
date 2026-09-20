@@ -31,21 +31,25 @@
 .ctx-item {
   background: var(--surface, #ffffff);
   border: 1px solid var(--border, #e3ddd0);
-  border-radius: 6px;
+  border-radius: 8px;
   display: grid;
-  gap: 0.15rem;
-  padding: 0.55rem 0.7rem;
+  gap: 0.35rem;
+  padding: 0.85rem 1rem;
 }
 
 .ctx-field {
   color: var(--ink-soft, #5c5646);
-  font-size: 0.72rem;
+  font-size: 0.7rem;
   font-weight: 600;
 }
 
 .ctx-value {
-  font-size: 0.9rem;
-  font-weight: 700;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.35rem;
+  font-weight: 400;
+  letter-spacing: -0.4px;
+  color: var(--ink, #211d17);
+  line-height: 1.1;
 }
 
 .ctx-src {

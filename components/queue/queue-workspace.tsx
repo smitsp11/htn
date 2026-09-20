@@ -7,7 +7,6 @@ import { Icon } from "@/components/ui/icon";
 import { LaneTabs } from "@/components/queue/lane-tabs";
 import { Pagination } from "@/components/queue/pagination";
 import { QuadrantBoard } from "@/components/queue/quadrant-board";
-import { QueueFilters, type SortKey, type SourceStatus } from "@/components/queue/queue-filters";
 import { QueueTable } from "@/components/queue/queue-table";
 import { ScopeSwitch, type Scope } from "@/components/queue/scope-switch";
 
@@ -70,23 +69,22 @@ function isPropertyScope(submission: RankedSubmission): boolean {
   return !line || line.includes("property");
 }
 
-/** Comparator for a given sort key, or `null` for "priority" (keep the engine's own rank order). */
-function comparatorFor(sort: SortKey): ((a: RankedSubmission, b: RankedSubmission) => number) | null {
-  switch (sort) {
-    case "appetite":
-      return (a, b) => b.score - a.score;
-    case "premium":
-      return (a, b) => {
-        if (a.totalPremium == null && b.totalPremium == null) return 0;
-        if (a.totalPremium == null) return 1; // undefined premium sorts last
-        if (b.totalPremium == null) return -1;
-        return b.totalPremium - a.totalPremium;
-      };
-    case "account":
-      return (a, b) => a.accountName.localeCompare(b.accountName);
-    default:
-      return null;
-  }
+/** A submission that fails appetite (declined or out of scope) drops to the bottom. */
+function isFailing(submission: RankedSubmission): boolean {
+  return submission.status === "out_of_appetite" || submission.status === "out_of_scope";
+}
+
+/**
+ * The queue's only ordering: submissions that meet appetite sit above those that
+ * fail it, and within each group the highest appetite score comes first. No sort
+ * control — an underwriter always wants the best opportunities on top and the
+ * declines out of the way.
+ */
+function byPriority(a: RankedSubmission, b: RankedSubmission): number {
+  const fa = isFailing(a) ? 1 : 0;
+  const fb = isFailing(b) ? 1 : 0;
+  if (fa !== fb) return fa - fb;
+  return b.score - a.score;
 }
 
 /**
@@ -99,15 +97,11 @@ export function QueueWorkspace({ submissions, onOpen, matchedIds }: QueueWorkspa
   const [view, setView] = useState<"list" | "quadrant">("list");
   const [scope, setScope] = useState<Scope>("property");
   const [lane, setLane] = useState<LaneFilter>("all");
-  const [sourceStatus, setSourceStatus] = useState<SourceStatus>("active");
-  const [sort, setSort] = useState<SortKey>("priority");
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(15);
 
-  function clearFilters() {
+  function showAllLanes() {
     setLane("all");
-    setSourceStatus("active");
-    setSort("priority");
     setPage(1);
   }
 
@@ -128,39 +122,24 @@ export function QueueWorkspace({ submissions, onOpen, matchedIds }: QueueWorkspa
     [matched, scope],
   );
 
-  // 3. Source status. The frozen `RankedSubmission` contract carries no
-  // bound/closed lifecycle flag: every submission the deterministic engine
-  // ranked is, by definition, an open submission awaiting an underwriting
-  // decision -- there is no separate "closed" record set in this data.
-  // "Active" therefore means the full scoped set; "history"/"all" are meant to
-  // widen that set to include bound/closed records, but since no such records
-  // exist on the contract there is nothing to add, so all three values
-  // currently resolve to the same set. The control stays wired (and visible in
-  // the UI) so a real lifecycle field can slot in later without reshaping this
-  // component.
-  const sourceFiltered = scoped;
+  // Lane counts reflect the scope+search-filtered set, i.e. before the lane
+  // filter itself narrows the rows -- otherwise every non-active tab would
+  // always show its own current count.
+  const counts = useMemo(() => laneCounts(scoped), [scoped]);
 
-  // Lane counts reflect the scope+search+source-filtered set, i.e. before the
-  // lane filter itself narrows the rows -- otherwise every non-active tab
-  // would always show its own current count.
-  const counts = useMemo(() => laneCounts(sourceFiltered), [sourceFiltered]);
-
-  // 4. Lane.
+  // 3. Lane.
   const laned = useMemo(
     () =>
       lane === "all"
-        ? sourceFiltered
-        : sourceFiltered.filter((submission) => laneForStatus(submission.status) === lane),
-    [sourceFiltered, lane],
+        ? scoped
+        : scoped.filter((submission) => laneForStatus(submission.status) === lane),
+    [scoped, lane],
   );
 
-  // 5. Sort.
-  const sorted = useMemo(() => {
-    const comparator = comparatorFor(sort);
-    return comparator ? laned.slice().sort(comparator) : laned;
-  }, [laned, sort]);
+  // 4. Order: meets-appetite first, then by appetite score, failures last.
+  const sorted = useMemo(() => laned.slice().sort(byPriority), [laned]);
 
-  // 6. Paginate, clamping the page in case a filter change shrank the set.
+  // 5. Paginate, clamping the page in case a filter change shrank the set.
   const pageCount = Math.max(1, Math.ceil(sorted.length / pageSize));
   const clampedPage = Math.min(Math.max(page, 1), pageCount);
   const start = (clampedPage - 1) * pageSize;
@@ -170,7 +149,7 @@ export function QueueWorkspace({ submissions, onOpen, matchedIds }: QueueWorkspa
     <section id="queue">
       <header className="queue-heading">
         <p className="eyebrow">Opportunity, in focus.</p>
-        <h2>Commercial property queue</h2>
+        <h2>Commercial underwriting queue</h2>
       </header>
       <ScopeSwitch
         value={scope}
@@ -187,20 +166,10 @@ export function QueueWorkspace({ submissions, onOpen, matchedIds }: QueueWorkspa
       <div className="queue-nav">
         {view === "list" && (
           <div className="lane-row">
-            <button
-              type="button"
-              className="lane-all"
-              aria-pressed={lane === "all"}
-              onClick={() => {
-                setLane("all");
-                setPage(1);
-              }}
-            >
-              All lanes in view
-            </button>
             <LaneTabs
               counts={counts}
-              active={lane === "all" ? LANES[0] : lane}
+              total={scoped.length}
+              active={lane}
               onChange={(next) => {
                 setLane(next);
                 setPage(1);
@@ -226,31 +195,20 @@ export function QueueWorkspace({ submissions, onOpen, matchedIds }: QueueWorkspa
             Quadrant
           </button>
         </div>
-        <QueueFilters
-          sourceStatus={sourceStatus}
-          sort={sort}
-          onSourceStatus={(next) => {
-            setSourceStatus(next);
-            setPage(1);
-          }}
-          onSort={(next) => {
-            setSort(next);
-            setPage(1);
-          }}
-          onClear={clearFilters}
-        />
       </div>
       {view === "quadrant" ? (
-        <QuadrantBoard submissions={sourceFiltered} onOpen={onOpen} />
+        <QuadrantBoard submissions={scoped} onOpen={onOpen} />
       ) : visible.length > 0 ? (
         <QueueTable submissions={visible} onOpen={onOpen} />
       ) : (
         <div className="empty-state">
           <Icon name="inbox" />
           <p>{emptyStateMessage(scope, lane)}</p>
-          <button type="button" onClick={clearFilters}>
-            Reset filters
-          </button>
+          {lane !== "all" ? (
+            <button type="button" onClick={showAllLanes}>
+              Show all lanes
+            </button>
+          ) : null}
         </div>
       )}
       {view === "list" && (

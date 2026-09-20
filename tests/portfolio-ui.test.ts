@@ -10,7 +10,7 @@ test("portfolio strip shows total, TIV and state metrics", () => {
   const subs = rankSubmissions([fullTarget, empty]);
   const html = renderToStaticMarkup(createElement(PortfolioStrip, { submissions: subs }));
   assert.match(html, /Submissions/);
-  assert.match(html, /Total TIV/);
-  assert.match(html, /In-appetite TIV/);
-  assert.match(html, /Top states/);
+  assert.match(html, /Property TIV/);
+  assert.match(html, /In-appetite property TIV/);
+  assert.match(html, /Top property states/);
 });

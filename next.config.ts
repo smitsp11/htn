@@ -11,6 +11,14 @@ const nextConfig: NextConfig = {
   turbopack: {
     root,
   },
+  // The API routes read the captured Federato snapshot and FEMA enrichment
+  // from raw/ at request time via process.cwd() (see lib/federato/offline-data.ts,
+  // lib/enrichment/*). Those paths are built dynamically, so Next's tracer can't
+  // see them — force them into the serverless function bundle or the deployed
+  // functions throw "Missing offline Federato snapshot".
+  outputFileTracingIncludes: {
+    "/api/**": ["./raw/**/*"],
+  },
 };
 
 export default nextConfig;

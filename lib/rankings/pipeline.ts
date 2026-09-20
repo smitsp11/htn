@@ -134,9 +134,12 @@ export async function buildRankings(
   const generatedAt = deps.now().toISOString();
   const dataset = options.dataset ?? "baseline";
   const extended = dataset === "extended";
+  const synthetic = extended ? syntheticPropertySubmissions() : [];
+  const syntheticIds = new Set(synthetic.map((s) => s.id));
 
   if (deps.useDemoData) {
-    const ranked = deps.rank(deps.demoSubmissions);
+    const ranked = deps.rank([...deps.demoSubmissions, ...synthetic]);
+    for (const submission of ranked) if (syntheticIds.has(submission.id)) submission.synthetic = true;
     return {
       source: "demo",
       dataset,
@@ -152,8 +155,6 @@ export async function buildRankings(
   }
 
   const agent = await deps.runAgent();
-  const synthetic = extended ? syntheticPropertySubmissions() : [];
-  const syntheticIds = new Set(synthetic.map((s) => s.id));
   const ranked = deps.rank([...agent.submissions, ...synthetic]);
   for (const s of ranked) if (syntheticIds.has(s.id)) s.synthetic = true;
 

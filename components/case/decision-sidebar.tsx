@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { AnimatePresence, motion } from "motion/react";
 import type { RankedSubmission } from "@/lib/domain/types";
 import { completenessOf } from "@/lib/rankings/completeness";
 import { fixturesFor } from "@/lib/demo/fixtures";
@@ -47,7 +48,6 @@ export function DecisionSidebar({ submission, onDecided }: DecisionSidebarProps)
   const [premium, setPremium] = useState("");
   const [terms, setTerms] = useState("");
   const [rationale, setRationale] = useState("");
-  const [author, setAuthor] = useState("");
   const [errors, setErrors] = useState<string[]>([]);
   const [decided, setDecided] = useState<DemoDecision | null>(null);
   const [toast, setToast] = useState<string | null>(null);
@@ -63,7 +63,7 @@ export function DecisionSidebar({ submission, onDecided }: DecisionSidebarProps)
   function record() {
     const input = {
       kind: choice as DemoDecisionKind,
-      author,
+      author: "",
       rationale,
       premium: choice === "approve" ? Number(premium) : undefined,
     };
@@ -95,7 +95,7 @@ export function DecisionSidebar({ submission, onDecided }: DecisionSidebarProps)
     setErrors([]);
   }
 
-  const canRecord = choice != null && author.trim().length > 0;
+  const canRecord = choice != null;
 
   return (
     <aside className="decision-sidebar">
@@ -118,20 +118,26 @@ export function DecisionSidebar({ submission, onDecided }: DecisionSidebarProps)
         </div>
       </div>
 
-      {decided && (
-        <div className="decided-banner">
-          <div>
-            <span className="decided-label">{statusLabel(decided.kind)}</span>
-            {decided.rationale && <p>{decided.rationale}</p>}
-            <small>
-              {decided.author} · {new Date(decided.decidedAt).toLocaleString()}
-            </small>
-          </div>
-          <button type="button" className="button" onClick={reopen}>
-            Reopen
-          </button>
-        </div>
-      )}
+      <AnimatePresence>
+        {decided && (
+          <motion.div
+            className="decided-banner"
+            initial={{ opacity: 0, y: -8, height: 0, marginTop: 0, marginBottom: 0 }}
+            animate={{ opacity: 1, y: 0, height: "auto", marginTop: 18, marginBottom: 18 }}
+            exit={{ opacity: 0, y: -8, height: 0, marginTop: 0, marginBottom: 0 }}
+            transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+          >
+            <div>
+              <span className="decided-label">{statusLabel(decided.kind)}</span>
+              {decided.rationale && <p>{decided.rationale}</p>}
+              <small>{new Date(decided.decidedAt).toLocaleString()}</small>
+            </div>
+            <button type="button" className="button" onClick={reopen}>
+              Reopen
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <div className="decide-form">
         <div className="section-title">
@@ -140,19 +146,29 @@ export function DecisionSidebar({ submission, onDecided }: DecisionSidebarProps)
         </div>
         <div className="decision-choices">
           {CHOICES.map((option) => (
-            <button
+            <motion.button
               key={option.value}
               type="button"
               className={`decision-choice${choice === option.value ? " selected" : ""}`}
               onClick={() => setChoice(option.value)}
+              whileTap={{ scale: 0.95 }}
+              transition={{ duration: 0.12 }}
             >
               {option.label}
-            </button>
+            </motion.button>
           ))}
         </div>
 
+        <AnimatePresence initial={false}>
         {choice === "approve" && (
-          <div className="pricing">
+          <motion.div
+            className="pricing"
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.26, ease: [0.22, 1, 0.36, 1] }}
+            style={{ overflow: "hidden" }}
+          >
             <div className="section-title">
               <h3>Pricing</h3>
               <span>{completeness.effortToDecision === 0 ? "in good order" : `${completeness.effortToDecision} to resolve`}</span>
@@ -185,8 +201,9 @@ export function DecisionSidebar({ submission, onDecided }: DecisionSidebarProps)
                 placeholder="Deductible, sub-limits, warranties"
               />
             </label>
-          </div>
+          </motion.div>
         )}
+        </AnimatePresence>
 
         <label className="field">
           <span>Rationale</span>
@@ -196,16 +213,6 @@ export function DecisionSidebar({ submission, onDecided }: DecisionSidebarProps)
             value={rationale}
             onChange={(event) => setRationale(event.target.value)}
             placeholder="Why this decision, on this evidence"
-          />
-        </label>
-        <label className="field">
-          <span>Decided by</span>
-          <input
-            type="text"
-            maxLength={120}
-            value={author}
-            onChange={(event) => setAuthor(event.target.value)}
-            placeholder="Your name"
           />
         </label>
 
@@ -221,9 +228,16 @@ export function DecisionSidebar({ submission, onDecided }: DecisionSidebarProps)
         )}
 
         <div className="decide-actions">
-          <button type="button" className="button mint" disabled={!canRecord} onClick={record}>
+          <motion.button
+            type="button"
+            className="button mint"
+            disabled={!canRecord}
+            onClick={record}
+            whileTap={canRecord ? { scale: 0.97 } : undefined}
+            transition={{ duration: 0.12 }}
+          >
             Record decision
-          </button>
+          </motion.button>
         </div>
       </div>
 

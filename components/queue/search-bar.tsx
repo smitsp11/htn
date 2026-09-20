@@ -2,8 +2,10 @@
 
 import { useState } from "react";
 import { Icon } from "@/components/ui/icon";
+import type { Dataset } from "@/lib/domain/types";
 
 export interface SearchBarProps {
+  dataset?: Dataset;
   onResult: (matchedIds: string[] | null) => void;
 }
 
@@ -19,7 +21,7 @@ interface AskResponse {
  * interprets the question and phrases the answer; `matchedIds` is the deterministic
  * engine's row list, which the caller uses to filter the queue.
  */
-export function SearchBar({ onResult }: SearchBarProps) {
+export function SearchBar({ dataset = "baseline", onResult }: SearchBarProps) {
   const [q, setQ] = useState("");
   const [answer, setAnswer] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -32,7 +34,7 @@ export function SearchBar({ onResult }: SearchBarProps) {
       const res = await fetch("/api/ask", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ question: q }),
+        body: JSON.stringify({ question: q, dataset }),
       });
       const data = (await res.json()) as AskResponse;
       setAnswer(data.answer);
@@ -61,13 +63,14 @@ export function SearchBar({ onResult }: SearchBarProps) {
           onChange={(event) => setQ(event.target.value)}
           onKeyDown={(event) => event.key === "Enter" && void ask()}
         />
-        <kbd>/</kbd>
         <button type="button" className="button mint" onClick={() => void ask()} disabled={busy}>
           {busy ? "Asking…" : "Ask"}
         </button>
-        <button type="button" className="search-clear" onClick={clear}>
-          Clear
-        </button>
+        {q || answer ? (
+          <button type="button" className="search-clear" onClick={clear}>
+            Clear
+          </button>
+        ) : null}
       </div>
       {answer ? <p className="search-answer">{answer}</p> : null}
     </div>

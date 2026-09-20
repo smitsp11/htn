@@ -2,15 +2,16 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
-import { PropertyTab } from "../components/case/property-tab";
+import { ReviewTab } from "../components/case/review-tab";
 import { rankSubmissions } from "../lib/domain/appetite";
 import { fullTarget } from "./fixtures/domain/submissions";
 
-test("property tab lists appetite factor checks and peer pricing", () => {
+test("review tab shows the appetite breakdown with one row per factor", () => {
   const [submission] = rankSubmissions([fullTarget]);
-  const html = renderToStaticMarkup(createElement(PropertyTab, { submission }));
-  assert.match(html, /Appetite check|appetite/i);
-  const factorRows = html.match(/fb-|factor-row|appetite-check/g) ?? [];
-  assert.ok(factorRows.length >= submission.factors.length);
-  assert.match(html, /Peer-indicated|Target band/);
+  const html = renderToStaticMarkup(createElement(ReviewTab, { submission }));
+  assert.match(html, /Appetite breakdown/);
+  // One `.appetite-check` row per evaluated factor (each row also carries an
+  // `.appetite-check-label`, so the class appears at least once per factor).
+  const factorRows = html.match(/appetite-check-label/g) ?? [];
+  assert.equal(factorRows.length, submission.factors.length);
 });

@@ -22,6 +22,7 @@ test("RankingsResponse echoes the dataset", () => {
 import { buildRankings } from "../lib/rankings/pipeline";
 import type { CanonicalSubmission } from "../lib/domain/types";
 import { rankSubmissions } from "../lib/domain/appetite";
+import { datasetFrom } from "../lib/rankings/dataset";
 
 function deps(subs: CanonicalSubmission[], extendedRank = false) {
   return {
@@ -46,6 +47,19 @@ test("extended injects synthetic and scores cgl", async () => {
   assert.equal(r.dataset, "extended");
   assert.ok(r.submissions.some((s) => s.synthetic === true));
   assert.notEqual(r.submissions.find((s) => s.id === "c1")!.status, "out_of_scope");
+});
+
+test("extended also injects synthetic submissions in demo mode", async () => {
+  const d = deps([], true);
+  const r = await buildRankings({ ...d, useDemoData: true, demoSubmissions: [] }, { dataset: "extended" });
+  assert.equal(r.source, "demo");
+  assert.ok(r.submissions.some((s) => s.synthetic === true));
+});
+
+test("unknown dataset values preserve baseline behavior", () => {
+  assert.equal(datasetFrom("extended"), "extended");
+  assert.equal(datasetFrom("anything-else"), "baseline");
+  assert.equal(datasetFrom(undefined), "baseline");
 });
 
 test("pipeline attaches resolution + re-score from the consolidation index", async () => {

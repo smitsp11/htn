@@ -2,8 +2,10 @@
 
 import { Dialog } from "@/components/ui/dialog";
 import { Icon } from "@/components/ui/icon";
+import type { Dataset } from "@/lib/domain/types";
 
 export interface MethodologyDialogProps {
+  dataset?: Dataset;
   open: boolean;
   onClose(): void;
 }
@@ -25,12 +27,27 @@ const WEIGHTS: { label: string; points: number }[] = [
   { label: "Five-year losses", points: 1 },
 ];
 
-const ASSUMPTIONS: string[] = [
-  "Target verdicts exist only for the four factors with a published target band -- primary risk state, TIV, total premium, and building year. The other four factors (submission type, line of business, construction, five-year losses) only ever reach \"acceptable\" or \"not acceptable\".",
+const SHARED_ASSUMPTIONS: string[] = [
+  "Each submission is evaluated only against the appetite table for its own line of business.",
+  "Scores are normalized against the maximum points available from that line's applicable factors, so omitted factors never count against a line.",
   "A single not-acceptable factor is a hard gate: the submission is out of appetite regardless of how many other factors are favorable, and the score is informational only in that case.",
-  "Any unresolved (\"unknown\") factor -- a missing value, or a value the guidelines don't classify, such as a building from exactly 1990 or a 50/50 construction split -- moves the submission to needs-investigation instead of a verdict.",
-  "Renewal business is never acceptable under the current guidelines; only new business is scored as acceptable for the submission-type factor.",
-  "A line of business is only in scope for this appetite table when it is commercial property; every other recognized line is out of scope and is never scored.",
+  "Any unresolved (\"unknown\") applicable factor moves the submission to needs-investigation instead of a verdict.",
+];
+
+const PROPERTY_ASSUMPTIONS: string[] = [
+  "Target verdicts exist only for the four factors with a published target band -- primary risk state, TIV, total premium, and building year. The other four factors (submission type, line of business, construction, five-year losses) only ever reach \"acceptable\" or \"not acceptable\".",
+  "Property renewal business is not acceptable; only new property business is acceptable for the submission-type factor.",
+  "A building from exactly 1990, a 50/50 construction split, or losses of exactly $100K remain unresolved under the property guideline.",
+];
+
+const LINE_METHODS = [
+  { line: "Commercial Property", factors: "8 factors / 12 points", renewal: "new business only", source: "provided 2025 PDF" },
+  { line: "CGL", factors: "5 factors / 7 points", renewal: "new and renewal", source: "synthesized for demo" },
+  { line: "Commercial Auto", factors: "5 factors / 7 points", renewal: "new and renewal", source: "synthesized for demo" },
+  { line: "Cyber", factors: "5 factors / 7 points", renewal: "new and renewal", source: "synthesized for demo" },
+  { line: "Commercial Excess/Umbrella", factors: "5 factors / 7 points", renewal: "new and renewal", source: "synthesized for demo" },
+  { line: "Group Health", factors: "4 factors / 6 points; no exposure factor", renewal: "new business only", source: "synthesized for demo" },
+  { line: "Lawyers Professional Liability", factors: "5 factors / 7 points", renewal: "new and renewal", source: "synthesized for demo" },
 ];
 
 const INTERPRETATIONS: { factor: string; detail: string }[] = [
@@ -72,24 +89,37 @@ const INTERPRETATIONS: { factor: string; detail: string }[] = [
  * `deriveStatus` in `lib/domain/appetite.ts`) rather than the source's
  * `report.rules` object, which this codebase doesn't have.
  */
-export function MethodologyDialog({ open, onClose }: MethodologyDialogProps) {
+export function MethodologyDialog({ dataset = "baseline", open, onClose }: MethodologyDialogProps) {
+  const extended = dataset === "extended";
   return (
     <Dialog open={open} onClose={onClose}>
       <button type="button" className="icon-button close-dialog" aria-label="Close methodology" onClick={onClose}>
         <Icon name="x" />
       </button>
-      <div className="eyebrow">COMMERCIAL PROPERTY</div>
+      <div className="eyebrow">{extended ? "LINE-AWARE APPETITE" : "COMMERCIAL PROPERTY"}</div>
       <h2>Appetite &amp; scoring methodology</h2>
       <p className="method-intro">Transparent rules. Traceable recommendations.</p>
 
       <section>
         <h3>How the score works</h3>
         <p>
-          Every submission is checked against eight factors. A target verdict earns 2 points, an acceptable verdict
-          earns 1 point, and an unknown or not-acceptable verdict earns 0 points. Points are summed and scaled to
-          100 against a maximum of 12. The scoring weight for each factor below is its maximum contribution to that
-          total.
+          A target verdict earns 2 points, an acceptable verdict earns 1 point, and an unknown or not-acceptable
+          verdict earns 0 points. Each submission is checked only against its line-of-business table, then normalized
+          to 100 against that table&rsquo;s own maximum. Property remains the original eight-factor, 12-point model.
         </p>
+        {extended ? (
+          <details className="method-item" open>
+            <summary>Line-specific tables</summary>
+            <ul>
+              {LINE_METHODS.map((item) => (
+                <li key={item.line}>
+                  <b>{item.line}:</b> {item.factors}; {item.renewal}; {item.source}.
+                </li>
+              ))}
+            </ul>
+          </details>
+        ) : null}
+        <h3>Property factor weights</h3>
         <div className="weight-grid">
           {WEIGHTS.map((weight) => (
             <div key={weight.label}>
@@ -108,27 +138,34 @@ export function MethodologyDialog({ open, onClose }: MethodologyDialogProps) {
           decisions.
         </p>
 
-        <h3>Factor interpretations &amp; assumptions</h3>
-        <ul>
+        <h3>Property guideline details</h3>
+        <p className="method-hint">Open a factor to see how its verdict is decided.</p>
+        <div className="method-accordion">
           {INTERPRETATIONS.map((item) => (
-            <li key={item.factor}>
-              <b>{item.factor}.</b> {item.detail}
-            </li>
+            <details className="method-item" key={item.factor}>
+              <summary>{item.factor}</summary>
+              <p>{item.detail}</p>
+            </details>
           ))}
-          {ASSUMPTIONS.map((assumption) => (
-            <li key={assumption}>{assumption}</li>
-          ))}
-        </ul>
-      </section>
-
-      <section>
-        <h3>Data &amp; sources</h3>
-        <p>Guideline source: documents/APPETITE_GUIDELINES.pdf (2025 commercial-property appetite table).</p>
-        <p>
-          Submission data comes from Federato's supplied API through the Auth0-authenticated flow. Enrichment
-          (FEMA National Risk Index hazard data) is decision support only -- it never changes a score or status,
-          it only adds location context.
-        </p>
+          <details className="method-item">
+            <summary>Assumptions &amp; edge cases</summary>
+            <ul>
+              {[...SHARED_ASSUMPTIONS, ...PROPERTY_ASSUMPTIONS].map((assumption) => (
+                <li key={assumption}>{assumption}</li>
+              ))}
+            </ul>
+          </details>
+          <details className="method-item">
+            <summary>Data &amp; sources</summary>
+            <p>Property source: documents/APPETITE_GUIDELINES.pdf (2025 commercial-property appetite table).</p>
+            {extended ? <p>Non-property tables are explicitly labeled synthesized-for-demo and use their own documented thresholds.</p> : null}
+            <p>
+              Submission data comes from Federato&rsquo;s supplied API through the Auth0-authenticated flow.
+              Enrichment (FEMA National Risk Index hazard data) is decision support only &mdash; it never changes a
+              score or status, it only adds location context.
+            </p>
+          </details>
+        </div>
       </section>
     </Dialog>
   );

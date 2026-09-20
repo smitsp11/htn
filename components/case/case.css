@@ -73,13 +73,8 @@
   flex-shrink: 0;
 }
 
-.case-verdict .flag-chips {
-  margin-left: 4px;
-}
-
 /* Appetite outcome is the headline verdict: the lane badge leads the case bar,
-   sized up so the decision-relevant status reads first (the completeness score
-   below is demoted to a modest stat, not the biggest element on the page). */
+   sized up so the decision-relevant status reads first. */
 .case-verdict .badge.lane-work-now,
 .case-verdict .badge.lane-chase-evidence,
 .case-verdict .badge.lane-declined,
@@ -87,25 +82,6 @@
   font-size: 13px;
   padding: 8px 13px;
   border-radius: 7px;
-}
-
-.case-score {
-  display: flex;
-  align-items: baseline;
-}
-
-/* Completeness metric — a data-coverage read, not the appetite verdict — so it is
-   a neutral secondary stat rather than a large green number that reads as "good". */
-.case-score strong {
-  font-size: 18px;
-  font-weight: 600;
-  color: var(--ink);
-}
-
-.case-score span {
-  font-size: 11px;
-  color: var(--ink-faint);
-  margin-left: 4px;
 }
 
 .case-summary {
@@ -121,22 +97,6 @@
   color: var(--ink);
 }
 
-.case-summary-chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 8px;
-}
-
-.case-summary-chips .chip {
-  font-size: 11px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  color: var(--ink);
-  padding: 4px 8px;
-  border-radius: 6px;
-}
-
 /* Off-strategy bind callout: predicted out-of-appetite vs. actual bound. Read-only
    context; never changes the appetite score or status. */
 .case-summary-offstrategy {
@@ -150,16 +110,6 @@
 }
 .case-summary-offstrategy b {
   color: var(--orange-strong);
-}
-
-.case-summary-watch {
-  font-size: 11px;
-  color: var(--ink-soft);
-  margin-top: 8px;
-}
-
-.case-summary-watch b {
-  color: var(--ink);
 }
 
 /* .tabs/.tab base styling lives in components/ui/ui.css; the case view only
@@ -364,9 +314,9 @@
 
 .lead {
   border: 1px solid var(--border);
-  border-radius: 6px;
-  padding: 11px 13px;
-  background: var(--surface-muted);
+  border-radius: 8px;
+  padding: 14px 16px;
+  background: var(--surface);
 }
 
 .lead header {
@@ -374,17 +324,18 @@
   align-items: baseline;
   gap: 8px;
   flex-wrap: wrap;
-  margin-bottom: 5px;
+  margin-bottom: 8px;
 }
 
 .lead-kind {
   font-size: 9px;
   text-transform: uppercase;
   letter-spacing: 0.9px;
+  font-weight: 600;
   color: var(--orange-strong);
-  border: 1px solid var(--border-strong);
+  background: var(--orange-tint);
   border-radius: 99px;
-  padding: 2px 7px;
+  padding: 3px 8px;
 }
 
 .lead header strong {
@@ -395,8 +346,12 @@
 
 .lead-value {
   display: block;
-  font-size: 15px;
-  margin-bottom: 5px;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 22px;
+  font-weight: 400;
+  letter-spacing: -0.5px;
+  line-height: 1.1;
+  margin-bottom: 7px;
   color: var(--ink);
 }
 
@@ -443,6 +398,33 @@
   border: 1px solid var(--border);
   border-radius: 10px;
   background: var(--surface-muted);
+}
+/* Collapsed by default: local risk research is context, opened on demand. */
+.research-panel > summary {
+  cursor: pointer;
+  list-style: none;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+.research-panel > summary::-webkit-details-marker {
+  display: none;
+}
+.research-panel > summary::after {
+  content: "+";
+  color: var(--ink-faint);
+  font-size: 18px;
+  line-height: 1;
+  align-self: center;
+}
+.research-panel[open] > summary::after {
+  content: "\2013";
+}
+.research-hint {
+  font-size: 11px;
+  color: var(--ink-faint);
+  white-space: nowrap;
 }
 
 .research-heading h3 {
@@ -1081,14 +1063,18 @@
 
 .context-card {
   border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 18px 20px 6px;
+  border-radius: 10px;
+  padding: 18px 20px 20px;
   margin-bottom: 16px;
-  background: var(--surface);
+  background: var(--surface-muted);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
 .context-card .section-title {
   margin-top: 0;
+  margin-bottom: 2px;
 }
 
 .context-card-caution {
@@ -1432,6 +1418,57 @@
   border: 0;
   padding: 0;
   margin: 0;
+}
+
+.dialog .method-hint {
+  font-size: 12px;
+  color: var(--ink-faint);
+  margin: 0 0 4px;
+}
+
+/* Methodology factor accordion: one collapsible row per factor so an underwriter
+   can jump to a single rule instead of reading the whole modal top to bottom. */
+.method-accordion {
+  margin: 12px 0 8px;
+  border-top: 1px solid var(--border);
+}
+.method-item {
+  border-bottom: 1px solid var(--border);
+}
+.method-item > summary {
+  cursor: pointer;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+}
+.method-item > summary::-webkit-details-marker {
+  display: none;
+}
+.method-item > summary::after {
+  content: "+";
+  color: var(--ink-faint);
+  font-size: 16px;
+  line-height: 1;
+}
+.method-item[open] > summary::after {
+  content: "\2013";
+}
+.method-item > summary:hover {
+  color: var(--mint-strong);
+}
+.method-item > p,
+.method-item > ul {
+  margin: 0;
+  padding: 0 0 14px;
+}
+.method-item > ul {
+  padding-left: 19px;
 }
 
 .weight-grid {

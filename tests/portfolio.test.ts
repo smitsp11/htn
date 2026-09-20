@@ -8,8 +8,8 @@ test("aggregates count, TIV, in-appetite TIV, and state concentration", () => {
   const subs = rankSubmissions([fullTarget, empty, contradictory]);
   const p = portfolioSummary(subs);
   assert.equal(p.total, 3);
-  assert.equal(p.inScope, 3);
-  assert.equal(p.outOfScope, 0);
+  assert.equal(p.propertyCount, 3);
+  assert.equal(p.nonProperty, 0);
   const sumTiv = (list: typeof subs) => list.reduce((sum, s) => sum + (typeof s.tiv === "number" ? s.tiv : 0), 0);
   assert.equal(p.totalTiv, sumTiv(subs));
   assert.equal(p.inAppetiteTiv, sumTiv(subs.filter((s) => s.status === "in_appetite")));
@@ -33,10 +33,30 @@ test("out-of-scope lines count toward the total but not the property figures", (
   const subs = rankSubmissions([fullTarget, { id: "C1", accountName: "Cyber Co", lineOfBusiness: "Cyber", primaryRiskState: "TX", tiv: 500_000_000 }]);
   const p = portfolioSummary(subs);
   assert.equal(p.total, 2);
-  assert.equal(p.outOfScope, 1);
+  assert.equal(p.nonProperty, 1);
   assert.equal(p.totalTiv, fullTarget.tiv);
   assert.ok(!p.topStates.some((s) => s.state === "TX"));
   assert.equal(Object.values(p.hazardCounts).reduce((n, c) => n + c, 0), 1);
+});
+
+test("extended non-property exposure values never enter property TIV", () => {
+  const subs = rankSubmissions([
+    fullTarget,
+    {
+      id: "CGL1",
+      accountName: "Liability Co",
+      submissionType: "new",
+      lineOfBusiness: "cgl",
+      primaryRiskState: "CA",
+      tiv: 900_000_000,
+      totalPremium: 60_000,
+      fiveYearLossValue: 0,
+    },
+  ], { extended: true });
+  const p = portfolioSummary(subs);
+  assert.equal(p.propertyCount, 1);
+  assert.equal(p.nonProperty, 1);
+  assert.equal(p.totalTiv, fullTarget.tiv);
 });
 
 test("state ties break alphabetically and codes are normalised", () => {

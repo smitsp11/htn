@@ -10,3 +10,13 @@ test("methodology dialog renders scoring weights when open", () => {
   );
   assert.match(html, /scoring|weight/i);
 });
+
+test("extended methodology explains per-line normalization without changing property rules", () => {
+  const html = renderToStaticMarkup(
+    createElement(MethodologyDialog, { dataset: "extended", open: true, onClose: () => {} }),
+  );
+  assert.match(html, /Line-specific tables/);
+  assert.match(html, /Group Health/);
+  assert.match(html, /Property remains the original eight-factor, 12-point model/);
+  assert.doesNotMatch(html, /every other recognized line is out of scope/);
+});

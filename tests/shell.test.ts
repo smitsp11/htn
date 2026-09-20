@@ -11,9 +11,9 @@ test("header renders the Federanorth wordmark", () => {
   assert.match(html, /content/);
 });
 
-test("hero renders the headline, CTA, and aerial image", () => {
+test("hero renders the headline, CTA, and dithered map canvas", () => {
   const html = renderToStaticMarkup(createElement(Hero, {}));
   assert.match(html, /A clearer view/);
   assert.match(html, /Explore your queue/);
-  assert.match(html, /federanorth-aerial\.png/);
+  assert.match(html, /hero-map-canvas/);
 });

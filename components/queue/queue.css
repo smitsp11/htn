@@ -1,3 +1,37 @@
+/* Loading skeleton: shimmering stand-ins shown while the rankings fetch runs.
+   The shimmer sweep pauses under prefers-reduced-motion (global guard). */
+.queue-skeleton {
+  padding: 4px 0 0;
+}
+.skeleton {
+  background: linear-gradient(100deg, var(--surface-muted) 30%, var(--surface-hover) 50%, var(--surface-muted) 70%);
+  background-size: 200% 100%;
+  border-radius: 6px;
+  animation: skeleton-sweep 1.3s ease-in-out infinite;
+}
+@keyframes skeleton-sweep {
+  from { background-position: 200% 0; }
+  to { background-position: -200% 0; }
+}
+.sk-eyebrow { width: 120px; height: 11px; margin-bottom: 12px; }
+.sk-title { width: 320px; height: 26px; margin-bottom: 26px; }
+.sk-tabs { width: 100%; max-width: 640px; height: 34px; margin-bottom: 26px; border-radius: 8px; }
+.sk-table { border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+.sk-row {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1.4fr 2.4fr;
+  align-items: center;
+  gap: 20px;
+  padding: 18px 22px;
+  border-bottom: 1px solid var(--border);
+  animation: row-in 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.sk-row:last-child { border-bottom: 0; }
+.sk-cell { height: 12px; }
+.sk-name { height: 16px; }
+.sk-bar { height: 8px; border-radius: 99px; }
+.sk-wide { height: 12px; }
+
 /* Queue table: ported from federanorth's `.queue-table` / `.table-scroll` block
    (src/decision/federanorth.css), adapted to read RankedSubmission columns. */
 .table-scroll {
@@ -96,14 +130,13 @@
   font-size: 11px;
   color: var(--ink-soft);
 }
+/* Appetite verdict leads the row; the raw score is a small, muted tie-breaker. */
 .score-cell {
   display: flex;
   align-items: center;
   gap: 8px;
-  flex-wrap: wrap;
   min-width: 70px;
 }
-/* Status pill leads; the raw score is a muted secondary (the bar already encodes it). */
 .score-cell .badge {
   font-size: 10px;
   padding: 5px 9px;
@@ -113,24 +146,6 @@
   font-size: 11px;
   color: var(--ink-faint);
   font-variant-numeric: tabular-nums;
-}
-/* Actual historical disposition, shown next to the predicted appetite lane so an
-   underwriter can see predicted vs. actual at a glance. Read-only context. */
-.outcome-line {
-  flex-basis: 100%;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  flex-wrap: wrap;
-  margin-top: 2px;
-}
-.outcome-chip {
-  font-size: 10px;
-  color: var(--ink-faint);
-  max-width: 190px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 .queue-table .next-action {
   min-width: 220px;
@@ -195,56 +210,6 @@
   background: transparent;
 }
 
-/* Queue filters: ported from federanorth's `.queue-filters`. */
-.queue-filters {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 18px;
-  padding: 16px 22px;
-  border-bottom: 1px solid var(--border);
-}
-.queue-filters label {
-  font-size: 11px;
-  color: var(--ink-soft);
-  display: flex;
-  gap: 7px;
-  align-items: center;
-}
-.record-status-label {
-  font-size: 12px;
-  color: var(--ink-soft);
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.record-status-label select {
-  max-width: 190px;
-  font-size: 12px;
-}
-.sort-label {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 10px;
-  color: var(--ink-soft);
-  margin-left: auto;
-  white-space: nowrap;
-}
-.sort-label select {
-  border: 0;
-  background: transparent;
-  color: var(--ink);
-  padding-right: 3px;
-}
-.clear-filters {
-  color: var(--mint-strong);
-  font-size: 10px;
-  padding: 5px;
-  white-space: nowrap;
-  border: 0;
-  background: transparent;
-}
 select {
   background: var(--surface);
   border: 1px solid var(--border-strong);
@@ -337,14 +302,6 @@ select {
 .search-input::placeholder {
   color: var(--ink-faint);
 }
-.search-bar kbd {
-  font-family: monospace;
-  border: 1px solid var(--border-strong);
-  border-radius: 2px;
-  font-size: 10px;
-  padding: 0 4px;
-  color: var(--ink-soft);
-}
 .search-clear {
   font-size: 11px;
   color: var(--ink-soft);
@@ -390,6 +347,26 @@ select {
 .pipeline-trace-body li {
   margin: 3px 0;
 }
+/* Plain-English query-reasoning summary + the "show full trace" toggle. */
+.trace-summary {
+  font-size: 12px;
+  color: var(--ink);
+  line-height: 1.65;
+  margin: 0 0 8px;
+}
+.trace-detail {
+  margin-top: 10px;
+}
+.trace-detail > summary {
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--mint-strong);
+  padding: 4px 0;
+}
+.trace-detail[open] > summary {
+  margin-bottom: 8px;
+}
 
 /* Queue workspace: heading, sticky lane/filter nav, and empty state. */
 .queue-heading {
@@ -423,24 +400,8 @@ select {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 10px 22px 0;
+  padding: 6px 0 0;
   flex-wrap: wrap;
-}
-.lane-all {
-  font-size: 10px;
-  font-weight: 600;
-  color: var(--ink-soft);
-  border: 1px solid var(--border-strong);
-  border-radius: 999px;
-  padding: 6px 12px;
-  background: transparent;
-  white-space: nowrap;
-  transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
-}
-.lane-all[aria-pressed="true"] {
-  color: var(--mint-strong);
-  border-color: var(--mint);
-  background: var(--mint-tint);
 }
 .empty-state {
   display: flex;
