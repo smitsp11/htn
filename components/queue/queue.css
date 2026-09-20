@@ -371,14 +371,6 @@ select {
 .search-input::placeholder {
   color: var(--ink-faint);
 }
-.search-bar kbd {
-  font-family: monospace;
-  border: 1px solid var(--border-strong);
-  border-radius: 2px;
-  font-size: 10px;
-  padding: 0 4px;
-  color: var(--ink-soft);
-}
 .search-clear {
   font-size: 11px;
   color: var(--ink-soft);
