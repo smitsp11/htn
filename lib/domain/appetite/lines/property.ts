@@ -131,5 +131,3 @@ export function evaluatePropertyFactors(submission: CanonicalSubmission): Factor
     evaluateLosses(submission.fiveYearLossValue),
   ];
 }
-
-export const PROPERTY_LABELS = labels;
