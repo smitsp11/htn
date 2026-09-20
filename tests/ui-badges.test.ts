@@ -7,7 +7,7 @@ import { LaneBadge } from "../components/ui/lane-badge";
 import { FlagChips } from "../components/ui/flag-chips";
 import { Track } from "../components/ui/track";
 import { rankSubmissions } from "../lib/domain/appetite";
-import { contradictory, empty, fullTarget } from "./fixtures/domain/submissions";
+import { empty } from "./fixtures/domain/submissions";
 
 test("badge renders tone class and label", () => {
   const html = renderToStaticMarkup(createElement(Badge, { tone: "mint", children: "In good order" }));
