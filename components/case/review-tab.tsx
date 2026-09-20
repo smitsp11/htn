@@ -10,6 +10,7 @@ import { EvidenceRequest } from "@/components/case/evidence-request";
 import { TaskCard, type TaskSeverity } from "@/components/case/task-card";
 import { RunConsolidation } from "@/components/consolidation/run-consolidation";
 import { scenarioSubmissionIds } from "@/lib/consolidation/scenario/pages";
+import { tableFor } from "@/lib/domain/appetite/registry";
 
 /** Submissions with a staged scattered-channel scenario (W8). Only these expose
  *  the live "Consolidate" affordance; every other submission chases gaps normally. */
@@ -89,9 +90,21 @@ interface Gap {
   needs?: string;
 }
 
-function gapFor(factor: FactorEvaluation, kind: "absent" | "ambiguous"): Gap {
+function gapFor(factor: FactorEvaluation, kind: "absent" | "ambiguous", submission: RankedSubmission): Gap {
   if (kind === "absent") {
-    const ask = ABSENT_ASK[factor.key];
+    const line = tableFor(submission.lineOfBusiness);
+    const ask =
+      factor.key === "tiv" && line?.line !== "property"
+        ? {
+            question: `Confirm the ${factor.label.toLowerCase()} used for this line.`,
+            needs: `Broker submission or exposure schedule documenting the ${factor.label.toLowerCase()}.`,
+          }
+        : factor.key === "fiveYearLossValue" && line?.line !== "property"
+          ? {
+              question: `Confirm the five-year loss value for this ${line?.displayName ?? "submission"} account.`,
+              needs: "Five-year loss run for the applicable line of business.",
+            }
+          : ABSENT_ASK[factor.key];
     return {
       requestKey: factor.key,
       label: factor.label,
@@ -130,7 +143,7 @@ export function ReviewTab({ submission }: { submission: RankedSubmission }) {
   ]
     .map(({ key, kind }) => {
       const factor = factorByKey.get(key);
-      return factor ? gapFor(factor, kind) : null;
+      return factor ? gapFor(factor, kind, submission) : null;
     })
     .filter((gap): gap is Gap => gap !== null);
 

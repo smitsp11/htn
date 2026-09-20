@@ -1,6 +1,6 @@
 import type { LineOfBusiness } from "@/lib/domain/types";
 import type { AppetiteTable } from "./lines/helpers";
-import { evaluatePropertyFactors } from "./lines/property";
+import { evaluatePropertyFactors, PROPERTY_PREMIUM_BANDS } from "./lines/property";
 import { CGL_TABLE, AUTO_TABLE, EXCESS_TABLE, LPL_TABLE } from "./lines/casualty";
 import { CYBER_TABLE, HEALTH_TABLE } from "./lines/specialty";
 
@@ -11,6 +11,7 @@ const PROPERTY_TABLE: AppetiteTable = {
   line: "property",
   displayName: "Commercial Property",
   provenance: "provided-pdf",
+  premiumBands: PROPERTY_PREMIUM_BANDS,
   maxScorePoints: 12,
   evaluate: evaluatePropertyFactors,
 };

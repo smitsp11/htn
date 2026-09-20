@@ -1,100 +1,117 @@
-import type { HazardEntry, RankedSubmission } from "@/lib/domain/types";
-import { fixturesFor } from "@/lib/demo/fixtures";
+import type { FactorEvaluation, RankedSubmission } from "@/lib/domain/types";
+import { tableFor } from "@/lib/domain/appetite/registry";
 import { Icon } from "@/components/ui/icon";
 
-/** The flood-related hazard entry from the enrichment layer, if any. */
-function floodHazard(topHazards: HazardEntry[]): HazardEntry | undefined {
-  return topHazards.find((hazard) => hazard.type.toLowerCase().includes("flood"));
+function verifyNext(factor: FactorEvaluation, isProperty: boolean): string {
+  switch (factor.key) {
+    case "submissionType":
+      return "Confirm new business versus renewal with the broker.";
+    case "lineOfBusiness":
+      return "Confirm the recorded line of business.";
+    case "primaryRiskState":
+      return "Confirm the primary risk state for the insured exposure.";
+    case "tiv":
+      return isProperty
+        ? "Request a statement of values showing total insured value."
+        : `Request an exposure schedule documenting the ${factor.label.toLowerCase()}.`;
+    case "totalPremium":
+      return "Request the quoted total premium.";
+    case "buildingYear":
+      return "Confirm the year built for the oldest insured building.";
+    case "construction":
+      return "Confirm construction details across the insured schedule.";
+    case "fiveYearLossValue":
+      return "Request a five-year loss run for the applicable line.";
+  }
 }
 
 /**
- * Research digest, AI briefs, and sources, ported from federanorth's `researchPanel` /
- * `researchDigest` (`src/decision/research-panel.js`). Enrichment (FEMA hazard data) and the
- * static demo research bundle are presentational only: nothing here recomputes or overrides
- * `submission.status` / `submission.score` / `submission.explanation` from the deterministic
- * appetite engine.
+ * Read-only decision support. Hazard values come from the submission's FEMA NRI
+ * enrichment; unresolved items come from the selected appetite table's factors.
+ * Neither source changes the score or status here.
  */
 export function ResearchPanel({ submission }: { submission: RankedSubmission }) {
-  const research = fixturesFor(submission.id).research;
-  const hazard = submission.enrichment
-    ? floodHazard(submission.enrichment.topHazards)?.rating ?? submission.enrichment.compositeRating
-    : undefined;
-  const floodZone = hazard ?? research.femaFloodZone;
+  const table = tableFor(submission.lineOfBusiness);
+  const enrichment = submission.enrichment;
+  const unresolved = submission.factors.filter((factor) => factor.verdict === "unknown");
+  const isProperty = table?.line === "property";
 
   return (
     <details className="research-panel" aria-label="Submission research">
       <summary className="research-heading">
         <div>
           <span className="eyebrow">RESEARCH</span>
-          <h3>Property risk research</h3>
+          <h3>{table?.displayName ?? "Submission"} research</h3>
         </div>
-        <span className="research-hint">Local risk context — FEMA, weather, sources</span>
+        <span className="research-hint">Public hazard data and unresolved factors</span>
       </summary>
 
       <section className="research-digest">
         <div className="digest-heading">
           <h4>Research at a glance</h4>
-          {submission.enrichment ? <span>FEMA NRI as of {submission.enrichment.asOf}</span> : null}
+          {enrichment ? <span>{enrichment.source} as of {enrichment.asOf}</span> : null}
         </div>
-        <div className="digest-grid">
-          <div>
-            <small>Location match</small>
-            <strong>{research.locationMatch}</strong>
-          </div>
-          <div>
-            <small>FEMA flood zone</small>
-            <strong>{floodZone}</strong>
-          </div>
-          <div>
-            <small>Current weather</small>
-            <strong>{research.currentWeather}</strong>
-          </div>
-        </div>
+        {enrichment ? (
+          <>
+            <div className="digest-grid">
+              <div>
+                <small>Composite hazard rating</small>
+                <strong>{enrichment.compositeRating}</strong>
+              </div>
+              {enrichment.compositeScore != null ? (
+                <div>
+                  <small>NRI score</small>
+                  <strong>{enrichment.compositeScore}</strong>
+                </div>
+              ) : null}
+            </div>
+            {enrichment.topHazards.length > 0 ? (
+              <ul className="digest-hazards">
+                {enrichment.topHazards.map((hazard) => (
+                  <li key={hazard.type}>{hazard.type}: {hazard.rating}</li>
+                ))}
+              </ul>
+            ) : null}
+          </>
+        ) : (
+          <p>No FEMA hazard enrichment is available for this submission.</p>
+        )}
       </section>
 
-      {research.notes.length > 0 ? (
+      {unresolved.length > 0 ? (
         <div className="research-ai">
-          <h4>
-            AI notes <span>{research.notes.length}</span>
-          </h4>
-          {research.notes.map((note) => (
-            <details className="brief ai-note" key={note.factorLabel}>
+          <h4>Unresolved factors</h4>
+          {unresolved.map((factor) => (
+            <details className="brief" key={factor.key}>
               <summary>
-                <strong>{note.factorLabel}</strong>
-                <span>AI context</span>
+                <strong>{factor.label}</strong>
+                <span>Engine context</span>
               </summary>
-              <p className="brief-reading">{note.reading}</p>
+              <p className="brief-reading">{factor.reason}</p>
               <p className="brief-watch">
-                <b>Verify next:</b> {note.verifyNext}
+                <b>Verify next:</b> {verifyNext(factor, isProperty)}
               </p>
-              <p className="brief-basis">Based on: {note.basedOn}</p>
             </details>
           ))}
         </div>
       ) : null}
 
-      {research.sources.length > 0 ? (
+      {enrichment ? (
         <details className="research-sources" open>
-          <summary>Sources · {research.sources.length}</summary>
-          {research.sources.map((source) => (
-            <article className="research-source" key={source.label}>
-              <header>
-                <b>{source.label}</b>
-                <span>{source.status}</span>
-              </header>
-              <p>
-                <a href={source.href} target="_blank" rel="noopener noreferrer">
-                  <Icon name="globe" /> View source
-                </a>
-              </p>
-            </article>
-          ))}
+          <summary>Source</summary>
+          <article className="research-source">
+            <header><b>{enrichment.source}</b></header>
+            <p>
+              <a href="https://hazards.fema.gov/nri/" target="_blank" rel="noopener noreferrer">
+                <Icon name="globe" /> View source
+              </a>
+            </p>
+          </article>
         </details>
       ) : null}
 
       <p className="research-notice">
-        Research and AI notes are context only. They never change the appetite score or status —
-        only the deterministic engine does that.
+        Research and engine context are decision support only. They never change the appetite score or status.
       </p>
     </details>
   );

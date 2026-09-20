@@ -13,4 +13,6 @@ test("decision sidebar renders the decision choices and a record button", () => 
   assert.match(html, /Decline/);
   assert.match(html, /Request info|Request information/i);
   assert.match(html, /Record decision/);
+  assert.match(html, /Total insured value/);
+  assert.doesNotMatch(html, /Peer-indicated/);
 });

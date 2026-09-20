@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { evaluateAppetite } from "../lib/domain/appetite";
+import { evaluateAppetite, pricingBandsFor } from "../lib/domain/appetite";
 import { tableFor } from "../lib/domain/appetite/registry";
 import type { CanonicalSubmission } from "../lib/domain/types";
 import { fullTarget } from "./fixtures/domain/submissions";
@@ -58,4 +58,17 @@ test("each line normalizes its score against only its applicable factors", () =>
 
 test("line-aware scoring does not change property scoring", () => {
   assert.deepEqual(evaluateAppetite(fullTarget, true), evaluateAppetite(fullTarget));
+});
+
+test("pricing uses each line's own guideline bands without changing property", () => {
+  const acceptableBand = (lineOfBusiness: string) =>
+    pricingBandsFor({ ...base, lineOfBusiness }).find((band) => band.label === "Acceptable band")?.value;
+
+  assert.equal(acceptableBand("property"), "$50K – $175K");
+  assert.equal(acceptableBand("cgl"), "$25K – $250K");
+  assert.equal(acceptableBand("auto"), "$30K – $300K");
+  assert.equal(acceptableBand("cyber"), "$20K – $200K");
+  assert.equal(acceptableBand("excess"), "$10K – $150K");
+  assert.equal(acceptableBand("health"), "$50K – $500K");
+  assert.equal(acceptableBand("lpl"), "$15K – $180K");
 });

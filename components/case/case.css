@@ -459,9 +459,17 @@
 
 .digest-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
   margin: 12px 0 0;
+}
+
+.digest-hazards {
+  margin: 10px 0 0;
+  padding-left: 18px;
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--ink-soft);
 }
 
 .digest-grid div {
@@ -677,15 +685,17 @@
 .evidence-request,
 .request-draft {
   border: 1px solid var(--border);
-  padding: 14px;
+  padding: 18px;
   margin: 0 0 18px;
   border-radius: 8px;
+  background: var(--surface);
 }
 
 .request-draft summary {
   cursor: pointer;
-  font-size: 13px;
-  color: var(--mint-strong);
+  font-weight: 600;
+  line-height: 1.5;
+  color: var(--ink);
 }
 
 .request-draft p {
@@ -710,7 +720,19 @@
 
 .request-draft .button {
   font-size: 11px;
-  margin: 0 8px 0 0;
+  padding: 8px 12px;
+  gap: 6px;
+}
+
+.request-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.request-draft .button .icon {
+  width: 13px;
+  height: 13px;
 }
 
 /* Task list / cards. */
