@@ -22,13 +22,14 @@ export function ResearchPanel({ submission }: { submission: RankedSubmission }) 
   const floodZone = hazard ?? research.femaFloodZone;
 
   return (
-    <section className="research-panel" aria-label="Submission research">
-      <div className="research-heading">
+    <details className="research-panel" aria-label="Submission research">
+      <summary className="research-heading">
         <div>
           <span className="eyebrow">RESEARCH</span>
           <h3>Property risk research</h3>
         </div>
-      </div>
+        <span className="research-hint">Local risk context — FEMA, weather, sources</span>
+      </summary>
 
       <section className="research-digest">
         <div className="digest-heading">
@@ -95,6 +96,6 @@ export function ResearchPanel({ submission }: { submission: RankedSubmission }) 
         Research and AI notes are context only. They never change the appetite score or status —
         only the deterministic engine does that.
       </p>
-    </section>
+    </details>
   );
 }

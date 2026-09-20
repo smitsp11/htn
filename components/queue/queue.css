@@ -130,14 +130,13 @@
   font-size: 11px;
   color: var(--ink-soft);
 }
+/* Appetite verdict leads the row; the raw score is a small, muted tie-breaker. */
 .score-cell {
   display: flex;
   align-items: center;
   gap: 8px;
-  flex-wrap: wrap;
   min-width: 70px;
 }
-/* Status pill leads; the raw score is a muted secondary (the bar already encodes it). */
 .score-cell .badge {
   font-size: 10px;
   padding: 5px 9px;
@@ -147,24 +146,6 @@
   font-size: 11px;
   color: var(--ink-faint);
   font-variant-numeric: tabular-nums;
-}
-/* Actual historical disposition, shown next to the predicted appetite lane so an
-   underwriter can see predicted vs. actual at a glance. Read-only context. */
-.outcome-line {
-  flex-basis: 100%;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  flex-wrap: wrap;
-  margin-top: 2px;
-}
-.outcome-chip {
-  font-size: 10px;
-  color: var(--ink-faint);
-  max-width: 190px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 .queue-table .next-action {
   min-width: 220px;
