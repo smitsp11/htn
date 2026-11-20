@@ -162,7 +162,7 @@ export function MethodologyDialog({ dataset = "baseline", open, onClose }: Metho
           </details>
           <details className="method-item">
             <summary>Data &amp; sources</summary>
-            <p>Property source: documents/APPETITE_GUIDELINES.pdf (2025 commercial-property appetite table).</p>
+            <p>Property source: Federato&rsquo;s 2025 commercial-property appetite guidelines (Hack the North 2026 track).</p>
             {extended ? <p>Non-property tables are explicitly labeled synthesized-for-demo and use their own documented thresholds.</p> : null}
             <p>
               Submission data comes from Federato&rsquo;s supplied API through the Auth0-authenticated flow.

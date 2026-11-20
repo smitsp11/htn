@@ -7,7 +7,7 @@ import type {
   FactorKey,
 } from "@/lib/domain/types";
 
-// 2025 commercial-property appetite table (documents/APPETITE_GUIDELINES.pdf).
+// 2025 commercial-property appetite table (Federato appetite guidelines, HTN 2026 track; PDF not redistributed).
 const TARGET_STATES = new Set(["OH", "PA", "MD", "CO", "CA", "FL"]);
 const ACCEPTABLE_STATES = new Set([...TARGET_STATES, "NC", "SC", "GA", "VA", "UT"]);
 const TIV_TARGET_MIN = 50_000_000;

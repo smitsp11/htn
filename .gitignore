@@ -11,3 +11,15 @@ npm-debug.log*
 .playwright-mcp/
 htn-*.png
 .vercel
+
+# Organizer-supplied track PDFs (not redistributed)
+documents/*.pdf
+
+# AI agent tooling / scaffolding
+CLAUDE.md
+AGENTS.md
+.claude/
+.conductor/
+.cursor/
+.cursorrules
+docs/superpowers/

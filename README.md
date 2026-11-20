@@ -68,9 +68,7 @@ See [the implementation plan](docs/MVP_PLAN.md) and the [Person 2 handoff](docs/
 
 ## Parallel team handover
 
-Start with [`CLAUDE.md`](CLAUDE.md) and [`docs/HANDOVER.md`](docs/HANDOVER.md). Four equal Claude Code assignments, file ownership, decision boundaries, and completion criteria are defined under [`docs/handover/`](docs/handover/).
-
-When using Conductor, create four workspaces from the same commit and assign one numbered brief to each. Repository scripts use concurrent mode and each local workspace receives its own development port.
+Start with [`docs/HANDOVER.md`](docs/HANDOVER.md). Four equal workstream assignments, file ownership, decision boundaries, and completion criteria are defined under [`docs/handover/`](docs/handover/).
 
 ## Commands
 
