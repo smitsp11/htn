@@ -8,7 +8,6 @@ Build one read-only underwriting queue that uses Federato's supplied API to disc
 
 The repository contains:
 
-- All three source PDFs and a consolidated research document.
 - A Next.js/TypeScript application that runs in demo mode.
 - A server-side Federato/Auth0 client boundary.
 - Canonical submission and ranked-result contracts.
@@ -38,12 +37,12 @@ Both live in `lib/domain/types.ts`. Changes require explicit agreement from all 
 
 ## Equal parallel assignments
 
-| Person | Core capability | UI contribution | Test ownership | Brief |
-|---|---|---|---|---|
-| 1 | Auth, API transport, pagination, resilience | Source/connection status | API client and pagination tests | `docs/handover/PERSON_1_API_RUNTIME.md` |
-| 2 | Schema reasoning, query planning, normalization | Query/decision trace | Planner and adapter tests | `docs/handover/PERSON_2_QUERY_AGENT.md` |
-| 3 | Appetite rules, score, explanations | Factor breakdown | Rule and boundary tests | `docs/handover/PERSON_3_DECISION_ENGINE.md` |
-| 4 | Rankings orchestration and application integration | Queue/dashboard shell | Route and UI integration tests | `docs/handover/PERSON_4_PRODUCT_INTEGRATION.md` |
+| Person | Core capability | UI contribution | Test ownership |
+|---|---|---|---|
+| 1 | Auth, API transport, pagination, resilience | Source/connection status | API client and pagination tests |
+| 2 | Schema reasoning, query planning, normalization | Query/decision trace | Planner and adapter tests |
+| 3 | Appetite rules, score, explanations | Factor breakdown | Rule and boundary tests |
+| 4 | Rankings orchestration and application integration | Queue/dashboard shell | Route and UI integration tests |
 
 Each assignment includes one substantial core module, one visible UI contribution, and its own test surface. Nobody builds a duplicate dashboard.
 
@@ -58,21 +57,20 @@ If a decision crosses boundaries, the owner proposes it and the consuming person
 
 ## Parallel workflow
 
-1. Create four Conductor workspaces from the same pushed commit.
-2. Give each Claude Code session its numbered person brief.
-3. Keep `FEDERATO_USE_DEMO_DATA=true` unless the workspace has valid organizer credentials.
-4. Work against fixtures; do not wait for upstream implementation.
-5. Each person runs typecheck, tests, and production build before handoff.
-6. Merge workstreams with their owned files intact.
-7. Run one end-to-end live-data integration pass after Persons 1–3 are merged; Person 4 composes the final UI.
+1. Start every workstream from the same pushed commit.
+2. Keep `FEDERATO_USE_DEMO_DATA=true` unless the workspace has valid organizer credentials.
+3. Work against fixtures; do not wait for upstream implementation.
+4. Each person runs typecheck, tests, and production build before handoff.
+5. Merge workstreams with their owned files intact.
+6. Run one end-to-end live-data integration pass after Persons 1–3 are merged; Person 4 composes the final UI.
 
-Conductor is configured for concurrent local development using a different `$CONDUCTOR_PORT` in each workspace. `.env*` files are copied by Conductor's default files-to-copy behavior; never commit real credentials.
+Never commit real credentials; keep them in `.env.local`.
 
 ## Shared product rules
 
-- Target/acceptable/not-acceptable classifications come from `APPETITE_GUIDELINES.pdf`.
+- Target/acceptable/not-acceptable classifications come from Federato's 2025 appetite guidelines.
 - Missing values never silently count as acceptable.
-- Exact boundaries not classified by the PDF remain visible as ambiguous until the engineer decides otherwise.
+- Exact boundaries not classified by the guidelines remain visible as ambiguous until the engineer decides otherwise.
 - Out-of-appetite submissions remain in the queue and receive explanations.
 - The score is subordinate to appetite status; a high score cannot hide an unacceptable factor.
 - Explanations are template-based and deterministic by default. An LLM may be used to plan queries or phrase explanations, but it is optional and never replaces the Federato API as the source of submission data.

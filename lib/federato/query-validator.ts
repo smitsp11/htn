@@ -6,8 +6,8 @@
  * comes back as a bare string error or, worse, as zero rows. Nothing here is
  * specific to Federato's field names: every check reads the discovered schema.
  *
- * The rules are the documented ones (QUERY_REQUEST_BODY, summarized in
- * documents/TRACK_BRIEF.md §6): stages run where → expand → unwind → filter →
+ * The rules are the documented ones (Federato's Query Request Body
+ * documentation): stages run where → expand → unwind → filter →
  * over → select → sort → pagination; `where` sees raw records and `filter` sees
  * hydrated ones; a dot-path never crosses an array (use `$elemMatch`); a
  * reference is only an id until it is expanded. They have not yet been

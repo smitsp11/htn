@@ -64,11 +64,11 @@ There is no query body to pin: the pipeline above compiles it from the discovere
 - The same endpoint with `{ "action": "query", "payload": { ... } }`
 - Auth against `auth.product.federato.ai` rather than the canonical Auth0 domain
 
-See [the implementation plan](docs/MVP_PLAN.md) and the [Person 2 handoff](docs/handover/PERSON_2_HANDOFF.md) for the aggregation rules behind each factor.
+See [the implementation plan](docs/MVP_PLAN.md) for the overall design, and the header of [`lib/federato/assemble.ts`](lib/federato/assemble.ts) for the aggregation rules behind each factor.
 
 ## Parallel team handover
 
-Start with [`docs/HANDOVER.md`](docs/HANDOVER.md). Four equal workstream assignments, file ownership, decision boundaries, and completion criteria are defined under [`docs/handover/`](docs/handover/).
+The project was built by four people working in parallel against frozen TypeScript contracts. [`docs/HANDOVER.md`](docs/HANDOVER.md) describes the four workstreams, file ownership, decision boundaries, and completion criteria.
 
 ## Commands
 

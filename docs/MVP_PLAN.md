@@ -29,7 +29,7 @@ Both contracts are defined in `lib/domain/types.ts` and are frozen before parall
 
 ## Four equal parallel workstreams
 
-Each person owns one substantial core capability, one visible UI contribution, and its own test surface. Detailed executable briefs are in `docs/handover/`.
+Each person owns one substantial core capability, one visible UI contribution, and its own test surface.
 
 ### Person 1 — API runtime
 

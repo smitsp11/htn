@@ -23,3 +23,9 @@ AGENTS.md
 .cursor/
 .cursorrules
 docs/superpowers/
+
+# Internal team docs (removed before going public)
+docs/COMPETITOR_COMPARISON.md
+docs/handover/
+documents/TRACK_BRIEF.md
+documents/MASTER_RESEARCH.md
